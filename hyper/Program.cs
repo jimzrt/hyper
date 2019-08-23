@@ -19,8 +19,10 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using ZWave.BasicApplication.Devices;
 using ZWave.CommandClasses;
-
-
+using LinqToDB.Data;
+using hyper.Database;
+using hyper.Models;
+using hyper.Database.DAO;
 
 namespace hyper
 {
@@ -35,22 +37,68 @@ namespace hyper
         static void Main(string[] args)
         {
 
+            if (!File.Exists("logs\\events.db"))
+            {
 
-          //  if (File.Exists("logs\\database.db"))
-         //       return;
+           
+                using (SQLiteConnection connection = new SQLiteConnection("Data Source=logs/events.db;"))
+            using (SQLiteCommand command = new SQLiteCommand(
+               @"CREATE TABLE 'Events' ( 
+            `Id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            `NodeId` INTEGER NOT NULL,
+            `EventType` TEXT NOT NULL,
+            `Value` INTEGER,
+            `Added` DATETIME NOT NULL)",
+                connection))
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
 
-    //        using (SQLiteConnection connection = new SQLiteConnection("Data Source=logs/database.db;"))
-    //        using (SQLiteCommand command = new SQLiteCommand(
-    //           @"CREATE TABLE 'Logs' ( 
-    //`Id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    //`TimestampUtc` TEXT NOT NULL,
-    //`Level` TEXT NOT NULL,
-    //`Message` TEXT NOT NULL)",
-    //            connection))
-    //        {
-    //            connection.Open();
-    //            command.ExecuteNonQuery();
-    //        }
+            }
+
+            LinqToDB.Data.DataConnection.DefaultSettings = new DatabaseSettings();
+
+
+
+
+            //var events = new List<Event>();
+
+
+            //for (int i = 0; i < 100; i++)
+            //{
+            //    Event evt = new Event();
+            //    evt.Value =  i;
+            //    evt.EventType = EventType.BATTERY;
+            //    evt.NodeId = 10;
+            //    events.Add(evt);
+
+            //}
+            //var dbTask = EventDAO.InsertEventsAsync(events);
+            //Console.WriteLine("done");
+            //Console.WriteLine("now waiting");
+            //dbTask.Wait();
+            //Console.WriteLine("really done!");
+
+
+
+
+            //Console.WriteLine("getting...");
+            //var eventos = EventDAO.GetAll();
+
+            ////foreach (var eventoss in eventos)
+            ////{
+            ////    Console.WriteLine(eventoss.id);
+            ////    Console.WriteLine(eventoss.Name);
+            ////    Console.WriteLine(eventoss.EventType);
+            ////}
+            //Console.WriteLine(eventos.Count());
+
+            //return;
+            //  if (File.Exists("logs\\database.db"))
+            //       return;
+
+
 
             //string[] ports = SerialPort.GetPortNames();
 
@@ -777,12 +825,25 @@ namespace hyper
                    //     buffer = new byte[] { x.SrcNodeId, x.Command[0], binaryReport.value };
                         break;
                     case COMMAND_CLASS_WAKE_UP.WAKE_UP_NOTIFICATION _:
+                        var evtWakeup = new Event
+                        {
+                            NodeId = x.SrcNodeId,
+                            EventType = EventType.WAKEUP,
+                        };
+                        EventDAO.InsertEventAsync(evtWakeup);
                         queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
                         return;
                     case COMMAND_CLASS_BATTERY.BATTERY_REPORT _:
                         var batteryReport = (COMMAND_CLASS_BATTERY.BATTERY_REPORT)x.Command;
                         Common.logger.Info("battery value: {0}", batteryReport.batteryLevel);
-                  //      buffer = new byte[] { x.SrcNodeId, x.Command[0], batteryReport.batteryLevel };
+                        var evtBattery = new Event
+                        {
+                            NodeId = x.SrcNodeId,
+                            EventType = EventType.BATTERY,
+                            Value = batteryReport.batteryLevel
+                        };
+                        EventDAO.InsertEventAsync(evtBattery);
+                        //      buffer = new byte[] { x.SrcNodeId, x.Command[0], batteryReport.batteryLevel };
                         break;
                     case COMMAND_CLASS_SENSOR_MULTILEVEL.SENSOR_MULTILEVEL_REPORT _:
                         var multilevelReport = (COMMAND_CLASS_SENSOR_MULTILEVEL.SENSOR_MULTILEVEL_REPORT)x.Command;
