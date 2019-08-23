@@ -1,50 +1,29 @@
-﻿using System;
+﻿using hyper.commands;
+using hyper.config;
+using NLog;
+using NLog.Internal;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.IO;
+using System.IO.Ports;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Configuration;
+using System.Data.SqlClient;
 using Utils;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using ZWave.BasicApplication;
 using ZWave.BasicApplication.Devices;
 using ZWave.CommandClasses;
-using ZWave.Enums;
-using ZWave.Layers;
-using ZWave.Layers.Session;
-using ZWave.Layers.Transport;
+
+
 
 namespace hyper
 {
-
-
-    class ConfigItemList
-    {
-        public List<ConfigItem> configItems;
-    }
-
-    class ConfigItem
-    {
-        public string deviceName;
-        public int manufacturerId;
-        public int productTypeId;
-        public Dictionary<byte, byte> groups = new Dictionary<byte, byte>();
-        public Dictionary<string, ushort> config = new Dictionary<string, ushort>();
-        public int wakeup;
-
-    }
-
-    class GroupConfig
-    {
-        public int identifier;
-        public int member;
-    }
-
-    class ParameterConfig
-    {
-        public int parameter;
-        public int value;
-    }
 
 
     class Program
@@ -55,139 +34,192 @@ namespace hyper
 
         static void Main(string[] args)
         {
-            Console.WriteLine("==== ZWave Command Center 5000 ====");
-            Console.WriteLine("-----------------------------------");
-            Console.WriteLine("Loading device configuration database...");
+
+
+          //  if (File.Exists("logs\\database.db"))
+         //       return;
+
+    //        using (SQLiteConnection connection = new SQLiteConnection("Data Source=logs/database.db;"))
+    //        using (SQLiteCommand command = new SQLiteCommand(
+    //           @"CREATE TABLE 'Logs' ( 
+    //`Id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    //`TimestampUtc` TEXT NOT NULL,
+    //`Level` TEXT NOT NULL,
+    //`Message` TEXT NOT NULL)",
+    //            connection))
+    //        {
+    //            connection.Open();
+    //            command.ExecuteNonQuery();
+    //        }
+
+            //string[] ports = SerialPort.GetPortNames();
+
+            //Console.WriteLine("The following serial ports were found:");
+
+            //// Display each port name to the console.
+            //foreach (string porta in ports)
+            //{
+            //    Console.WriteLine(porta);
+            //}
+
+            //Console.ReadLine();
+            //return;
+
+
+            ICommand currentCommand = null;
+
+            Console.CancelKeyPress += new ConsoleCancelEventHandler((evtSender, evtArgs) =>
+            {
+                evtArgs.Cancel = true;
+
+                if (currentCommand?.Active ?? false)
+                {
+                    Common.logger.Info("master: stopping current command!");
+                    currentCommand.Stop();
+                } else
+                {
+                    Common.logger.Info("No current command, stopping application");
+
+                }
+            });
+
+
+
+
+            Common.logger.Info("==== ZWave Command Center 5000 ====");
+            Common.logger.Info("-----------------------------------");
+            Common.logger.Info("Loading device configuration database...");
             if (!File.Exists("config.yaml"))
             {
-                Console.WriteLine("configuration file config.yaml does not exist!");
+                Common.logger.Info("configuration file config.yaml does not exist!");
                 return;
             }
             var config = ParseConfig("config.yaml");
             if (config == null)
             {
-                Console.WriteLine("Could not parse configuration file config.yaml!");
+                Common.logger.Info("Could not parse configuration file config.yaml!");
                 return;
             }
-            Console.WriteLine("Got configuration for " + config.Count + " devices.");
-            Console.WriteLine("-----------------------------------");
+            Common.logger.Info("Got configuration for " + config.Count + " devices.");
+            Common.logger.Info("-----------------------------------");
 
-            if(args.Length  < 2)
+            if (args.Length < 2)
             {
-                Console.WriteLine("usage:");
-                Console.WriteLine("./hyper [serialPort] [command]");
-                Console.WriteLine("valid commands:");
-                Console.WriteLine("r/replace, c/config, i/include, e/exclude");
+                Common.logger.Info("usage:");
+                Common.logger.Info("./hyper [serialPort] [command]");
+                Common.logger.Info("valid commands:");
+                Common.logger.Info("r/replace, c/config, i/include, e/exclude, l/listen, p/ping");
                 return;
             }
 
             var port = args[0];
-            Console.WriteLine("Initialize Serialport: {0}", port);
+            Common.logger.Info("Initialize Serialport: {0}", port);
             var initController = Common.InitController(port, out Controller controller, out string errorMessage);
             if (!initController)
             {
-                Console.WriteLine("Error connecting with port {0}! Error Mesage:");
-                Console.WriteLine(errorMessage);
+                Common.logger.Info("Error connecting with port {0}! Error Mesage:", port);
+                Common.logger.Info(errorMessage);
                 return;
 
             }
-            Console.WriteLine("Version: {0}", controller.Version);
-            Console.WriteLine("Included nodes: {0}", controller.IncludedNodes.Length);
-            Console.WriteLine("-----------------------------------");
+            Common.logger.Info("Version: {0}", controller.Version);
+            Common.logger.Info("Included nodes: {0}", controller.IncludedNodes.Length);
+            Common.logger.Info("-----------------------------------");
 
             Task.Delay(2000).Wait();
 
 
+
+
+
+
             if (args[1] == "r" || args[1] == "replace" || args[1] == "c" || args[1] == "config")
             {
-              
+
 
                 if (args.Length != 3)
                 {
-                    Console.WriteLine("wrong arguments!");
-                    Console.WriteLine("correct usage:");
-                    if(args[1] == "r" || args[1] == "replace")
+                    Common.logger.Info("wrong arguments!");
+                    Common.logger.Info("correct usage:");
+                    if (args[1] == "r" || args[1] == "replace")
                     {
-                        Console.WriteLine("./hyper [serialPort] r [nodeid]");
-                    } else
-                    {
-                        Console.WriteLine("./hyper [serialPort] c [nodeid]");
+                        Common.logger.Info("./hyper [serialPort] r [nodeid]");
                     }
-                    
+                    else
+                    {
+                        Common.logger.Info("./hyper [serialPort] c [nodeid]");
+                    }
+
                     return;
                 }
 
                 if (!byte.TryParse(args[2], out byte nodeId))
                 {
-                    Console.WriteLine("argument 1 should be node id! " + args[2] + " is not a number!");
+                    Common.logger.Info("argument 1 should be node id! " + args[2] + " is not a number!");
                     return;
 
                 }
-               
-               
 
-               
+
+
+
 
 
 
                 if (!controller.IncludedNodes.Contains(nodeId))
                 {
-                    Console.WriteLine("NodeID " + nodeId + " not included in network!");
-                    Console.WriteLine(string.Join(", ", controller.IncludedNodes));
-                    return;
+                    Common.logger.Info("NodeID " + nodeId + " not included in network!");
+                    Common.logger.Info(string.Join(", ", controller.IncludedNodes));
+                    //    return;
                 }
 
-                if(args[1] == "r" || args[1] == "replace")
+                if (args[1] == "r" || args[1] == "replace")
                 {
                     new ReplaceCommand(controller, nodeId, config).Start();
 
-                } else
+                }
+                else
                 {
                     new ConfigCommand(controller, nodeId, config).Start();
                 }
 
 
-                controller.Disconnect();
-                controller.Dispose();
 
-            } else if(args[1] == "i" || args[1] == "include")
+            }
+            else if (args[1] == "i" || args[1] == "include")
             {
                 if (args.Length != 2)
                 {
-                    Console.WriteLine("wrong arguments!");
-                    Console.WriteLine("correct usage:");
+                    Common.logger.Info("wrong arguments!");
+                    Common.logger.Info("correct usage:");
 
-                        Console.WriteLine("./hyper [serialPort] i");
-                    
+                    Common.logger.Info("./hyper [serialPort] i");
+
 
 
                     return;
                 }
 
 
-                    new IncludeCommand(controller, config).Start();
+                new IncludeCommand(controller, config).Start();
 
 
-
-
-                controller.Disconnect();
-                controller.Dispose();
             }
             else if (args[1] == "e" || args[1] == "exclude")
             {
                 if (args.Length != 2)
                 {
-                    Console.WriteLine("wrong arguments!");
-                    Console.WriteLine("correct usage:");
+                    Common.logger.Info("wrong arguments!");
+                    Common.logger.Info("correct usage:");
 
-                    Console.WriteLine("./hyper [serialPort] e");
+                    Common.logger.Info("./hyper [serialPort] e");
 
 
 
                     return;
                 }
 
-              
+
 
 
 
@@ -196,14 +228,86 @@ namespace hyper
 
 
 
-                controller.Disconnect();
-                controller.Dispose();
+            }
+            else if (args[1] == "l" || args[1] == "listen")
+            {
+                if (args.Length != 2)
+                {
+                    Common.logger.Info("wrong arguments!");
+                    Common.logger.Info("correct usage:");
+
+                    Common.logger.Info("./hyper [serialPort] l");
+
+
+
+                    return;
+                }
+                //  new ReconfigureCommand(controller, config).Start();
+                currentCommand = new ListenCommand(controller, config);
+                currentCommand.Start();
+            }
+            else if (args[1] == "p" || args[1] == "ping")
+            {
+
+                if (args.Length != 3)
+                {
+                    Common.logger.Info("wrong arguments!");
+                    Common.logger.Info("correct usage:");
+
+                    Common.logger.Info("./hyper [serialPort] p [nodeid]");
+
+
+                    return;
+                }
+
+                if (!byte.TryParse(args[2], out byte nodeId))
+                {
+                    Common.logger.Info("argument should be node id! " + args[2] + " is not a number!");
+                    return;
+
+                }
+
+
+
+
+
+
+
+                if (!controller.IncludedNodes.Contains(nodeId))
+                {
+                    Common.logger.Info("NodeID " + nodeId + " not included in network!");
+                    Common.logger.Info(string.Join(", ", controller.IncludedNodes));
+                    return;
+                }
+
+
+                new PingCommand(controller, nodeId).Start();
+            }
+            else if (args[1] == "rc" || args[1] == "reconfigure")
+            {
+                if (args.Length != 2)
+                {
+                    Common.logger.Info("wrong arguments!");
+                    Common.logger.Info("correct usage:");
+
+                    Common.logger.Info("./hyper [serialPort] rc");
+
+
+
+                    return;
+                }
+                new ReconfigureCommand(controller, config).Start();
+                // new ListenCommand(controller).Start();
+            } else if(args[1] == "it" ||args[1] == "interactive")
+            {
+                currentCommand = new InteractiveCommand(controller, config);
+                currentCommand.Start();
             }
             else
             {
-                Console.WriteLine("unknown command: {0}", args[1]);
-                Console.WriteLine("valid commands:");
-                Console.WriteLine("r/replace, c/config, i/include");
+                Common.logger.Info("unknown command: {0}", args[1]);
+                Common.logger.Info("valid commands:");
+                Common.logger.Info("r/replace, c/config, i/include, e/exclude, l/listen, p/ping");
             }
 
 
@@ -212,9 +316,9 @@ namespace hyper
 
 
 
-            Console.WriteLine("----------");
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadLine();
+            Common.logger.Info("----------");
+            Common.logger.Info("Press any key to exit...");
+            Console.ReadKey();
 
         }
 
@@ -222,7 +326,7 @@ namespace hyper
         {
 
             var yamlText = File.ReadAllText(configFile);
-            var input = new StringReader(yamlText);
+            //  var input = new StringReader(yamlText);
 
 
             var deserializer = new DeserializerBuilder()
@@ -231,11 +335,13 @@ namespace hyper
             List<ConfigItem> configList = null;
             try
             {
-                configList = deserializer.Deserialize<List<ConfigItem>>(input);
-            } catch{
-              
+                configList = deserializer.Deserialize<List<ConfigItem>>(yamlText);
             }
-           
+            catch
+            {
+
+            }
+
             return configList;
 
 
@@ -244,379 +350,59 @@ namespace hyper
 
     }
 
-    internal class Common
+    internal class InteractiveCommand : ICommand
     {
-        public static TransmitOptions txOptions = TransmitOptions.TransmitOptionAcknowledge | TransmitOptions.TransmitOptionAutoRoute | TransmitOptions.TransmitOptionExplore;
-
-
-        public static bool InitController(string port, out Controller controller, out string errorMessage)
+        private Controller controller;
+        private List<ConfigItem> configList;
+        private ICommand currentCommand = null;
+        
+        public InteractiveCommand(Controller controller, List<ConfigItem> configList)
         {
-            BasicApplicationLayer AppLayer = new BasicApplicationLayer(
-                new SessionLayer(),
-                new BasicFrameLayer(),
-                new SerialPortTransportLayer());
-            var _controller = AppLayer.CreateController();
-
-            if (_controller.Connect(new SerialPortDataSource(port, BaudRates.Rate_115200)) == CommunicationStatuses.Done)
-            {
-                //   Console.WriteLine("connection done!");
-                var versionRes = _controller.GetVersion();
-                if (versionRes)
-                {
-                    //     Console.WriteLine("connection success!!");
-                    //  Console.WriteLine(versionRes.Version);
-                    _controller.GetPRK();
-                    _controller.SerialApiGetInitData();
-                    _controller.SerialApiGetCapabilities();
-                    _controller.GetControllerCapabilities();
-                    _controller.GetSucNodeId();
-                    _controller.MemoryGetId();
-                    //      Console.WriteLine("Initialization done!");
-                    //  Console.WriteLine("Included Nodes: " + string.Join(", ", controller.IncludedNodes));
-
-                }
-                else
-                {
-                    Console.WriteLine("could not get version...");
-                    errorMessage = "Could not communicate with controller.";
-                    controller = null;
-                    return false;
-                }
-
-            }
-            else
-            {
-                Console.WriteLine("could not connect to " + port);
-                errorMessage = string.Format("Could not connect to port {0}", port);
-                controller = null;
-                return false;
-            }
-            controller = _controller;
-            errorMessage = "";
-            return true;
+            this.controller = controller;
+            this.configList = configList;
         }
 
-        public static ConfigItem GetConfigurationForDevice(Controller controller, byte nodeId, List<ConfigItem> configList)
+        public bool Active { get; private set; } = false;
+
+        public void Start()
         {
-            var gotDeviceIds = GetManufactor(controller, nodeId, out int manufacturerId, out int productTypeId);
-            while (!gotDeviceIds)
-            {
-                Console.WriteLine("could not get device data! Trying again, wake up device!");
-                gotDeviceIds = GetManufactor(controller, nodeId, out manufacturerId, out productTypeId);
-            }
-            var config = configList.Find(item => item.manufacturerId == manufacturerId && item.productTypeId == productTypeId);
-            return config;
-        }
+            Active = true;
+            Common.logger.Info("-----------");
+            Common.logger.Info("Interaction mode");
+            Common.logger.Info("-----------");
 
-        public static bool GetManufactor(Controller controller, byte nodeId, out int manufacturerId, out int productTypeId)
-        {
-            var cmd = new COMMAND_CLASS_MANUFACTURER_SPECIFIC.MANUFACTURER_SPECIFIC_GET();
-            var result = controller.RequestData(nodeId, cmd, Common.txOptions, new COMMAND_CLASS_MANUFACTURER_SPECIFIC.MANUFACTURER_SPECIFIC_REPORT(), 5000);
-            if (result)
+            while (Active)
             {
-                var rpt = (COMMAND_CLASS_MANUFACTURER_SPECIFIC.MANUFACTURER_SPECIFIC_REPORT)result.Command;
-                manufacturerId = Tools.GetInt32(rpt.manufacturerId);
-                Console.WriteLine("ManufacturerId: " + manufacturerId);
-                Console.WriteLine("ProductId: " + Tools.GetInt32(rpt.productId));
-                productTypeId = Tools.GetInt32(rpt.productTypeId);
-                Console.WriteLine("ProductTypeId: " + productTypeId);
-                return true;
-            }
-            else
-            {
-                manufacturerId = 0;
-                productTypeId = 0;
-                return false;
-            }
-        }
-
-
-
-        public static bool SetConfiguration(Controller controller, byte nodeId, ConfigItem config)
-        {
-            if (config.groups.Count != 0)
-            {
-                Console.WriteLine("Setting " + config.groups.Count + " associtions");
-                foreach (var group in config.groups)
+                Common.logger.Info("press l girl!");
+                var input = Console.ReadKey();
+                if(input.Key == ConsoleKey.L )
                 {
-                    var groupIdentifier = group.Key;
-                    var member = group.Value;
-
-                    var associationAdded = AddAssociation(controller, nodeId, groupIdentifier, member);
-                    var associationValidated = false;
-                    if (associationAdded)
-                    {
-                        associationValidated = AssociationContains(controller, nodeId, groupIdentifier, member);
-                    }
-
-                    while (!associationAdded || !associationValidated)
-                    {
-                        Console.WriteLine("Not successful! Trying again, please wake up device.");
-                        associationAdded = AddAssociation(controller, nodeId, groupIdentifier, member);
-                        if (associationAdded)
-                        {
-                            associationValidated = AssociationContains(controller, nodeId, groupIdentifier, member);
-
-                        }
-                    }
+                    Common.logger.Info("yes my master");
+                    currentCommand = new ListenCommand(controller, configList);
+                    currentCommand.Start();
                 }
             }
 
-            if (config.config.Count != 0)
-            {
-                Console.WriteLine("Setting " + config.config.Count + " configuration parameter");
-                foreach (var configurationEntry in config.config)
-                {
-                    var configParameter = configurationEntry.Key;
-                    var configValue = configurationEntry.Value;
 
-
-                    var parameterSet = SetParameter(controller, nodeId, configParameter, configValue);
-                    var parameterValidated = false;
-                    if (parameterSet)
-                    {
-                        parameterValidated = ValidateParameter(controller, nodeId, configParameter, configValue);
-                    }
-                    while (!parameterSet || !parameterValidated)
-                    {
-                        Console.WriteLine("Not successful! Trying again, please wake up device.");
-                        parameterSet = SetParameter(controller, nodeId, configParameter, configValue);
-                        if (parameterSet)
-                        {
-                            parameterValidated = ValidateParameter(controller, nodeId, configParameter, configValue);
-                        }
-                    }
-
-
-                }
-            }
-
-            return true;
+            Common.logger.Info("goodby master,,,");
         }
 
-        public static bool SetParameter(Controller controller, byte nodeId, string configParameterLong, ushort configValue)
+        public void Stop()
         {
-
-            var configParameter = byte.Parse(configParameterLong.Split("_")[0]);
-            var configWordSize = byte.Parse(configParameterLong.Split("_")[1]);
-
-            Console.WriteLine("Set configuration - parameter " + configParameter + " - value " + configValue);
-            COMMAND_CLASS_CONFIGURATION.CONFIGURATION_SET cmd = new COMMAND_CLASS_CONFIGURATION.CONFIGURATION_SET();
-            cmd.parameterNumber = configParameter;
-            if (configWordSize == 1)
+            if(currentCommand?.Active ?? false)
             {
-                cmd.configurationValue = new byte[] { (byte)configValue };
-            }
-            else if (configWordSize == 2)
+                Common.logger.Info("stoppping current command!");
+                currentCommand.Stop();
+            } else
             {
-                cmd.configurationValue = Tools.GetBytes(configValue);
-            }
-            else
-            {
-                cmd.configurationValue = Tools.GetBytes((int)configValue);
-            }
-            //else
-            //{
-            //    Console.WriteLine("configuration parameter {0}: wordSize {1} not implemented!");
-            //    return false;
-            //}
-            // Tools.GetBytes(((byte)configValue));
-            cmd.properties1.mdefault = 0;
-            cmd.properties1.size = configWordSize;
-
-
-            var setAssociation = controller.SendData(nodeId, cmd, Common.txOptions);
-            return setAssociation.TransmitStatus == TransmitStatuses.CompleteOk;
-        }
-
-        public static bool ValidateParameter(Controller controller, byte nodeId, string configParameterLong, ushort configValue)
-        {
-            var configParameter = byte.Parse(configParameterLong.Split("_")[0]);
-            Console.WriteLine("Validate configuration - parameter " + configParameter + " - value " + configValue);
-            COMMAND_CLASS_CONFIGURATION.CONFIGURATION_GET cmd = new COMMAND_CLASS_CONFIGURATION.CONFIGURATION_GET();
-            cmd.parameterNumber = configParameter;
-            var result = controller.RequestData(nodeId, cmd, Common.txOptions, new COMMAND_CLASS_CONFIGURATION.CONFIGURATION_REPORT(), 20000);
-            if (result)
-            {
-                var rpt = (COMMAND_CLASS_CONFIGURATION.CONFIGURATION_REPORT)result.Command;
-                var value = Tools.GetInt32(rpt.configurationValue.ToArray());
-                if (configValue == value)
-                {
-                    Console.WriteLine("parameter ist set correctly!");
-                    return true;
-                }
-                else
-                {
-                    Console.WriteLine("parametr has value {0} instead of {1}", value, configValue);
-                    return false;
-                }
-
-            }
-            else
-            {
-                Console.WriteLine("Could not get configuration parameter!");
-                return false;
+                Common.logger.Info("stopping interactive mode");
+                Common.logger.Info("press any key to exit");
+                Active = false;
             }
         }
-
-        public static bool AssociationContains(Controller controller, byte nodeId, byte groupIdentifier, byte member)
-        {
-            Console.WriteLine("Validate associtation - group " + groupIdentifier + " - node " + member);
-
-            var cmd = new COMMAND_CLASS_ASSOCIATION.ASSOCIATION_GET();
-            cmd.groupingIdentifier = groupIdentifier;
-            var result = controller.RequestData(nodeId, cmd, Common.txOptions, new COMMAND_CLASS_ASSOCIATION.ASSOCIATION_REPORT(), 20000);
-            if (result)
-            {
-                var rpt = (COMMAND_CLASS_ASSOCIATION.ASSOCIATION_REPORT)result.Command;
-                if (rpt.nodeid.Contains(member))
-                {
-                    Console.WriteLine(member + " is a member of association group " + groupIdentifier);
-                    return true;
-                }
-                else
-                {
-                    Console.WriteLine(member + " is not a member of association group " + groupIdentifier);
-                    return false;
-                }
-
-
-            }
-            else
-            {
-                Console.WriteLine("could not get association for group " + groupIdentifier);
-                return false;
-            }
-
-        }
-
-        public static bool AddAssociation(Controller controller, byte nodeId, byte groupIdentifier, byte member)
-        {
-            Console.WriteLine("Add associtation - group " + groupIdentifier + " - node " + member);
-            COMMAND_CLASS_ASSOCIATION.ASSOCIATION_SET cmd = new COMMAND_CLASS_ASSOCIATION.ASSOCIATION_SET();
-            cmd.groupingIdentifier = groupIdentifier;
-            cmd.nodeId = new List<byte>() { member };
-            var setAssociation = controller.SendData(nodeId, cmd, Common.txOptions);
-            return setAssociation.TransmitStatus == TransmitStatuses.CompleteOk;
-        }
-
-
-        public static bool ReplaceNode(Controller controller, byte nodeId)
-        {
-            var replacedNode = controller.ReplaceFailedNode(nodeId);
-            return replacedNode.AddRemoveNode.AddRemoveNodeStatus == ZWave.BasicApplication.Enums.AddRemoveNodeStatuses.Replaced;
-
-        }
-
-        public static bool IncludeNode(Controller controller,out byte nodeId)
-        {
-            var includeNode = controller.IncludeNode(Modes.None, 10000);
-            nodeId = includeNode.AddRemoveNode.Id;
-            if (nodeId == 0)
-            {
-                return false;
-            }
-            return true;
-        }
-
-        public static bool ExcludeNode(Controller controller, out byte nodeId)
-        {
-            var excludeNode = controller.ExcludeNode(Modes.None, 10000);
-            nodeId = excludeNode.AddRemoveNode.Id;
-            if (nodeId == 0)
-            {
-                return false;
-            }
-            return true;
-        }
-
-        public static bool MarkNodeFailed(Controller controller, byte nodeId)
-        {
-            var isFailed = controller.IsFailedNode(nodeId);
-            return isFailed.RetValue;
-        }
-
-        public static bool CheckNotReachable(Controller controller, byte nodeId)
-        {
-            var sendData = controller.SendData(nodeId, new byte[1], Common.txOptions);
-            return sendData.TransmitStatus == TransmitStatuses.CompleteNoAcknowledge;
-        }
-
-        //public static int GetValueWithBitmask(int value, int bitmask)
-        //{
-        //    value = value & bitmask;
-        //    int bits = bitmask;
-        //    while ((bits & 0x01) == 0)
-        //    {
-        //        value = value >> 1;
-        //        bits = bits >> 1;
-        //    }
-
-
-        //    return value;
-        //}
-
-
-        //public static void GetAssociation(Controller controller, byte nodeId)
-        //{
-        //    for (byte id = 1; id <= 5; id++)
-        //    {
-        //        var cmd = new COMMAND_CLASS_ASSOCIATION.ASSOCIATION_GET();
-        //        cmd.groupingIdentifier = id;
-        //        var result = controller.RequestData(nodeId, cmd, Common.txOptions, new COMMAND_CLASS_ASSOCIATION.ASSOCIATION_REPORT(), 20000);
-        //        if (result)
-        //        {
-        //            var rpt = (COMMAND_CLASS_ASSOCIATION.ASSOCIATION_REPORT)result.Command;
-        //            var _groupId = rpt.groupingIdentifier;
-        //            if (_groupId != id)
-        //            {
-        //                continue;
-        //            }
-        //            var maxSupported = rpt.maxNodesSupported;
-        //            var reportToFollow = rpt.reportsToFollow;
-        //            var member = string.Join(", ", rpt.nodeid);
-
-        //            Console.WriteLine("Group: {0} - Member: {1} - Max: {2} - Follow: {3}", _groupId, member, maxSupported, reportToFollow);
-        //        }
-        //    }
-
-        //}
-
-
-        //public static void GetConfig(Controller controller, byte nodeId)
-        //{
-        //    for (byte parameterNumber = 1; parameterNumber < 100; parameterNumber++)
-        //    {
-        //        var cmd = new COMMAND_CLASS_CONFIGURATION.CONFIGURATION_GET();
-        //        cmd.parameterNumber = parameterNumber;
-        //        RequestDataResult result;
-        //        result = controller.RequestData(nodeId, cmd, Common.txOptions, new COMMAND_CLASS_CONFIGURATION.CONFIGURATION_REPORT(), 100);
-        //        if (result)
-        //        {
-        //            var rpt = (COMMAND_CLASS_CONFIGURATION.CONFIGURATION_REPORT)result.Command;
-
-        //            var _parameterNumber = rpt.parameterNumber;
-        //            if (_parameterNumber != parameterNumber)
-        //            {
-        //                continue;
-        //            }
-        //            var value = Tools.GetInt32(rpt.configurationValue.ToArray());
-
-
-        //            Console.WriteLine("ParameterNumber: {0} - {1}", _parameterNumber, value);
-        //        }
-        //        else
-        //        {
-        //            //  Console.WriteLine("Parameter {0} does not exist!", parameterNumber);
-        //        }
-        //    }
-
-        //}
-
     }
 
-
-    internal class ExcludeCommand
+        internal class ExcludeCommand
     {
 
 
@@ -631,34 +417,34 @@ namespace hyper
 
         internal void Start()
         {
-            Console.WriteLine("-----------");
-            Console.WriteLine("Exclusion mode");
-            Console.WriteLine("-----------");
 
-            Console.WriteLine("Starting exclusion, please wake up device...");
+            Common.logger.Info("-----------");
+            Common.logger.Info("Exclusion mode");
+            Common.logger.Info("-----------");
+
+            Common.logger.Info("Starting exclusion, please wake up device...");
 
             var nodeExcluded = Common.ExcludeNode(controller, out byte nodeId);
             while (!nodeExcluded)
             {
-                Console.WriteLine("Could not exclude any node, trying again...");
+                Common.logger.Info("Could not exclude any node, trying again...");
                 nodeExcluded = Common.ExcludeNode(controller, out nodeId);
             }
 
-            Console.WriteLine("Success! node with id: {0} excluded.", nodeId);
+            Common.logger.Info("Success! node with id: {0} excluded.", nodeId);
 
 
-            Console.WriteLine("Exclusion done!");
+            Common.logger.Info("Exclusion done!");
         }
     }
 
-        internal class IncludeCommand
+    internal class IncludeCommand
     {
 
 
 
 
         private Controller controller;
-        private byte nodeId;
         private List<ConfigItem> configList;
 
         public IncludeCommand(Controller controller, List<ConfigItem> configList)
@@ -669,25 +455,25 @@ namespace hyper
 
         internal void Start()
         {
-            Console.WriteLine("-----------");
-            Console.WriteLine("Inclusion mode");
-            Console.WriteLine("-----------");
+            Common.logger.Info("-----------");
+            Common.logger.Info("Inclusion mode");
+            Common.logger.Info("-----------");
 
-            Console.WriteLine("Starting inclusion, please wake up device...");
+            Common.logger.Info("Starting inclusion, please wake up device...");
 
             var nodeIncluded = Common.IncludeNode(controller, out byte nodeId);
             while (!nodeIncluded)
             {
-                Console.WriteLine("Could not include any node, trying again...");
+                Common.logger.Info("Could not include any node, trying again...");
                 nodeIncluded = Common.IncludeNode(controller, out nodeId);
             }
 
-            Console.WriteLine("Success! New node id: {0}", nodeId);
+            Common.logger.Info("Success! New node id: {0}", nodeId);
 
             new ConfigCommand(controller, nodeId, configList).Start();
 
 
-            Console.WriteLine("Inclusion done!");
+            Common.logger.Info("Inclusion done!");
 
 
 
@@ -696,55 +482,56 @@ namespace hyper
 
     internal class ConfigCommand
     {
-      
-
-
-
-            private Controller controller;
-            private byte nodeId;
-            private List<ConfigItem> configList;
-
-            public ConfigCommand(Controller controller, byte nodeId, List<ConfigItem> configList)
-            {
-                this.controller = controller;
-                this.nodeId = nodeId;
-                this.configList = configList;
-            }
-
-            internal void Start()
-            {
-                Console.WriteLine("-----------");
-                Console.WriteLine("Configuration mode");
-                Console.WriteLine("node to configure: " + nodeId);
-                Console.WriteLine("-----------");
 
 
 
 
-                Console.WriteLine("Getting configuration for device...");
-                ConfigItem config = Common.GetConfigurationForDevice(controller, nodeId, configList);
-                if (config == null)
-                {
-                    Console.WriteLine("could not find configuration!");
-                    Console.WriteLine("you need to add this device to the configuration file.");
-                    return;
-                }
+        private Controller controller;
+        private byte nodeId;
+        private List<ConfigItem> configList;
 
-                Console.WriteLine("configuration found for {0}!", config.deviceName);
-                Console.WriteLine("Setting values.");
-                Common.SetConfiguration(controller, nodeId, config);
-
-                Console.WriteLine("Configuration done!");
-
-
-
-            }
+        public ConfigCommand(Controller controller, byte nodeId, List<ConfigItem> configList)
+        {
+            this.controller = controller;
+            this.nodeId = nodeId;
+            this.configList = configList;
         }
 
-        internal class ReplaceCommand
+        internal void Start()
+        {
+            Common.logger.Info("-----------");
+            Common.logger.Info("Configuration mode");
+            Common.logger.Info("node to configure: " + nodeId);
+            Common.logger.Info("-----------");
+
+
+
+
+            Common.logger.Info("Getting configuration for device...");
+            ConfigItem config = Common.GetConfigurationForDevice(controller, nodeId, configList);
+            if (config == null)
+            {
+                Common.logger.Info("could not find configuration!");
+                Common.logger.Info("you need to add this device to the configuration file.");
+                return;
+            }
+
+            Common.logger.Info("configuration found for {0}!", config.deviceName);
+            Common.logger.Info("Setting values.");
+            Common.SetConfiguration(controller, nodeId, config);
+
+            Common.logger.Info("Configuration done!");
+            Common.logger.Info("-------------------");
+
+
+
+        }
+    }
+
+    internal class ReplaceCommand
     {
 
-         
+
 
         private Controller controller;
         private byte nodeId;
@@ -759,51 +546,51 @@ namespace hyper
 
         internal void Start()
         {
-            Console.WriteLine("-----------");
-            Console.WriteLine("Replacement mode");
-            Console.WriteLine("node to replace: " + nodeId);
-            Console.WriteLine("-----------");
-            Console.WriteLine("Check if node is reachable...");
-            var notReachable = Common.CheckNotReachable(controller, nodeId);
-            if (!notReachable)
+            Common.logger.Info("-----------");
+            Common.logger.Info("Replacement mode");
+            Common.logger.Info("node to replace: " + nodeId);
+            Common.logger.Info("-----------");
+            Common.logger.Info("Check if node is reachable...");
+            var reachable = Common.CheckReachable(controller, nodeId);
+            if (reachable)
             {
-                Console.WriteLine("Node is reachable!");
-                Console.WriteLine("If node is reachable, we cannot replace it!");
+                Common.logger.Info("Node is reachable!");
+                Common.logger.Info("If node is reachable, we cannot replace it!");
                 return;
             }
             else
             {
-                Console.WriteLine("OK, node is not reachable");
+                Common.logger.Info("OK, node is not reachable");
             }
-            Console.WriteLine("Mark node as failed...");
+            Common.logger.Info("Mark node as failed...");
             var markedAsFailed = Common.MarkNodeFailed(controller, nodeId);
             if (!markedAsFailed)
             {
-                Console.WriteLine("Node could not be marked as failed!");
-                Console.WriteLine("Try again and ensure that node is not reachable.");
+                Common.logger.Info("Node could not be marked as failed!");
+                Common.logger.Info("Try again and ensure that node is not reachable.");
                 return;
             }
             else
             {
-                Console.WriteLine("OK, node is marked as failed");
+                Common.logger.Info("OK, node is marked as failed");
             }
-            Console.WriteLine("Replacing Node... Set new device to inclusion mode!");
+            Common.logger.Info("Replacing Node... Set new device to inclusion mode!");
             bool nodeReplaced = Common.ReplaceNode(controller, nodeId);
             if (!nodeReplaced)
             {
-                Console.WriteLine("Could not replace device!");
-                Console.WriteLine("Please try again.");
+                Common.logger.Info("Could not replace device!");
+                Common.logger.Info("Please try again.");
                 return;
             }
             else
             {
-                Console.WriteLine("Node sucessfully replaced!");
+                Common.logger.Info("Node sucessfully replaced!");
             }
 
-            //     Console.WriteLine("Write new Configuration...");
+            //     Common.logger.Info("Write new Configuration...");
             //     bool configurationSet = SetConfiguration();
 
-            //   Console.WriteLine("Get Association");
+            //   Common.logger.Info("Get Association");
             //  GetAssociation();
             //GetConfig();
 
@@ -815,7 +602,7 @@ namespace hyper
 
 
 
-            Console.WriteLine("Replacement done!");
+            Common.logger.Info("Replacement done!");
 
 
 
@@ -834,16 +621,15 @@ namespace hyper
         //    if (result)
         //    {
         //        var rpt = (COMMAND_CLASS_WAKE_UP.WAKE_UP_INTERVAL_REPORT)result.Command;
-        //        Console.WriteLine("wake up interval: " + Tools.GetInt32(rpt.seconds));
+        //        Common.logger.Info("wake up interval: " + Tools.GetInt32(rpt.seconds));
 
         //    }
         //    else
         //    {
-        //        Console.WriteLine("Could Not get wake up!!");
+        //        Common.logger.Info("Could Not get wake up!!");
         //    }
         //}
 
-        
 
 
 
@@ -851,8 +637,437 @@ namespace hyper
 
 
 
-        
 
 
+
+
+    }
+
+
+
+    internal class ListenCommand : ICommand
+    {
+        private Controller controller;
+        private EventWaitHandle waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+        List<ConfigItem> configList;
+
+        public ListenCommand(Controller controller, List<ConfigItem> configList)
+        {
+            this.controller = controller;
+            this.configList = configList;
+
+        }
+
+
+        //public NetworkStream ConnectToServer()
+        //{
+        //    var client = new TcpClient("", 54321);
+        //    var stream = client.GetStream();
+        //    return stream;
+        //}
+
+        //public void SendBytes(UdpClient udpClient, byte[] bytes)
+        //{
+        //    lock (syncObject)
+        //    {
+
+
+        //        try
+        //        {
+        //            udpClient.Send(bytes, bytes.Length);
+        //            messageCounter++;
+        //            Common.logger.Info("Number of packets send: {0}", messageCounter);
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            Common.logger.Info(e.ToString());
+        //        }
+        //    }
+        //}
+
+
+        List<byte> byteBuffer = new List<byte>();
+        readonly object syncObject = new object();
+        readonly object syncObjectServer = new object();
+
+        private int messageCounter = 0;
+
+        public bool Active { get; private set; } = false;
+
+
+        BlockingCollection<Action> queueItems = new BlockingCollection<Action>();
+
+
+        public void Start()
+        {
+            //IAdapter console = new ConsoleAdapter();
+            //Task.Run(() => { console.Listen(); });
+          //  console.CommandHandler += OnCommand;
+
+            Active = true;
+            Common.logger.Info("-----------");
+            Common.logger.Info("Listening mode");
+            Common.logger.Info("Press Enter to exit");
+            Common.logger.Info("-----------");
+
+            Common.logger.Info("Loading available command classes...");
+            var assembly = typeof(COMMAND_CLASS_BASIC).GetTypeInfo().Assembly;
+            var commandClasses = Common.GetAllCommandClasses(assembly, "CommandClasses");
+            Common.logger.Info("Got {0} command classes", commandClasses.Count);
+            var nestedCommandClasses = Common.GetAllNestedCommandClasses(commandClasses.Values);
+            Common.logger.Info("Got all inner command classes for {0} command classes", commandClasses.Count);
+            Common.logger.Info("Listening...");
+            // NetworkStream stream = ConnectToServer();
+
+
+            //UdpClient udpClient = new UdpClient("", 54321);
+
+            
+
+            //Task.Run(() => {
+
+            //    Task.Delay(10000).Wait();
+            //    queueItems.Add(() => {
+
+            //        // Common.RequestBatteryReport(controller, x.SrcNodeId)
+            //  //      new ConfigCommand(controller, 14, configList).Start();
+
+            //        });
+
+            //});
+
+            //  AutoResetEvent waitHandle = new AutoResetEvent(false);
+
+            var tokenListen = controller.ListenData((x) =>
+            {
+                var _commandClass = commandClasses.TryGetValue(x.Command[0], out Type commandClass);
+                var nestedDict = nestedCommandClasses[commandClass];
+                var _nestedType = nestedDict.TryGetValue(x.Command[1], out Type nestedType);
+                //   var _command = commandClasses.TryGetValue(x.Command[1], out Type command);
+
+                Common.logger.Info("{0}: {2}:{3} from node {1}", x.TimeStamp, x.SrcNodeId, _commandClass ? commandClass.Name : string.Format("unknown(id:{0})", x.Command[0]), _nestedType ? nestedType.Name : string.Format("unknown(id:{0})", x.Command[1]));
+
+                Common.logger.Info(string.Join(",", x.Command));
+                // Common.logger.Info("command type: {0}, type name: {1}", x.CommandType, x.GetType().Name);
+
+
+                var dummyInstance = Activator.CreateInstance(nestedType);
+             //   byte[] buffer;
+
+
+                switch (dummyInstance)
+                {
+                    case COMMAND_CLASS_NOTIFICATION_V3.NOTIFICATION_REPORT _:
+                        var alarmReport = (COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT)x.Command;
+                        Common.logger.Info("value: {0}", alarmReport.notificationStatus);
+                        Common.logger.Info("value2: {0}", alarmReport.notificationType);
+                        Common.logger.Info("value3: {0}", alarmReport.mevent);
+                        Common.logger.Info("value4: {0}", alarmReport.v1AlarmLevel);
+                        Common.logger.Info("value5: {0}", alarmReport.v1AlarmType);
+
+                        // buffer = new byte[] { x.SrcNodeId, x.Command[0], alarmReport.zwaveAlarmEvent };
+                        return;
+                    case COMMAND_CLASS_BASIC.BASIC_SET _:
+                        var basicSet = (COMMAND_CLASS_BASIC.BASIC_SET)x.Command;
+                        Common.logger.Info("value: {0}", basicSet.value);
+                  //      buffer = new byte[] { x.SrcNodeId, x.Command[0], basicSet.value };
+                        break;
+                    case COMMAND_CLASS_SWITCH_BINARY.SWITCH_BINARY_REPORT _:
+                        var binaryReport = (COMMAND_CLASS_SWITCH_BINARY.SWITCH_BINARY_REPORT)x.Command;
+                   //     buffer = new byte[] { x.SrcNodeId, x.Command[0], binaryReport.value };
+                        break;
+                    case COMMAND_CLASS_WAKE_UP.WAKE_UP_NOTIFICATION _:
+                        queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
+                        return;
+                    case COMMAND_CLASS_BATTERY.BATTERY_REPORT _:
+                        var batteryReport = (COMMAND_CLASS_BATTERY.BATTERY_REPORT)x.Command;
+                        Common.logger.Info("battery value: {0}", batteryReport.batteryLevel);
+                  //      buffer = new byte[] { x.SrcNodeId, x.Command[0], batteryReport.batteryLevel };
+                        break;
+                    case COMMAND_CLASS_SENSOR_MULTILEVEL.SENSOR_MULTILEVEL_REPORT _:
+                        var multilevelReport = (COMMAND_CLASS_SENSOR_MULTILEVEL.SENSOR_MULTILEVEL_REPORT)x.Command;
+                        Common.logger.Info("properties: {0}, type: {1}, value: {2}", multilevelReport.properties1.ToString(), multilevelReport.sensorType, multilevelReport.sensorValue);
+                        return;
+                    default:
+                        Common.logger.Info("Unhandled command class: {0}", nestedType.Name);
+                        return;
+
+                }
+
+            //    SendBytes(udpClient, buffer);
+
+
+            });
+
+            var tokenController = controller.HandleControllerUpdate((r) =>
+            {
+                Common.logger.Info("{0}: Got {2} for node {1}", DateTime.Now, r.NodeId, r.Status);
+                queueItems.Add(() => Common.RequestBatteryReport(controller, r.NodeId));
+
+            });
+
+
+
+
+            var waitingForInput = Task.Run(() =>
+            {
+
+                //byte nodeId = 55;
+                //for(int i = 0; i < 100; i++)
+                //{
+                //    queueItems.Add(() => {
+
+
+
+                //        Common.logger.Info("SET binary switch to node {0}: {1}", nodeId, actualNodeValue);
+                //        var cmdSet = new COMMAND_CLASS_SWITCH_BINARY.SWITCH_BINARY_SET();
+                //        cmdSet.switchValue = Convert.ToByte(actualNodeValue);
+                //       controller.SendData(nodeId, cmdSet, Common.txOptions);
+                //       Thread.Sleep(3000);
+                //        Common.logger.Info("GET binary switch from node {0}", nodeId);
+                //        var cmdGet = new COMMAND_CLASS_SWITCH_BINARY.SWITCH_BINARY_GET();
+                //        controller.SendData(nodeId, cmdGet, Common.txOptions);
+                //        try
+                //        {
+                //            waitHandle.WaitOne(2000);
+
+                //        }
+                //        catch
+                //        {
+
+                //        }
+
+                //        Thread.Sleep(3000);
+                //        actualNodeValue = !actualNodeValue;
+
+                //    });
+
+                //}
+
+                waitHandle.WaitOne();
+                tokenListen.SetCompleted();
+                tokenController.SetCompleted();
+                queueItems.CompleteAdding();
+            });
+
+
+            while (!queueItems.IsCompleted)
+            {
+                try
+                {
+                    var action = queueItems.Take();
+                    action();
+
+                }
+                catch (InvalidOperationException) { }
+
+
+            }
+
+           Active = false;
+            Common.logger.Info("Listening done!");
+        }
+
+        //private void OnCommand(object sender, string e)
+        //{
+        //    Common.logger.Info("recevied from da console: " + e);
+        //    if(e == "configure 14")
+        //    {
+        //        queueItems.Add(() => {
+
+        //            // Common.RequestBatteryReport(controller, x.SrcNodeId)
+        //                  new ConfigCommand(controller, 14, configList).Start();
+
+        //        });
+        //    }
+        //}
+
+        public void Stop()
+        {
+            Common.logger.Info("stop listening!");
+            waitHandle.Set();
+        }
+    }
+
+
+    internal class ReconfigureCommand
+    {
+        private Controller controller;
+        private List<ConfigItem> configList;
+
+        public ReconfigureCommand(Controller controller, List<ConfigItem> configList)
+        {
+            this.controller = controller;
+            this.configList = configList;
+        }
+
+
+        public readonly object lockObject = new object();
+
+
+
+        internal void Start()
+        {
+            Common.logger.Info("-----------");
+            Common.logger.Info("Listening mode");
+            Common.logger.Info("Press Enter to exit");
+            Common.logger.Info("-----------");
+
+            Common.logger.Info("Loading available command classes...");
+            var assembly = typeof(COMMAND_CLASS_BASIC).GetTypeInfo().Assembly;
+            var commandClasses = Common.GetAllCommandClasses(assembly, "CommandClasses");
+            Common.logger.Info("Got {0} command classes", commandClasses.Count);
+
+
+            var nodesToCheck = new HashSet<byte>(controller.IncludedNodes);
+            nodesToCheck.Remove(1);
+
+
+            // ping all nodes
+            // all nodes that respond are probably not battery powered and we can overwrite the configuration without delay
+            Common.logger.Info("There are {0} to check/reconfigure. Pinging each node...", nodesToCheck.Count);
+            foreach (var nodeId in nodesToCheck.ToList())
+            {
+                Common.logger.Info("Pinging node {0}...", nodeId);
+                if (!Common.CheckReachable(controller, nodeId))
+                {
+                    Common.logger.Info("node {0} is not reachable, waiting for a wakuep.", nodeId);
+                    continue;
+                }
+
+                Common.logger.Info("node {0} is reachable! Configure directly.", nodeId);
+                nodesToCheck.Remove(nodeId);
+                Common.logger.Info("{0} nodes left to check.", nodesToCheck.Count);
+                new ConfigCommand(controller, nodeId, configList).Start();
+            }
+
+            Common.logger.Info("There are {0} nodes left to check/reconfigure. Waiting for wake up notifications...", nodesToCheck.Count);
+            Common.logger.Info("Exit by pressing ENTER");
+
+            var queueItems = new BlockingCollection<byte>(nodesToCheck.Count);
+
+            bool inProgress = false;
+
+
+            var token = controller.ListenData((x) =>
+            {
+                if (inProgress)
+                {
+                    return;
+                }
+                lock (lockObject)
+                {
+
+
+                    var getValue = commandClasses.TryGetValue(x.Command[0], out Type commandClass);
+                    Common.logger.Info("{0}: Got {2} notification from node {1}", x.TimeStamp, x.SrcNodeId, getValue ? commandClass.Name : string.Format("unknown(id:{0})", x.Command[0]));
+
+                    if (!getValue)
+                    {
+                        Common.logger.Info("Unknown command class");
+                        return;
+                    }
+                    if (!nodesToCheck.Contains(x.SrcNodeId))
+                    {
+                        Common.logger.Info("node {0} already processed", x.SrcNodeId);
+                        return;
+                    }
+                    if (x.Command[0] != COMMAND_CLASS_WAKE_UP.ID)
+                    {
+                        Common.logger.Info("Not a wakeup notification");
+                        return;
+                    }
+                    Common.logger.Info("Got a wakeup! Reconfigure node {0}", x.SrcNodeId);
+                    nodesToCheck.Remove(x.SrcNodeId);
+
+                }
+                //  new ConfigCommand(controller, x.SrcNodeId, configList).Start();
+
+                queueItems.Add(x.SrcNodeId);
+
+            });
+
+
+            //controller.HandleControllerUpdate((r) =>
+            //{
+            //    Common.logger.Info("{0}: Got {2} for node {1}", DateTime.Now, r.NodeId, r.Status);
+            //});
+
+
+            var waitingForInput = Task.Run(() =>
+            {
+                Console.ReadLine();
+                token.SetCompleted();
+                queueItems.CompleteAdding();
+            });
+
+
+            while (!queueItems.IsCompleted)
+            {
+                try
+                {
+                    var nodeId = queueItems.Take();
+                    //   Common.logger.Info("Got queue element for node {0}", nodeId);
+                    //token.SetCancelled();
+                    inProgress = true;
+                    new ConfigCommand(controller, nodeId, configList).Start();
+                    Common.logger.Info("{0} nodes left to check.", nodesToCheck.Count);
+                    if (nodesToCheck.Count == 1)
+                    {
+                        token.SetCompleted();
+                        queueItems.CompleteAdding();
+                    }
+                    inProgress = false;
+
+                }
+                catch (InvalidOperationException) { }
+
+
+            }
+
+
+
+
+            Common.logger.Info("Reconfiguration done!");
+            Common.logger.Info("---------------------");
+        }
+    }
+
+
+    internal class PingCommand
+    {
+        private Controller controller;
+        private byte nodeId;
+
+        public PingCommand(Controller controller, byte nodeId)
+        {
+            this.controller = controller;
+            this.nodeId = nodeId;
+        }
+
+
+
+
+        internal void Start()
+        {
+            Common.logger.Info("-----------");
+            Common.logger.Info("Ping mode");
+            Common.logger.Info("ctrl-c to exit");
+            Common.logger.Info("-----------");
+
+            Common.logger.Info("Pinging node {0}...", nodeId);
+
+
+            while (true)
+            {
+                var reachable = Common.CheckReachable(controller, nodeId);
+                Common.logger.Info("node {0} is{1}reachable! Pinging again...", nodeId, reachable ? " " : " NOT ");
+                if (reachable)
+                {
+                    Task.Delay(2000).Wait();
+                }
+            }
+
+        }
     }
 }
