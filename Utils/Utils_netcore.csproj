@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Utils</AssemblyName>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <RuntimeIdentifiers>win-x64;win-arm;ubuntu-x64;debian-arm;linux-arm</RuntimeIdentifiers>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>False</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <Target Name="ClearObjFolderTarget" BeforeTargets="Restore">
+    <ItemGroup>
+      <FilesToDelete Include="obj\**\*" />
+    </ItemGroup> 
+    <Delete Files="@(FilesToDelete)" />
+  </Target>
+  <ItemGroup>
+    <PackageReference Include="System.IO.Ports" Version="4.6.0-preview6.19303.8" />
+    <PackageReference Include="System.IO.Packaging" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.2'">
+    <Compile Include="**\*.cs" Exclude="WinBased\**" />
+  </ItemGroup>
+</Project>

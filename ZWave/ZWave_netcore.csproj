@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>ZWave</AssemblyName>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <RuntimeIdentifiers>win-x64;win-arm;ubuntu-x64;debian-arm;linux-arm</RuntimeIdentifiers>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <Target Name="ClearObjFolderTarget" BeforeTargets="Restore">
+    <ItemGroup>
+      <FilesToDelete Include="obj\**\*" />
+    </ItemGroup>
+    <Delete Files="@(FilesToDelete)" />
+  </Target>
+  <ItemGroup Condition="$(RuntimeIdentifier.Contains('win'))">
+	<Content Include="..\lib\CryptoLibraryS2\s2crypto32.dll" CopyToOutputDirectory="PreserveNewest" />
+	<Content Include="..\lib\CryptoLibraryS2\s2crypto64.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'debian-arms'">
+    <Content Include="..\lib\CryptoLibraryS2\arm\libs2crypto32.so" CopyToOutputDirectory="PreserveNewest" />
+	<Content Include="..\lib\BasicTransport\arm\libbasictrans32.so" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+	<Content Include="..\lib\CryptoLibraryS2\libs2crypto64.so" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\lib\BasicTransport\libbasictrans64.so" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Utils\Utils_netcore.csproj">
+      <Name>Utils</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0" />
+  </ItemGroup>
+</Project>
