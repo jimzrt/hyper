@@ -798,6 +798,16 @@ namespace hyper
                 Common.logger.Info(string.Join(",", x.Command));
                 // Common.logger.Info("command type: {0}, type name: {1}", x.CommandType, x.GetType().Name);
 
+                if(commandClass == null)
+                {
+                    Common.logger.Error("command class is null!");
+                    return;
+                }
+                if(nestedType == null)
+                {
+                    Common.logger.Error("nested type is null!");
+                    return;
+                }
 
                 var dummyInstance = Activator.CreateInstance(nestedType);
              //   byte[] buffer;
