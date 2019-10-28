@@ -205,7 +205,7 @@ namespace ZWave.BasicApplication.Security
             }
         }
 
-        private byte[] _nvrSecretKeyS2;
+        private readonly byte[] _nvrSecretKeyS2;
         public byte[] JoinSecretKeyS2
         {
             get
@@ -363,7 +363,7 @@ namespace ZWave.BasicApplication.Security
         }
 
         public const int NETWORK_KEYS_COUNT = 8;
-        private NetworkKey[] _networkKeys = new NetworkKey[NETWORK_KEYS_COUNT];
+        private readonly NetworkKey[] _networkKeys = new NetworkKey[NETWORK_KEYS_COUNT];
         /// <summary>
         /// Returns table of network keys
         /// </summary>
@@ -746,7 +746,7 @@ namespace ZWave.BasicApplication.Security
             }
         }
 
-        private byte[] _nodesMask;
+        private readonly byte[] _nodesMask;
         private void Network_S2SchemeSettingsChanged(SecuritySchemes scheme, bool isEnabled)
         {
             if (SecuritySchemeSet.ALLS2.Contains(scheme))

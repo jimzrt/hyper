@@ -15,16 +15,16 @@ namespace ZWave.BasicApplication.CommandClasses
             _network = network;
         }
 
-        NetworkViewPoint _network;
-        SendTestFrameOperation _sendTest;
-        RFPowerLevelGetOperation _powerLevelGet;
-        RFPowerLevelSetOperation _powerLevelSet;
-        SendDataExOperation _sendPowerLevelTestNodeReport;
-        SendDataExOperation _sendPowerLevelReport;
-        int _testIteration = 0;
-        int _failIterations = 0;
-        int _testFrameCount = 0;
-        byte _testFromNodeId = 0;
+        private readonly NetworkViewPoint _network;
+        private SendTestFrameOperation _sendTest;
+        private RFPowerLevelGetOperation _powerLevelGet;
+        private RFPowerLevelSetOperation _powerLevelSet;
+        private SendDataExOperation _sendPowerLevelTestNodeReport;
+        private SendDataExOperation _sendPowerLevelReport;
+        private int _testIteration = 0;
+        private int _failIterations = 0;
+        private int _testFrameCount = 0;
+        private byte _testFromNodeId = 0;
 
         protected override void CreateWorkflow()
         {

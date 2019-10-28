@@ -15,7 +15,7 @@ namespace ZWave.BasicApplication.Operations
 {
     public class AddNodeS2Operation : ApiOperation
     {
-        private SecurityManagerInfo _securityManagerInfo;
+        private readonly SecurityManagerInfo _securityManagerInfo;
         private NetworkKeyS2Flags _lastGrantedKey;
         private readonly ISecurityTestSettingsService _securityTestSettingsService;
 
@@ -26,27 +26,26 @@ namespace ZWave.BasicApplication.Operations
             _securityTestSettingsService = new SecurityTestSettingsService(_securityManagerInfo, true);
         }
 
-        COMMAND_CLASS_SECURITY_2.KEX_REPORT KEX_REPORT = null;
+        private COMMAND_CLASS_SECURITY_2.KEX_REPORT KEX_REPORT = null;
 
         private bool _isClientSideAuthRequested = false;
         private bool _isClientSideAuthGranted = false;
         private bool _isSkipDskCallback = false;
         private bool _isWaitingForKexSetEcho = false;
         private InvariantPeerNodeId _peerNodeId;
-
-        RequestDataOperation _KEXGetKEXReport;
-        RequestDataOperation _KEXSetPKReport; // Receive and load tmp key.
-        SendDataOperation _PKReport;
-        ExpectDataOperation _KEXSetEcho;
-        SendDataOperation _KEXReportEcho;
-        RequestDataOperation _NKReportNKVerify; // Send and load real key, receive and load tmp key.
-        SendDataOperation _TransferEnd;
-        ExpectDataOperation _OnNKGet;
-        ExpectDataOperation _OnTransferEnd; // Receive and load real key.
-        SendDataOperation _KexFail;
-        SendDataOperation _KexFailCancel;
-        ResponseDataOperation _KexFailReceived;
-        ResponseDataOperation _SecurityMessageReceived;
+        private RequestDataOperation _KEXGetKEXReport;
+        private RequestDataOperation _KEXSetPKReport; // Receive and load tmp key.
+        private SendDataOperation _PKReport;
+        private ExpectDataOperation _KEXSetEcho;
+        private SendDataOperation _KEXReportEcho;
+        private RequestDataOperation _NKReportNKVerify; // Send and load real key, receive and load tmp key.
+        private SendDataOperation _TransferEnd;
+        private ExpectDataOperation _OnNKGet;
+        private ExpectDataOperation _OnTransferEnd; // Receive and load real key.
+        private SendDataOperation _KexFail;
+        private SendDataOperation _KexFailCancel;
+        private ResponseDataOperation _KexFailReceived;
+        private ResponseDataOperation _SecurityMessageReceived;
 
         private bool IsOnTransferEndCancelled;
 
@@ -294,8 +293,8 @@ namespace ZWave.BasicApplication.Operations
         }
 
         private List<SecuritySchemes> _grantedSecuritySchemes = new List<SecuritySchemes>();
-        private List<SecuritySchemes> _transferedSchemes = new List<SecuritySchemes>();
-        private Dictionary<SecuritySchemes, bool> _requestedSchemesDictionary = new Dictionary<SecuritySchemes, bool>();
+        private readonly List<SecuritySchemes> _transferedSchemes = new List<SecuritySchemes>();
+        private readonly Dictionary<SecuritySchemes, bool> _requestedSchemesDictionary = new Dictionary<SecuritySchemes, bool>();
         private void OnKEXReport(ActionCompletedUnit ou)
         {
             if (_KEXGetKEXReport.Result)

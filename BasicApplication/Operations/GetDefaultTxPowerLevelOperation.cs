@@ -9,7 +9,7 @@ namespace ZWave.BasicApplication.Operations
     /// 
     public class GetDefaultTxPowerLevelOperation : RequestApiOperation
     {
-        private byte SERIAL_API_SETUP_CMD_TX_POWERLEVEL_GET = 1 << 3;
+        private readonly byte SERIAL_API_SETUP_CMD_TX_POWERLEVEL_GET = 1 << 3;
 
         public GetDefaultTxPowerLevelOperation() :
             base(CommandTypes.CmdSerialApiSetup, false)

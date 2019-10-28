@@ -5,10 +5,10 @@ namespace ZWave.BasicApplication.Operations
     public class SetRFReceiveModeOperation : ApiOperation
     {
         private int _maxAttempts = 2;
-        private int _startDelay = 5000;
-        private int _iterationDelay = 200;
+        private readonly int _startDelay = 5000;
+        private readonly int _iterationDelay = 200;
         private byte Mode { get; set; }
-        private bool _isNoDelay = false;
+        private readonly bool _isNoDelay = false;
         public SetRFReceiveModeOperation(byte mode)
             : base(true, CommandTypes.CmdZWaveSetRFReceiveMode, false)
         {
@@ -21,8 +21,8 @@ namespace ZWave.BasicApplication.Operations
             _isNoDelay = isNoDelay;
         }
 
-        ApiMessage message;
-        ApiHandler handler;
+        private ApiMessage message;
+        private ApiHandler handler;
 
         protected override void CreateWorkflow()
         {

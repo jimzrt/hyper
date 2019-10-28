@@ -12,11 +12,12 @@ namespace ZWave.BasicApplication.Operations
         /// <summary>
         /// Nonce Request Timer
         /// </summary>
-        const int NONCE_REQUEST_INCLUSION_TIMER = 10000;
+        private const int NONCE_REQUEST_INCLUSION_TIMER = 10000;
+
         /// <summary>
         /// Nonce Request Timer
         /// </summary>
-        const int NONCE_REQUEST_TIMER = 20000;
+        private const int NONCE_REQUEST_TIMER = 20000;
         #endregion
 
         protected TransmitOptions TxOptions { get; set; }
@@ -27,8 +28,8 @@ namespace ZWave.BasicApplication.Operations
         internal byte SequenceCounter { get; set; }
         //public Action<ActionUnit> OnHandledCallback { get; set; }
 
-        private SecurityManagerInfo _securityManagerInfo;
-        private SecurityS0CryptoProvider _securityS0CryptoProvider;
+        private readonly SecurityManagerInfo _securityManagerInfo;
+        private readonly SecurityS0CryptoProvider _securityS0CryptoProvider;
 
         internal SendDataFragmentedSecureTask(SecurityManagerInfo securityManagerInfo, SecurityS0CryptoProvider securityS0CryptoProvider, byte nodeId, byte[] data, TransmitOptions txOptions)
             : base(false, null, false)
@@ -41,9 +42,9 @@ namespace ZWave.BasicApplication.Operations
             TxOptions = txOptions;
         }
 
-        RequestDataOperation requestNonce;
-        RequestDataOperation sendFirstEncData;
-        SendDataOperation sendSecondEncData;
+        private RequestDataOperation requestNonce;
+        private RequestDataOperation sendFirstEncData;
+        private SendDataOperation sendSecondEncData;
 
         protected override void CreateWorkflow()
         {

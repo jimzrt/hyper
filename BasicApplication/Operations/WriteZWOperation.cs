@@ -11,7 +11,7 @@ namespace ZWave.BasicApplication.Operations
             Data = data;
         }
 
-        CommandMessage message;
+        private CommandMessage message;
         protected override void CreateInstance()
         {
             message = new CommandMessage { Data = Data };

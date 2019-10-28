@@ -10,11 +10,11 @@ namespace ZWave.BasicApplication.Operations
 {
     public class SetLearnModeSecureOperation : ApiOperation
     {
-        private ApiOperation _learnMode;
-        private SecurityManagerInfo _securityManagerInfo;
-        private Action _resetSecurityCallback;
-        private int _timeoutMs;
-        private byte[] _previousHomeId;
+        private readonly ApiOperation _learnMode;
+        private readonly SecurityManagerInfo _securityManagerInfo;
+        private readonly Action _resetSecurityCallback;
+        private readonly int _timeoutMs;
+        private readonly byte[] _previousHomeId;
 
         public SetLearnModeSecureOperation(SecurityManagerInfo securityManagerInfo, SetLearnModeSlaveOperation learnMode, Action resetSecurityCallback)
            : this(securityManagerInfo, learnMode, resetSecurityCallback, learnMode.TimeoutMs)

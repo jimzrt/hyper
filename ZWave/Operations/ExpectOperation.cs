@@ -4,8 +4,8 @@ namespace ZWave.Operations
 {
     public class ExpectOperation : ActionBase
     {
-        private ByteIndex[] _mask;
-        private int _timeoutMs;
+        private readonly ByteIndex[] _mask;
+        private readonly int _timeoutMs;
         public ExpectOperation(ByteIndex[] mask, int timeoutMs)
             : base(false)
         {

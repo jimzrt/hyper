@@ -8,13 +8,13 @@ namespace ZWave.BasicApplication.Tasks
     public class ExclusionTask : ActionParallelGroup
     {
         public int WAKE_UP_INTERVAL = 5 * 60; //seconds
-        private Modes _mode;
-        private int _timeoutMs;
-        private Action<NodeStatuses> _nodeStatusCallback;
+        private readonly Modes _mode;
+        private readonly int _timeoutMs;
+        private readonly Action<NodeStatuses> _nodeStatusCallback;
 
 
-        private FilterAchOperation _peerFilter;
-        private RemoveNodeOperation _removeNode;
+        private readonly FilterAchOperation _peerFilter;
+        private readonly RemoveNodeOperation _removeNode;
 
         public ExclusionTask(Modes mode, Action<NodeStatuses> nodeStatusCallback, int timeoutMs)
             : base(false, null)

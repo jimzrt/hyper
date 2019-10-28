@@ -15,7 +15,8 @@ namespace ZWave.BasicApplication.Operations
     public class RequestNodeInfoOperation : ApiOperation
     {
         internal byte NodeId { get; set; }
-        int _timeoutMs;
+
+        private readonly int _timeoutMs;
 
         public RequestNodeInfoOperation(byte nodeId)
             : this(nodeId, 5000)

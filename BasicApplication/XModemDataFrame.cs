@@ -15,7 +15,7 @@ namespace ZWave.BasicApplication
         public const int CrcChecksumLength = 2;
         public const int PayloadSize = FrameLength - HeaderLength - CrcChecksumLength;
 
-        ApiTypes ApiType { get { return ApiTypes.XModem; } }
+        private ApiTypes ApiType { get { return ApiTypes.XModem; } }
         public byte[] Payload { get; private set; }
         public byte[] Buffer { get; private set; }
 

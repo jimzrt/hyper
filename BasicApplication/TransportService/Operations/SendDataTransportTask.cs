@@ -21,10 +21,10 @@ namespace ZWave.BasicApplication.TransportService.Operations
         private readonly int _firstSegmentPayloadSize;
         private readonly int _subsequentSegmentPayloadSize;
 
-        private byte[] _data;
-        private TransportServiceManagerInfo _transportServiceManagerInfo;
+        private readonly byte[] _data;
+        private readonly TransportServiceManagerInfo _transportServiceManagerInfo;
         private int _dataOffset = 0;
-        private byte _sessionId;
+        private readonly byte _sessionId;
         private SendDataOperation _firstSegmentSendOperation;
         private SendDataOperation _nextSegmentSendOperation;
         private ExpectDataOperation _segmentCompleteExpect;

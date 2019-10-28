@@ -1,59 +1,50 @@
 ﻿using hyper.commands;
 using hyper.config;
-using NLog;
-using NLog.Internal;
+using hyper.Database;
+using hyper.Database.DAO;
+using hyper.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
-using System.IO.Ports;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Configuration;
-using System.Data.SqlClient;
 using Utils;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using ZWave;
 using ZWave.BasicApplication.Devices;
 using ZWave.CommandClasses;
-using LinqToDB.Data;
-using hyper.Database;
-using hyper.Models;
-using hyper.Database.DAO;
 
 namespace hyper
 {
-
-
-    class Program
+    internal class Program
     {
-
-
-
-
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
 
-            if (!File.Exists("logs\\events.db"))
-            {
 
-           
-                using (SQLiteConnection connection = new SQLiteConnection("Data Source=logs/events.db;"))
-            using (SQLiteCommand command = new SQLiteCommand(
-               @"CREATE TABLE 'Events' ( 
+
+
+
+
+            if (!File.Exists("events.db"))
+            {
+                //using (File.Create("events.db")) ;
+
+                using SQLiteConnection connection = new SQLiteConnection("Data Source=events.db;");
+                using SQLiteCommand command = new SQLiteCommand(
+@"CREATE TABLE 'Events' ( 
             `Id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             `NodeId` INTEGER NOT NULL,
             `EventType` TEXT NOT NULL,
             `Value` INTEGER,
             `Added` DATETIME NOT NULL)",
-                connection))
-            {
+connection);
                 connection.Open();
                 command.ExecuteNonQuery();
-            }
 
             }
 
@@ -124,7 +115,8 @@ namespace hyper
                 {
                     Common.logger.Info("master: stopping current command!");
                     currentCommand.Stop();
-                } else
+                }
+                else
                 {
                     Common.logger.Info("No current command, stopping application");
 
@@ -346,7 +338,8 @@ namespace hyper
                 }
                 new ReconfigureCommand(controller, config).Start();
                 // new ListenCommand(controller).Start();
-            } else if(args[1] == "it" ||args[1] == "interactive")
+            }
+            else if (args[1] == "it" || args[1] == "interactive")
             {
                 currentCommand = new InteractiveCommand(controller, config);
                 currentCommand.Start();
@@ -378,7 +371,7 @@ namespace hyper
 
 
             var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(new CamelCaseNamingConvention())
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
                 .Build();
             List<ConfigItem> configList = null;
             try
@@ -400,10 +393,10 @@ namespace hyper
 
     internal class InteractiveCommand : ICommand
     {
-        private Controller controller;
-        private List<ConfigItem> configList;
+        private readonly Controller controller;
+        private readonly List<ConfigItem> configList;
         private ICommand currentCommand = null;
-        
+
         public InteractiveCommand(Controller controller, List<ConfigItem> configList)
         {
             this.controller = controller;
@@ -423,7 +416,7 @@ namespace hyper
             {
                 Common.logger.Info("press l girl!");
                 var input = Console.ReadKey();
-                if(input.Key == ConsoleKey.L )
+                if (input.Key == ConsoleKey.L)
                 {
                     Common.logger.Info("yes my master");
                     currentCommand = new ListenCommand(controller, configList);
@@ -437,11 +430,12 @@ namespace hyper
 
         public void Stop()
         {
-            if(currentCommand?.Active ?? false)
+            if (currentCommand?.Active ?? false)
             {
                 Common.logger.Info("stoppping current command!");
                 currentCommand.Stop();
-            } else
+            }
+            else
             {
                 Common.logger.Info("stopping interactive mode");
                 Common.logger.Info("press any key to exit");
@@ -450,13 +444,13 @@ namespace hyper
         }
     }
 
-        internal class ExcludeCommand
+    internal class ExcludeCommand
     {
 
 
 
 
-        private Controller controller;
+        private readonly Controller controller;
 
         public ExcludeCommand(Controller controller)
         {
@@ -492,8 +486,8 @@ namespace hyper
 
 
 
-        private Controller controller;
-        private List<ConfigItem> configList;
+        private readonly Controller controller;
+        private readonly List<ConfigItem> configList;
 
         public IncludeCommand(Controller controller, List<ConfigItem> configList)
         {
@@ -534,9 +528,9 @@ namespace hyper
 
 
 
-        private Controller controller;
-        private byte nodeId;
-        private List<ConfigItem> configList;
+        private readonly Controller controller;
+        private readonly byte nodeId;
+        private readonly List<ConfigItem> configList;
 
         public ConfigCommand(Controller controller, byte nodeId, List<ConfigItem> configList)
         {
@@ -581,9 +575,9 @@ namespace hyper
 
 
 
-        private Controller controller;
-        private byte nodeId;
-        private List<ConfigItem> configList;
+        private readonly Controller controller;
+        private readonly byte nodeId;
+        private readonly List<ConfigItem> configList;
 
         public ReplaceCommand(Controller controller, byte nodeId, List<ConfigItem> configList)
         {
@@ -695,9 +689,8 @@ namespace hyper
 
     internal class ListenCommand : ICommand
     {
-        private Controller controller;
-        private EventWaitHandle waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
-        List<ConfigItem> configList;
+        private readonly Controller controller;
+        private readonly List<ConfigItem> configList;
 
         public ListenCommand(Controller controller, List<ConfigItem> configList)
         {
@@ -734,23 +727,20 @@ namespace hyper
         //}
 
 
-        List<byte> byteBuffer = new List<byte>();
-        readonly object syncObject = new object();
-        readonly object syncObjectServer = new object();
+        //List<byte> byteBuffer = new List<byte>();
+        //readonly object syncObject = new object();
+        //readonly object syncObjectServer = new object();
 
-        private int messageCounter = 0;
 
         public bool Active { get; private set; } = false;
 
-
-        BlockingCollection<Action> queueItems = new BlockingCollection<Action>();
-
+        private readonly BlockingCollection<Action> queueItems = new BlockingCollection<Action>();
+        private ActionToken dataListener;
+        private ActionToken controllerListener;
 
         public void Start()
         {
-            //IAdapter console = new ConsoleAdapter();
-            //Task.Run(() => { console.Listen(); });
-          //  console.CommandHandler += OnCommand;
+
 
             Active = true;
             Common.logger.Info("-----------");
@@ -765,74 +755,59 @@ namespace hyper
             var nestedCommandClasses = Common.GetAllNestedCommandClasses(commandClasses.Values);
             Common.logger.Info("Got all inner command classes for {0} command classes", commandClasses.Count);
             Common.logger.Info("Listening...");
-            // NetworkStream stream = ConnectToServer();
 
 
-            //UdpClient udpClient = new UdpClient("", 54321);
-
-            
-
-            //Task.Run(() => {
-
-            //    Task.Delay(10000).Wait();
-            //    queueItems.Add(() => {
-
-            //        // Common.RequestBatteryReport(controller, x.SrcNodeId)
-            //  //      new ConfigCommand(controller, 14, configList).Start();
-
-            //        });
-
-            //});
-
-            //  AutoResetEvent waitHandle = new AutoResetEvent(false);
-
-            var tokenListen = controller.ListenData((x) =>
+            dataListener = controller.ListenData((x) =>
             {
                 var _commandClass = commandClasses.TryGetValue(x.Command[0], out Type commandClass);
                 var nestedDict = nestedCommandClasses[commandClass];
                 var _nestedType = nestedDict.TryGetValue(x.Command[1], out Type nestedType);
-                //   var _command = commandClasses.TryGetValue(x.Command[1], out Type command);
 
                 Common.logger.Info("{0}: {2}:{3} from node {1}", x.TimeStamp, x.SrcNodeId, _commandClass ? commandClass.Name : string.Format("unknown(id:{0})", x.Command[0]), _nestedType ? nestedType.Name : string.Format("unknown(id:{0})", x.Command[1]));
 
                 Common.logger.Info(string.Join(",", x.Command));
                 // Common.logger.Info("command type: {0}, type name: {1}", x.CommandType, x.GetType().Name);
 
-                if(commandClass == null)
+                if (commandClass == null)
                 {
                     Common.logger.Error("command class is null!");
                     return;
                 }
-                if(nestedType == null)
+                if (nestedType == null)
                 {
                     Common.logger.Error("nested type is null!");
                     return;
                 }
 
                 var dummyInstance = Activator.CreateInstance(nestedType);
-             //   byte[] buffer;
 
 
                 switch (dummyInstance)
                 {
                     case COMMAND_CLASS_NOTIFICATION_V3.NOTIFICATION_REPORT _:
                         var alarmReport = (COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT)x.Command;
-                        Common.logger.Info("value: {0}", alarmReport.notificationStatus);
-                        Common.logger.Info("value2: {0}", alarmReport.notificationType);
-                        Common.logger.Info("value3: {0}", alarmReport.mevent);
-                        Common.logger.Info("value4: {0}", alarmReport.v1AlarmLevel);
-                        Common.logger.Info("value5: {0}", alarmReport.v1AlarmType);
+                        Common.logger.Info("notificationStatus: {0}", alarmReport.notificationStatus);
+                        Common.logger.Info("notificationType: {0}", alarmReport.notificationType);
+                        Common.logger.Info("mevent: {0}", alarmReport.mevent);
+                        Common.logger.Info("v1AlarmLevel: {0}", alarmReport.v1AlarmLevel);
+                        Common.logger.Info("v1AlarmType: {0}", alarmReport.v1AlarmType);
+                        var evtNotification = new Event
+                        {
+                            NodeId = x.SrcNodeId,
+                            EventType = EventType.NOTIFICATION
+                        };
+                        EventDAO.InsertEventAsync(evtNotification);
 
                         // buffer = new byte[] { x.SrcNodeId, x.Command[0], alarmReport.zwaveAlarmEvent };
                         return;
                     case COMMAND_CLASS_BASIC.BASIC_SET _:
                         var basicSet = (COMMAND_CLASS_BASIC.BASIC_SET)x.Command;
                         Common.logger.Info("value: {0}", basicSet.value);
-                  //      buffer = new byte[] { x.SrcNodeId, x.Command[0], basicSet.value };
+                        //      buffer = new byte[] { x.SrcNodeId, x.Command[0], basicSet.value };
                         break;
                     case COMMAND_CLASS_SWITCH_BINARY.SWITCH_BINARY_REPORT _:
                         var binaryReport = (COMMAND_CLASS_SWITCH_BINARY.SWITCH_BINARY_REPORT)x.Command;
-                   //     buffer = new byte[] { x.SrcNodeId, x.Command[0], binaryReport.value };
+                        //     buffer = new byte[] { x.SrcNodeId, x.Command[0], binaryReport.value };
                         break;
                     case COMMAND_CLASS_WAKE_UP.WAKE_UP_NOTIFICATION _:
                         var evtWakeup = new Event
@@ -859,18 +834,30 @@ namespace hyper
                         var multilevelReport = (COMMAND_CLASS_SENSOR_MULTILEVEL.SENSOR_MULTILEVEL_REPORT)x.Command;
                         Common.logger.Info("properties: {0}, type: {1}, value: {2}", multilevelReport.properties1.ToString(), multilevelReport.sensorType, multilevelReport.sensorValue);
                         return;
+                    case COMMAND_CLASS_SENSOR_BINARY_V2.SENSOR_BINARY_REPORT _:
+                        var sensorBinaryReport = (COMMAND_CLASS_SENSOR_BINARY_V2.SENSOR_BINARY_REPORT)x.Command;
+                        Common.logger.Info("values: {0} - {1}", sensorBinaryReport.sensorType, sensorBinaryReport.sensorValue);
+                        var evtBinaryreport = new Event
+                        {
+                            NodeId = x.SrcNodeId,
+                            EventType = EventType.SENSOR_BINARY,
+                            Value = sensorBinaryReport.sensorValue
+                        };
+                        EventDAO.InsertEventAsync(evtBinaryreport);
+                        break;
+
                     default:
                         Common.logger.Info("Unhandled command class: {0}", nestedType.Name);
                         return;
 
                 }
 
-            //    SendBytes(udpClient, buffer);
+                //    SendBytes(udpClient, buffer);
 
 
             });
 
-            var tokenController = controller.HandleControllerUpdate((r) =>
+            controllerListener = controller.HandleControllerUpdate((r) =>
             {
                 Common.logger.Info("{0}: Got {2} for node {1}", DateTime.Now, r.NodeId, r.Status);
                 queueItems.Add(() => Common.RequestBatteryReport(controller, r.NodeId));
@@ -879,47 +866,6 @@ namespace hyper
 
 
 
-
-            var waitingForInput = Task.Run(() =>
-            {
-
-                //byte nodeId = 55;
-                //for(int i = 0; i < 100; i++)
-                //{
-                //    queueItems.Add(() => {
-
-
-
-                //        Common.logger.Info("SET binary switch to node {0}: {1}", nodeId, actualNodeValue);
-                //        var cmdSet = new COMMAND_CLASS_SWITCH_BINARY.SWITCH_BINARY_SET();
-                //        cmdSet.switchValue = Convert.ToByte(actualNodeValue);
-                //       controller.SendData(nodeId, cmdSet, Common.txOptions);
-                //       Thread.Sleep(3000);
-                //        Common.logger.Info("GET binary switch from node {0}", nodeId);
-                //        var cmdGet = new COMMAND_CLASS_SWITCH_BINARY.SWITCH_BINARY_GET();
-                //        controller.SendData(nodeId, cmdGet, Common.txOptions);
-                //        try
-                //        {
-                //            waitHandle.WaitOne(2000);
-
-                //        }
-                //        catch
-                //        {
-
-                //        }
-
-                //        Thread.Sleep(3000);
-                //        actualNodeValue = !actualNodeValue;
-
-                //    });
-
-                //}
-
-                waitHandle.WaitOne();
-                tokenListen.SetCompleted();
-                tokenController.SetCompleted();
-                queueItems.CompleteAdding();
-            });
 
 
             while (!queueItems.IsCompleted)
@@ -935,7 +881,7 @@ namespace hyper
 
             }
 
-           Active = false;
+            Active = false;
             Common.logger.Info("Listening done!");
         }
 
@@ -956,15 +902,17 @@ namespace hyper
         public void Stop()
         {
             Common.logger.Info("stop listening!");
-            waitHandle.Set();
+            dataListener?.SetCompleted();
+            controllerListener?.SetCompleted();
+            queueItems?.CompleteAdding();
         }
     }
 
 
     internal class ReconfigureCommand
     {
-        private Controller controller;
-        private List<ConfigItem> configList;
+        private readonly Controller controller;
+        private readonly List<ConfigItem> configList;
 
         public ReconfigureCommand(Controller controller, List<ConfigItem> configList)
         {
@@ -1105,10 +1053,13 @@ namespace hyper
     }
 
 
-    internal class PingCommand
+    internal class PingCommand : ICommand
     {
-        private Controller controller;
-        private byte nodeId;
+        private readonly Controller controller;
+        private readonly byte nodeId;
+
+        private bool running = true;
+
 
         public PingCommand(Controller controller, byte nodeId)
         {
@@ -1116,11 +1067,11 @@ namespace hyper
             this.nodeId = nodeId;
         }
 
+        public bool Active { get; private set; } = false;
 
-
-
-        internal void Start()
+        public void Start()
         {
+            Active = true;
             Common.logger.Info("-----------");
             Common.logger.Info("Ping mode");
             Common.logger.Info("ctrl-c to exit");
@@ -1129,7 +1080,8 @@ namespace hyper
             Common.logger.Info("Pinging node {0}...", nodeId);
 
 
-            while (true)
+
+            while (running)
             {
                 var reachable = Common.CheckReachable(controller, nodeId);
                 Common.logger.Info("node {0} is{1}reachable! Pinging again...", nodeId, reachable ? " " : " NOT ");
@@ -1139,6 +1091,14 @@ namespace hyper
                 }
             }
 
+            Common.logger.Info("Goodbye...", nodeId);
+            Active = false;
+
+        }
+
+        public void Stop()
+        {
+            running = false;
         }
     }
 }

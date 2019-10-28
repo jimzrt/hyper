@@ -10,14 +10,14 @@ namespace ZWave
     public sealed class StorageWriter : IDisposable
     {
         private Thread worker;
-        private AutoResetEvent signal = new AutoResetEvent(false);
+        private readonly AutoResetEvent signal = new AutoResetEvent(false);
         private bool isClosing = false;
-        private object locker = new object();
+        private readonly object locker = new object();
         private List<DataChunk> innerListAdd = new List<DataChunk>();
         private List<DataChunk> innerListTmp = new List<DataChunk>();
         private List<DataChunk> innerListProcessing = new List<DataChunk>();
         public bool IsOpen { get; private set; }
-        private StorageHeader mStorageHeader = new StorageHeader();
+        private readonly StorageHeader mStorageHeader = new StorageHeader();
         public StorageHeader StorageHeader
         {
             get { return mStorageHeader; }
@@ -92,7 +92,7 @@ namespace ZWave
             }
         }
 
-        private object headerLocker = new object();
+        private readonly object headerLocker = new object();
         public void AddHeaderFrequencies(string fileName, Dictionary<byte, RFrequency> frequencies)
         {
             if (fileName != null && frequencies != null)

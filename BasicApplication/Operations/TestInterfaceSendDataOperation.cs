@@ -5,7 +5,7 @@ namespace ZWave.BasicApplication.Operations
 {
     public class TestInterfaceSendDataOperation : ApiOperation
     {
-        readonly int _timeoutMs = 0;
+        private readonly int _timeoutMs = 0;
         private readonly byte[] _testInterfaceCmd;
         public byte[] TestInterfaceCmd
         {
@@ -18,8 +18,8 @@ namespace ZWave.BasicApplication.Operations
             _timeoutMs = timeoutMs;
         }
 
-        ApiProgMessage message;
-        ApiProgHandler handler;
+        private ApiProgMessage message;
+        private ApiProgHandler handler;
 
         protected override void CreateWorkflow()
         {

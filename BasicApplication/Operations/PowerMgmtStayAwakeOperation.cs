@@ -19,7 +19,7 @@ namespace ZWave.BasicApplication.Operations
             _powerTimeoutMs = powerTimeoutMs;
         }
 
-        ApiMessage message;
+        private ApiMessage message;
 
         protected override void CreateWorkflow()
         {

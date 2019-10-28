@@ -7,13 +7,13 @@ namespace ZWave.Layers.Transport.TcpToSerialBridge
 {
     public class TcpToSerialBridge
     {
-        private static object _portsLocker = new object();
+        private static readonly object _portsLocker = new object();
         private bool _shouldListen;
-        private TcpListener _tcpListener;
+        private readonly TcpListener _tcpListener;
         private SocketBinding _socketToSerial;
         private SerialPortTransportClient _transportClient;
-        private string _comPortSource;
-        private int _baudRate;
+        private readonly string _comPortSource;
+        private readonly int _baudRate;
 
         public Action<string> LogOutput { get; set; }
 

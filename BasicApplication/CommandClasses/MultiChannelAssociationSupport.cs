@@ -14,7 +14,7 @@ namespace ZWave.BasicApplication.CommandClasses
         private List<byte> _associatedNodeIds { get; set; }
         private byte _maxNodesSupported { get; set; }
 
-        private NetworkViewPoint _network;
+        private readonly NetworkViewPoint _network;
         public TransmitOptions TxOptions { get; set; }
 
         public MultiChannelAssociationSupport(NetworkViewPoint network, TransmitOptions txOptions)

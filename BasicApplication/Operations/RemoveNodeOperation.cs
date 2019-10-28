@@ -8,9 +8,8 @@ namespace ZWave.BasicApplication.Operations
     public class RemoveNodeOperation : ApiOperation
     {
         public static int TIMEOUT = 60000;
-
-        Modes mInitMode;
-        int TimeoutMs;
+        private readonly Modes mInitMode;
+        private readonly int TimeoutMs;
         internal Action<NodeStatuses> NodeStatusCallback { get; set; }
         public RemoveNodeOperation(Modes mode, Action<NodeStatuses> nodeStatusCallback, int timeoutMS)
             : base(true, CommandTypes.CmdZWaveRemoveNodeFromNetwork, true)

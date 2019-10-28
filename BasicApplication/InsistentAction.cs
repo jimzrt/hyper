@@ -2,9 +2,9 @@
 {
     public class InsistentAction : ApiOperation
     {
-        private ActionBase _action;
+        private readonly ActionBase _action;
         private int _maxAttemptsCount;
-        private int _interval;
+        private readonly int _interval;
         public InsistentAction(ActionBase action, int maxAttemptsCount, int interval)
             : base(false, null, false)
         {

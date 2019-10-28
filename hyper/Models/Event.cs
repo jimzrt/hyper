@@ -1,7 +1,5 @@
 ﻿using LinqToDB.Mapping;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace hyper.Models
 {
@@ -10,7 +8,11 @@ namespace hyper.Models
         [LinqToDB.Mapping.MapValue(Value = "BATTERY")]
         BATTERY,
         [LinqToDB.Mapping.MapValue(Value = "WAKEUP")]
-        WAKEUP
+        WAKEUP,
+        [LinqToDB.Mapping.MapValue(Value = "NOTIFICATION")]
+        NOTIFICATION,
+        [LinqToDB.Mapping.MapValue(Value = "SENSOR_BINARY")]
+        SENSOR_BINARY
     }
 
 

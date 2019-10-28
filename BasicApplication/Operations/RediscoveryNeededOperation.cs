@@ -11,7 +11,7 @@ namespace ZWave.BasicApplication.Operations
     /// </summary>
     public class RediscoveryNeededOperation : ApiOperation
     {
-        private byte mNodeId;
+        private readonly byte mNodeId;
         public RediscoveryNeededOperation(byte nodeId)
             : base(true, CommandTypes.CmdZWaveRediscoveryNeeded, true)
         {

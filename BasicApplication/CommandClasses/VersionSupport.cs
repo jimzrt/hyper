@@ -8,7 +8,7 @@ namespace ZWave.BasicApplication.CommandClasses
 {
     public class VersionSupport : ApiAchOperation
     {
-        private NetworkViewPoint _network;
+        private readonly NetworkViewPoint _network;
         public byte Value { get; set; }
         public TransmitOptions TxOptions { get; set; }
         public TransmitOptions2 TxOptions2 { get; set; }

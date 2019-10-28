@@ -15,7 +15,7 @@ namespace ZWave.BasicApplication.CommandClasses
         public TransmitSecurityOptions TxSecOptions { get; set; }
         #endregion
 
-        private NetworkViewPoint _network;
+        private readonly NetworkViewPoint _network;
         public byte GroupId { get; set; }
         public string GroupName { get; set; }
         public List<byte> AssociatedNodeIds { get; set; }

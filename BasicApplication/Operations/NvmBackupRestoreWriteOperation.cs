@@ -5,9 +5,9 @@ namespace ZWave.BasicApplication.Operations
 {
     public class NvmBackupRestoreWriteOperation : RequestApiOperation
     {
-        byte Length;
-        int Offset;
-        byte[] Data;
+        private readonly byte Length;
+        private readonly int Offset;
+        private readonly byte[] Data;
         public NvmBackupRestoreWriteOperation(byte length, int offset, byte[] data)
             : base(CommandTypes.CmdZWaveNVMBackupRestore, true)
         {

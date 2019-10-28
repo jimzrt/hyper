@@ -16,7 +16,7 @@ namespace ZWave.Layers.Transport
         private readonly object _lockObject = new object();
         private volatile bool _isStoped = true;
         private SocketDataSource _dataSource;
-        private Action<DataChunk> _transmitCallback;
+        private readonly Action<DataChunk> _transmitCallback;
 
         public override bool IsOpen
         {

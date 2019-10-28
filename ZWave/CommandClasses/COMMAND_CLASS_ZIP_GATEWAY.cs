@@ -472,7 +472,7 @@ namespace ZWave.CommandClasses
         {
             public const byte ID = 0x0B;
             public IList<byte> nonSecureCommandClass = new List<byte>();
-            private byte[] securityScheme0Mark = { 0xF1, 0x00 };
+            private readonly byte[] securityScheme0Mark = { 0xF1, 0x00 };
             public IList<byte> securityScheme0CommandClass = new List<byte>();
             public static implicit operator COMMAND_APPLICATION_NODE_INFO_SET(byte[] data)
             {
@@ -539,7 +539,7 @@ namespace ZWave.CommandClasses
         {
             public const byte ID = 0x0D;
             public IList<byte> nonSecureCommandClass = new List<byte>();
-            private byte[] securityScheme0Mark = { 0xF1, 0x00 };
+            private readonly byte[] securityScheme0Mark = { 0xF1, 0x00 };
             public IList<byte> securityScheme0CommandClass = new List<byte>();
             public static implicit operator COMMAND_APPLICATION_NODE_INFO_REPORT(byte[] data)
             {

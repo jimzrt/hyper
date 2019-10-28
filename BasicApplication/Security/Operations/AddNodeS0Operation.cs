@@ -24,10 +24,10 @@ namespace ZWave.BasicApplication.Operations
             SecurityManagerInfo = securityManagerInfo;
         }
 
-        RequestDataOperation requestScheme;
-        SendDataOperation sendNetworkKeySet;
-        ExpectDataOperation expectNetworkKeyVerify;
-        RequestDataOperation requestSchemeInherit;
+        private RequestDataOperation requestScheme;
+        private SendDataOperation sendNetworkKeySet;
+        private ExpectDataOperation expectNetworkKeyVerify;
+        private RequestDataOperation requestSchemeInherit;
 
         protected override void CreateWorkflow()
         {

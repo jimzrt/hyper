@@ -13,7 +13,7 @@ namespace ZWave.BasicApplication.CommandClasses
         private const byte END_POINTS_COUNT = 3;
         private const byte GENERIC_DEVICE_CLASS = 0x18; //0x10 TODO:check
         private const byte SPECIFIC_DEVICE_CLASS = 0x01;
-        private byte[] ENDPOINTS_COMMAND_CLASSES = new byte[]
+        private readonly byte[] ENDPOINTS_COMMAND_CLASSES = new byte[]
         {
             COMMAND_CLASS_SWITCH_BINARY.ID,
             COMMAND_CLASS_ASSOCIATION.ID,
@@ -29,7 +29,7 @@ namespace ZWave.BasicApplication.CommandClasses
         private byte _maxNodesSupported { get; set; }
 
 
-        private NetworkViewPoint _network;
+        private readonly NetworkViewPoint _network;
         public TransmitOptions TxOptions { get; set; }
 
         public MultiChannelSupport(NetworkViewPoint network, TransmitOptions txOptions)

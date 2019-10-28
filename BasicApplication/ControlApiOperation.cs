@@ -8,7 +8,7 @@ namespace ZWave.BasicApplication
         public static int TIMEOUT = 2000;
 
         public byte[] OutputParameters { get; set; }
-        private FrameTypes HandlerType;
+        private readonly FrameTypes HandlerType;
 
         public ControlApiOperation(FrameTypes handlerType, CommandTypes command, bool isSequenceNumberRequired)
             : base(true, command, isSequenceNumberRequired)

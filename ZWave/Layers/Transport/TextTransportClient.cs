@@ -21,7 +21,7 @@ namespace ZWave.Layers.Transport
         public Encoding TextEncoding { get; set; }
         private const int BUFFER_LENGTH = 1024 * 1024;
 
-        private Action<DataChunk> _transmitCallback;
+        private readonly Action<DataChunk> _transmitCallback;
         public TextTransportClient(Action<DataChunk> transmitCallback)
         {
             _transmitCallback = transmitCallback;

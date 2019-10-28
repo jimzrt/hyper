@@ -6,9 +6,9 @@ namespace ZWave.Security
     public class SpanTable
     {
         public const int MAX_RECORDS_COUNT = 10;
-        private SizeLimitedTable<InvariantPeerNodeId, SpanContainer> _table;
-        private SizeLimitedTable<InvariantPeerNodeId, byte> _txSequenceNumberTable;
-        private object _synchObject = new object();
+        private readonly SizeLimitedTable<InvariantPeerNodeId, SpanContainer> _table;
+        private readonly SizeLimitedTable<InvariantPeerNodeId, byte> _txSequenceNumberTable;
+        private readonly object _synchObject = new object();
 
         /// <summary>
         /// Creates span table with default SPAN records capacity of 10

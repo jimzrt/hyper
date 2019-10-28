@@ -8,7 +8,7 @@ namespace ZWave.BasicApplication.Operations
 {
     public class ResponseDataExOperation : ApiAchOperation
     {
-        private NetworkViewPoint _network;
+        private readonly NetworkViewPoint _network;
         internal List<byte[]> Data { get; set; }
         internal TransmitOptions TxOptions { get; private set; }
         internal TransmitOptions2 TxOptions2 { get; private set; }
@@ -99,9 +99,9 @@ namespace ZWave.BasicApplication.Operations
             IsSecuritySchemeSpecified = true;
         }
 
-        byte handlingRequestFromNode = 0;
-        static byte[] emptyArray = new byte[0];
-        byte[] handlingRequest = emptyArray;
+        private byte handlingRequestFromNode = 0;
+        private static readonly byte[] emptyArray = new byte[0];
+        private byte[] handlingRequest = emptyArray;
         protected override void OnHandledInternal(DataReceivedUnit ou)
         {
             byte nodeId = ReceivedAchData.SrcNodeId;

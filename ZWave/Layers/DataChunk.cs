@@ -124,7 +124,7 @@ namespace ZWave.Layers
             return ret;
         }
 
-        private static DateTime defaultDateTime = new DateTime(2010, 1, 1);
+        private static readonly DateTime defaultDateTime = new DateTime(2010, 1, 1);
         /// <summary>
         /// Reads DataChunk from stream. Returns null if not enough data to read.
         /// </summary>

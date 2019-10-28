@@ -56,7 +56,7 @@ namespace ZWave
     {
         public int MinIntervalMs { get; set; }
         public int MaxIntervalMs { get; set; }
-        private Random rnd = new Random();
+        private readonly Random rnd = new Random();
 
         public RandomTimeInterval(int id, int minIntervalMs, int maxIntervalMs)
             : base(id)

@@ -8,7 +8,7 @@ namespace ZWave.Layers.Transport
 {
     public class TcpConnection : IDisposable
     {
-        private TcpClient _tcpClient;
+        private readonly TcpClient _tcpClient;
         private NetworkStream _tcpStream;
 
         public bool Connected

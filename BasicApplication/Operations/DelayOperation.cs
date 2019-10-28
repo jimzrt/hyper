@@ -2,7 +2,7 @@
 {
     public class DelayOperation : ActionBase
     {
-        private int _timeoutMs;
+        private readonly int _timeoutMs;
 
         public DelayOperation(int timeoutMs)
             : base(false)

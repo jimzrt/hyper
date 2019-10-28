@@ -11,7 +11,7 @@ namespace ZWave.BasicApplication.CommandClasses
         private byte[] _wakeupDelay = new byte[2];
         private SetRFReceiveModeOperation _disableRFReceiveOperation;
 
-        private NetworkViewPoint _network;
+        private readonly NetworkViewPoint _network;
         public TransmitOptions TxOptions { get; set; }
 
         public WakeupSupport(NetworkViewPoint network, TransmitOptions txOptions)

@@ -19,7 +19,7 @@ namespace ZWave.BasicApplication.TransportService
             return SubstituteIncomingFlags.TransportService;
         }
 
-        private object _lockObject = new object();
+        private readonly object _lockObject = new object();
         private ActionSerialGroup _rxTimerAction;
 
         private byte _srcNodeId;
@@ -321,7 +321,7 @@ namespace ZWave.BasicApplication.TransportService
             TransportServiceManagerInfo.NodeId = nodeId;
         }
 
-        private List<ActionToken> mRunningActionTokens = new List<ActionToken>();
+        private readonly List<ActionToken> mRunningActionTokens = new List<ActionToken>();
         private readonly object mLockObject = new object();
         public override List<ActionToken> GetRunningActionTokens()
         {

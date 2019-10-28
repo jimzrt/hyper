@@ -11,11 +11,11 @@ namespace ZWave.BasicApplication.Operations
     public class SecurityReportTask : ApiAchOperation
     {
         #region Timeouts
-        const int SEND_DATA_TIMER = 2000;
+        private const int SEND_DATA_TIMER = 2000;
         #endregion
 
-        private SecurityS0CryptoProvider _securityS0CryptoProvider;
-        private SecurityManagerInfo _securityManagerInfo;
+        private readonly SecurityS0CryptoProvider _securityS0CryptoProvider;
+        private readonly SecurityManagerInfo _securityManagerInfo;
         internal SecurityReportTask(SecurityManagerInfo securityManagerInfo, SecurityS0CryptoProvider securityS0CryptoProvider)
             : base(0, 0, new ByteIndex(COMMAND_CLASS_SECURITY.ID))
         {
@@ -23,7 +23,7 @@ namespace ZWave.BasicApplication.Operations
             _securityS0CryptoProvider = securityS0CryptoProvider;
         }
 
-        byte handlingNonceGetFromNode = 0;
+        private byte handlingNonceGetFromNode = 0;
         protected override void OnHandledInternal(DataReceivedUnit ou)
         {
             ou.SetNextActionItems();

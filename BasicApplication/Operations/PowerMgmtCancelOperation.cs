@@ -8,14 +8,14 @@ namespace ZWave.BasicApplication.Operations
     /// </summary>
     public class PowerMgmtCancelOperation : ApiOperation
     {
-        private byte _powerLockType;
-        private int timeoutMs = 2000;
+        private readonly byte _powerLockType;
+        private readonly int timeoutMs = 2000;
         public PowerMgmtCancelOperation(byte powerLockType) : base(true, CommandTypes.CmdPowerMgmtCancel, false)
         {
             _powerLockType = powerLockType;
         }
 
-        ApiMessage message;
+        private ApiMessage message;
 
         protected override void CreateWorkflow()
         {

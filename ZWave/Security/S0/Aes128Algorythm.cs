@@ -4,7 +4,7 @@ namespace ZWave.Security
 {
     public class Aes128Algorythm
     {
-        private ZWaveAES Engine;
+        private readonly ZWaveAES Engine;
         /// <summary>
         /// Initializes a new instance of the <see cref="Aes128Algorythm"/> class.
         /// </summary>

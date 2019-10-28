@@ -10,8 +10,8 @@ namespace ZWave.BasicApplication.Operations
         {
         }
 
-        ApiMessage message;
-        ApiHandler handler;
+        private ApiMessage message;
+        private ApiHandler handler;
 
         protected override void CreateWorkflow()
         {

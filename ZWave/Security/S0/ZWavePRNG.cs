@@ -4,9 +4,13 @@ namespace ZWave.Security
 {
     public class ZWavePRNG
     {
-        private ZWaveAES AESEngine;
+        private readonly ZWaveAES AESEngine;
         private byte[] innerState;
-        private byte[] K1, K2, H0, H1, H2;
+        private readonly byte[] K1;
+        private readonly byte[] K2;
+        private byte[] H0;
+        private readonly byte[] H1;
+        private readonly byte[] H2;
 
         //private IApplicationLayer zwApplicationLayer;
 

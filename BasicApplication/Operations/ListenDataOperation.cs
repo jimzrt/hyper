@@ -4,16 +4,16 @@ namespace ZWave.BasicApplication.Operations
 {
     public class ListenDataOperation : ApiAchOperation
     {
-        private ListenDataDelegate _listenCallback;
+        private readonly ListenDataDelegate _listenCallback;
         public ListenDataOperation(ListenDataDelegate listenCallback)
             : base(0, 0, null)
         {
             _listenCallback = listenCallback;
         }
 
-        static byte[] emptyArray = new byte[0];
-        byte handlingRequestFromNode = 0;
-        byte[] handlingRequest = emptyArray;
+        private static readonly byte[] emptyArray = new byte[0];
+        private byte handlingRequestFromNode = 0;
+        private byte[] handlingRequest = emptyArray;
         protected override void OnHandledInternal(DataReceivedUnit ou)
         {
             byte nodeId = ReceivedAchData.SrcNodeId;

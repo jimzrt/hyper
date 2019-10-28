@@ -8,7 +8,7 @@ namespace ZWave.BasicApplication.Security
     public class SecurityTestSettingsService : ISecurityTestSettingsService
     {
         private readonly SecurityManagerInfo _securityManagerInfo;
-        private bool _isInclusionProcesses;
+        private readonly bool _isInclusionProcesses;
 
         public SecurityTestSettingsService(SecurityManagerInfo securityManagerInfo, bool isInclusionProcesses)
         {

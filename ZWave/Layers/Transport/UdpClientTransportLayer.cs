@@ -7,9 +7,9 @@ namespace ZWave.Layers.Transport
 {
     public class UdpClientTransportLayer : TransportLayer
     {
-        private HashSet<ITransportClient> _listeningClientsSet = new HashSet<ITransportClient>();
+        private readonly HashSet<ITransportClient> _listeningClientsSet = new HashSet<ITransportClient>();
 
-        private object _lisneterLock = new object();
+        private readonly object _lisneterLock = new object();
 
         private UdpClientTransportListener _listener;
         public override ITransportListener Listener
@@ -67,7 +67,7 @@ namespace ZWave.Layers.Transport
             _listeningClientsSet.Add(transportClient);
         }
 
-        private Hashtable _clients = new Hashtable();
+        private readonly Hashtable _clients = new Hashtable();
 
         public void RegisterClient(string key, ITransportClient client)
         {

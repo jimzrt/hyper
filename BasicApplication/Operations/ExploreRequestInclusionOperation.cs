@@ -6,15 +6,16 @@ namespace ZWave.BasicApplication.Operations
 {
     public class ExploreRequestInclusionOperation : ApiOperation
     {
-        byte FuncId;
+        private readonly byte FuncId;
         public ExploreRequestInclusionOperation(byte funcId)
             : base(true, CommandTypes.CmdZWaveExploreRequestInclusion, true)
         {
             FuncId = funcId;
         }
-        ApiMessage message;
-        ApiHandler handlerOk;
-        ApiHandler handlerFail;
+
+        private ApiMessage message;
+        private ApiHandler handlerOk;
+        private ApiHandler handlerFail;
 
         protected override void CreateWorkflow()
         {

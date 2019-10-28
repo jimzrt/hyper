@@ -11,7 +11,7 @@ namespace ZWave.BasicApplication.Operations
 {
     public class SetLearnModeS2Operation : ApiOperation
     {
-        private SecurityManagerInfo _securityManagerInfo;
+        private readonly SecurityManagerInfo _securityManagerInfo;
         private readonly ISecurityTestSettingsService _securityTestSettingsService;
         internal byte NodeId { get; set; }
         internal byte VirtualNodeId { get; set; }
@@ -23,8 +23,8 @@ namespace ZWave.BasicApplication.Operations
             _securityTestSettingsService = new SecurityTestSettingsService(_securityManagerInfo, true);
         }
 
-        COMMAND_CLASS_SECURITY_2.KEX_SET _KEX_SET = null;
-        DateTime _PkReportReceivedTimeStamp = DateTime.MinValue;
+        private COMMAND_CLASS_SECURITY_2.KEX_SET _KEX_SET = null;
+        private DateTime _PkReportReceivedTimeStamp = DateTime.MinValue;
         private bool _isClientSideAuthRequested = false;
         private bool _isClientSideAuthGranted = false;
         private InvariantPeerNodeId _peerNodeId;
@@ -207,8 +207,8 @@ namespace ZWave.BasicApplication.Operations
             base.SetStateFailed(ou);
         }
 
-        private byte[] _prevHomeId = null;
-        DateTime kexReportStart;
+        private readonly byte[] _prevHomeId = null;
+        private DateTime kexReportStart;
         private void OnKEXGet(StartActionUnit ou)
         {
             kexReportStart = DateTime.Now;
@@ -281,8 +281,8 @@ namespace ZWave.BasicApplication.Operations
             }
         }
 
-        private Queue<NetworkKeyS2Flags> _grantedKeys = new Queue<NetworkKeyS2Flags>();
-        private List<SecuritySchemes> _grantedSchemes = new List<SecuritySchemes>();
+        private readonly Queue<NetworkKeyS2Flags> _grantedKeys = new Queue<NetworkKeyS2Flags>();
+        private readonly List<SecuritySchemes> _grantedSchemes = new List<SecuritySchemes>();
         private void OnKEXSet(ActionCompletedUnit ou)
         {
             if (_KEXReportKEXSet.Result &&

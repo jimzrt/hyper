@@ -14,7 +14,7 @@ namespace ZWave.BasicApplication.Operations
             TimeoutMs = timeoutMs;
         }
 
-        List<CommandHandler> handlers;
+        private List<CommandHandler> handlers;
         protected override void CreateInstance()
         {
             handlers = new List<CommandHandler>();

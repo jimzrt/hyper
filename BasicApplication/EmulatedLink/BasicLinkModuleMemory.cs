@@ -4,7 +4,7 @@ namespace ZWave.BasicApplication.EmulatedLink
 {
     public class BasicLinkModuleMemory
     {
-        static int sharedCounter = 1;
+        private static int sharedCounter = 1;
 
         public byte NodeId { get; set; }
         public byte[] HomeId { get; set; }
@@ -21,7 +21,7 @@ namespace ZWave.BasicApplication.EmulatedLink
         public byte Specific { get; set; }
 
         private byte _nextNodeId;
-        private byte _defaultNodeId;
+        private readonly byte _defaultNodeId;
 
         public BasicLinkModuleMemory(byte defaultNodeId)
         {

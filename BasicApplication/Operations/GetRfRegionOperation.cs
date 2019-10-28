@@ -10,7 +10,7 @@ namespace ZWave.BasicApplication.Operations
     /// 
     public class GetRfRegionOperation : RequestApiOperation
     {
-        private byte SERIAL_API_SETUP_CMD_RF_REGION_GET = 1 << 5;
+        private readonly byte SERIAL_API_SETUP_CMD_RF_REGION_GET = 1 << 5;
 
         public GetRfRegionOperation() :
             base(CommandTypes.CmdSerialApiSetup, false)

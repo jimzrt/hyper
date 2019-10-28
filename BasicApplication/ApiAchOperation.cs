@@ -19,7 +19,7 @@ namespace ZWave.BasicApplication.Operations
         internal int TimeoutMs { get; set; }
         internal ReceiveStatuses RxStatuses { get; set; }
         internal ReceiveStatuses IgnoreRxStatuses { get; set; }
-        private byte[] _extensionS2Types;
+        private readonly byte[] _extensionS2Types;
         public bool ExtensionS2TypeSpecified { get; set; }
         public ApiAchOperation(byte destNodeId, byte srcNodeId, params ByteIndex[] compareData)
             : base(false, null, false)

@@ -2,7 +2,7 @@
 
 namespace ZWave.BasicApplication.Operations
 {
-    class ClearNetworkStatsOperation : ApiOperation
+    internal class ClearNetworkStatsOperation : ApiOperation
     {
         public ClearNetworkStatsOperation() : base(true, CommandTypes.ClearNetworkStats, false)
         { }

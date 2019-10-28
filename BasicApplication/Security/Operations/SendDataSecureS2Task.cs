@@ -26,11 +26,11 @@ namespace ZWave.BasicApplication.Operations
         internal int DataDelay { get; set; }
         internal byte NodeId { get; private set; }
         internal byte? TestNodeId { get; set; }
-        private SecurityManagerInfo _securityManagerInfo;
-        private SecurityS2CryptoProvider _securityS2CryptoProvider;
-        private MpanTable _mpanTable;
-        private SpanTable _spanTable;
-        private SinglecastKey _sckey;
+        private readonly SecurityManagerInfo _securityManagerInfo;
+        private readonly SecurityS2CryptoProvider _securityS2CryptoProvider;
+        private readonly MpanTable _mpanTable;
+        private readonly SpanTable _spanTable;
+        private readonly SinglecastKey _sckey;
         private RequestDataOperation _requestNonce;
         private SendDataOperation _sendEncData;
         private InvariantPeerNodeId _peerNodeId;

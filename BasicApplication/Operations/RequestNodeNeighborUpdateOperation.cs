@@ -12,7 +12,7 @@ namespace ZWave.BasicApplication.Operations
     {
         public static int TIMEOUT = 60000;
 
-        private byte mNodeId;
+        private readonly byte mNodeId;
         internal int TimeoutMs { get; set; }
         public RequestNodeNeighborUpdateOperation(byte nodeId, int timeoutMs)
             : base(true, CommandTypes.CmdZWaveRequestNodeNeighborUpdate, true)

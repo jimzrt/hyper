@@ -42,10 +42,10 @@ namespace ZWave.BasicApplication.Operations
             TxOptions2 = txOptions2;
         }
 
-        SendDataExOperation sendFirst;
-        ActionCompletedUnit sendCompleted;
-        RequestDataExOperation requestFirst;
-        ActionCompletedUnit requestCompleted;
+        private SendDataExOperation sendFirst;
+        private ActionCompletedUnit sendCompleted;
+        private RequestDataExOperation requestFirst;
+        private ActionCompletedUnit requestCompleted;
 
         protected override void CreateWorkflow()
         {

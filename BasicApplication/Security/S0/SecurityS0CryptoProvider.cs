@@ -5,7 +5,7 @@ namespace ZWave.BasicApplication.Security
 {
     public class SecurityS0CryptoProvider : SecurityS0CryptoProviderBase
     {
-        private SecurityManagerInfo _securityManagerInfo;
+        private readonly SecurityManagerInfo _securityManagerInfo;
 
         public SecurityS0CryptoProvider(SecurityManagerInfo securityManagerInfo)
         {

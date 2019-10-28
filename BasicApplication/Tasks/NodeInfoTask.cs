@@ -9,11 +9,11 @@ namespace ZWave.BasicApplication.Tasks
 {
     public class NodeInfoTask : ActionSerialGroup
     {
-        private TransmitOptions _txOptions =
+        private readonly TransmitOptions _txOptions =
            TransmitOptions.TransmitOptionAcknowledge |
            TransmitOptions.TransmitOptionAutoRoute |
            TransmitOptions.TransmitOptionExplore;
-        private NetworkViewPoint _network;
+        private readonly NetworkViewPoint _network;
 
         internal byte NodeId
         {
@@ -26,10 +26,10 @@ namespace ZWave.BasicApplication.Tasks
             }
         }
 
-        private RequestNodeInfoOperation _nodeInfo;
-        private RequestNodeInfoOperation _nodeInfoSecondAttempt;
-        private RequestDataOperation _requestEndPoints;
-        private ActionSerialGroup _requestEndPointsCapabilities;
+        private readonly RequestNodeInfoOperation _nodeInfo;
+        private readonly RequestNodeInfoOperation _nodeInfoSecondAttempt;
+        private readonly RequestDataOperation _requestEndPoints;
+        private readonly ActionSerialGroup _requestEndPointsCapabilities;
 
         public NodeInfoTask(NetworkViewPoint network, byte nodeId)
         {
@@ -53,9 +53,10 @@ namespace ZWave.BasicApplication.Tasks
                 _requestEndPointsCapabilities,
             };
         }
-        bool _isIdentical;
-        int _endPoints;
-        bool isFirstFailed;
+
+        private bool _isIdentical;
+        private int _endPoints;
+        private bool isFirstFailed;
         protected override void OnCompletedInternal(ActionCompletedUnit ou)
         {
             var result = ou.Action.Result;

@@ -16,7 +16,7 @@ namespace ZWave.BasicApplication.Operations
         public static int CMD_TIMEOUT = 10000;
         #endregion
 
-        private SecurityManagerInfo _securityManagerInfo;
+        private readonly SecurityManagerInfo _securityManagerInfo;
         internal byte NodeId { get; set; }
         internal byte VirtualNodeId { get; set; }
         internal bool IsController { get; set; }
@@ -31,10 +31,10 @@ namespace ZWave.BasicApplication.Operations
             prevHomeId = _securityManagerInfo.Network.HomeId;
         }
 
-        RequestDataOperation requestNetworkKey;
-        RequestDataOperation requestSchemeInherit;
-        SendDataExOperation sendSecureSchemeReport;
-        SendDataExOperation sendNetworkKeyVerify;
+        private RequestDataOperation requestNetworkKey;
+        private RequestDataOperation requestSchemeInherit;
+        private SendDataExOperation sendSecureSchemeReport;
+        private SendDataExOperation sendNetworkKeyVerify;
 
         protected override void CreateWorkflow()
         {
@@ -84,7 +84,7 @@ namespace ZWave.BasicApplication.Operations
             base.SetStateFailed(ou);
         }
 
-        byte[] prevHomeId = null;
+        private readonly byte[] prevHomeId = null;
         private void OnSchemeGet(StartActionUnit ou)
         {
             SpecificResult.SubstituteStatus = SubstituteStatuses.Failed;

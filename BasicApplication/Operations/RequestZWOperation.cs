@@ -16,8 +16,8 @@ namespace ZWave.BasicApplication.Operations
             TimeoutMs = timeoutMs;
         }
 
-        CommandMessage message;
-        CommandHandler handler;
+        private CommandMessage message;
+        private CommandHandler handler;
         protected override void CreateInstance()
         {
             message = new CommandMessage { Data = Data };

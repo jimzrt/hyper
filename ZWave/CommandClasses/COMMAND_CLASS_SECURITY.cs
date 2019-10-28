@@ -76,7 +76,7 @@ namespace ZWave.CommandClasses
             public const byte ID = 0x03;
             public byte reportsToFollow;
             public IList<byte> commandClassSupport = new List<byte>();
-            private byte[] commandClassMark = { 0xEF };
+            private readonly byte[] commandClassMark = { 0xEF };
             public IList<byte> commandClassControl = new List<byte>();
             public static implicit operator SECURITY_COMMANDS_SUPPORTED_REPORT(byte[] data)
             {

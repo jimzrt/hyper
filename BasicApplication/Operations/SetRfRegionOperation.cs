@@ -9,7 +9,7 @@ namespace ZWave.BasicApplication.Operations
     public class SetRfRegionOperation : ControlApiOperation
     {
         private const byte SERIAL_API_SETUP_CMD_RF_REGION_SET = 1 << 6;
-        private RfRegions _rfRegion;
+        private readonly RfRegions _rfRegion;
         public SetRfRegionOperation(RfRegions rfRegion) : base(CommandTypes.CmdSerialApiSetup)
         {
             _rfRegion = rfRegion;

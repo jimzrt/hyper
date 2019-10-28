@@ -25,10 +25,10 @@ namespace ZWave.Layers.Transport
         private Thread _workerThread;
         private readonly object _lockObject = new object();
         private bool _isCancelled = false;
-        private byte[] _buffer = new byte[Transport.SerialPortProvider.BUFFER_SIZE];
-        private byte[] _ack = { 0x06 };
-        private AutoResetEvent _readDataSignal = new AutoResetEvent(false);
-        private Action<DataChunk> _transmitCallback;
+        private readonly byte[] _buffer = new byte[Transport.SerialPortProvider.BUFFER_SIZE];
+        private readonly byte[] _ack = { 0x06 };
+        private readonly AutoResetEvent _readDataSignal = new AutoResetEvent(false);
+        private readonly Action<DataChunk> _transmitCallback;
         public SerialPortTransportClient(Action<DataChunk> transmitCallback)
         {
             _transmitCallback = transmitCallback;

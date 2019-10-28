@@ -326,8 +326,8 @@ namespace ZWave.Configuration
             isPreviousEncryptedExtensionMoreToFollowDisabled = false;
         }
 
-        static bool isPreviousExtensionMoreToFollowDisabled = false;
-        static bool isPreviousEncryptedExtensionMoreToFollowDisabled = false;
+        private static bool isPreviousExtensionMoreToFollowDisabled = false;
+        private static bool isPreviousEncryptedExtensionMoreToFollowDisabled = false;
 
         public void AddExtension(List<COMMAND_CLASS_SECURITY_2.SECURITY_2_MESSAGE_ENCAPSULATION.TVG1> extensionsList,
             List<COMMAND_CLASS_SECURITY_2.SECURITY_2_MESSAGE_ENCAPSULATION.TVG1> encryptedExtensionsList)

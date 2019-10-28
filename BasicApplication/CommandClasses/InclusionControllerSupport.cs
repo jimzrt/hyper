@@ -16,7 +16,7 @@ namespace ZWave.BasicApplication.CommandClasses
     {
         public class Initiate : RequestDataOperation
         {
-            private static byte[] _dataToSend = new COMMAND_CLASS_INCLUSION_CONTROLLER.INITIATE();
+            private static readonly byte[] _dataToSend = new COMMAND_CLASS_INCLUSION_CONTROLLER.INITIATE();
             public byte NodeId { get; private set; }
             public byte StepId { get; private set; }
 
@@ -38,7 +38,7 @@ namespace ZWave.BasicApplication.CommandClasses
 
         public class Complete : SendDataOperation
         {
-            private static byte[] _dataToSend = new COMMAND_CLASS_INCLUSION_CONTROLLER.COMPLETE();
+            private static readonly byte[] _dataToSend = new COMMAND_CLASS_INCLUSION_CONTROLLER.COMPLETE();
             public byte StatusComplete { get; private set; }
             public byte StepId { get; private set; }
 

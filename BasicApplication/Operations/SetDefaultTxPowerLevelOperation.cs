@@ -9,8 +9,8 @@ namespace ZWave.BasicApplication.Operations
     public class SetDefaultTxPowerLevelOperation : ControlApiOperation
     {
         private const byte SERIAL_API_SETUP_CMD_TX_POWERLEVEL_SET = 1 << 2;
-        private byte _normalTxPower;
-        private byte _measured0dBmPower;
+        private readonly byte _normalTxPower;
+        private readonly byte _measured0dBmPower;
 
         public SetDefaultTxPowerLevelOperation(byte normalTxPower, byte measured0dBmPower) : base(CommandTypes.CmdSerialApiSetup)
         {

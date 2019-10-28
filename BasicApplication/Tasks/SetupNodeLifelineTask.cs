@@ -8,22 +8,22 @@ using ZWave.Enums;
 
 namespace ZWave.BasicApplication.Tasks
 {
-    class SetupNodeLifelineTask : ActionSerialGroup
+    internal class SetupNodeLifelineTask : ActionSerialGroup
     {
-        private TransmitOptions _txOptions =
+        private readonly TransmitOptions _txOptions =
             TransmitOptions.TransmitOptionAcknowledge |
             TransmitOptions.TransmitOptionAutoRoute |
             TransmitOptions.TransmitOptionExplore;
 
-        private NetworkViewPoint _network;
-        private NodeInfoTask _requestNodeInfo;
-        private RequestDataOperation _requestRoleType;
-        private DeleteReturnRouteOperation _deleteReturnRoute;
-        private AssignReturnRouteOperation _assignReturnRoute;
-        private SendDataOperation _sendAssociationCreate;
-        private SendDataOperation _sendMultichannelAssociationCreate;
-        private RequestDataOperation _requestWakeUpCapabilities;
-        private SendDataOperation _sendWakeUpInterval;
+        private readonly NetworkViewPoint _network;
+        private readonly NodeInfoTask _requestNodeInfo;
+        private readonly RequestDataOperation _requestRoleType;
+        private readonly DeleteReturnRouteOperation _deleteReturnRoute;
+        private readonly AssignReturnRouteOperation _assignReturnRoute;
+        private readonly SendDataOperation _sendAssociationCreate;
+        private readonly SendDataOperation _sendMultichannelAssociationCreate;
+        private readonly RequestDataOperation _requestWakeUpCapabilities;
+        private readonly SendDataOperation _sendWakeUpInterval;
 
         public int WakeUpInterval { get; set; }
         public bool IsFullSetup { get; set; }

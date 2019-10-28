@@ -10,16 +10,16 @@ namespace ZWave.BasicApplication.CommandClasses
 {
     public class FirmwareUpdateMdSupport : ApiAchOperation
     {
-        const ushort START_REPORT_NUMBER = 0x01;
-        byte[] FIRMWARE_ID = { 0x05, 0x01 }; //Hardcoded devkit 6.80
-        byte[] MANUFACTURE_ID = { 0x00, 0x00 }; //(Former Zensys) 0x0000 by default (SDS13425) or device.ManufacturerId,
-        int MAX_FRAGMENT_SIZE = 40;
+        private const ushort START_REPORT_NUMBER = 0x01;
+        private readonly byte[] FIRMWARE_ID = { 0x05, 0x01 }; //Hardcoded devkit 6.80
+        private readonly byte[] MANUFACTURE_ID = { 0x00, 0x00 }; //(Former Zensys) 0x0000 by default (SDS13425) or device.ManufacturerId,
+        private readonly int MAX_FRAGMENT_SIZE = 40;
 
         private int _firmwareOffset;
         private ushort _lastUsedReportNumber;
         private byte[] _myOtaFirmwareCrc;
         private byte _pStatus = 0x00;
-        private NetworkViewPoint _network;
+        private readonly NetworkViewPoint _network;
 
         private FirmwareUpdateNvmSetNewImageOperation _firmwareUpdateNvmSetNewImageTrue;
         private FirmwareUpdateNvmSetNewImageOperation _firmwareUpdateNvmSetNewImageFalse;
@@ -29,7 +29,7 @@ namespace ZWave.BasicApplication.CommandClasses
         public TransmitOptions2 TxOptions2 { get; set; }
         public TransmitSecurityOptions TxSecOptions { get; set; }
 
-        Action _setNewImageCompletedCallback;
+        private readonly Action _setNewImageCompletedCallback;
 
         /// <summary>
         /// Over The Air support task.

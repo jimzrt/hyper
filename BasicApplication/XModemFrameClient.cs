@@ -36,8 +36,8 @@ namespace ZWave.BasicApplication
         private XModemClientStates _currentState;
         private bool _hasTransmitFails;
         private int _runAppRetryCount;
-        private AutoResetEvent _uploadStateSignal = new AutoResetEvent(false);
-        private List<byte> _cancelationOutput = new List<byte>();
+        private readonly AutoResetEvent _uploadStateSignal = new AutoResetEvent(false);
+        private readonly List<byte> _cancelationOutput = new List<byte>();
 
         private const XModemClientStates ReadyForUpload = XModemClientStates.OptionsMsgReceived | XModemClientStates.BeginUploadMsgReceived |
                     XModemClientStates.C_startReceived | XModemClientStates.C_confirmedReceived;

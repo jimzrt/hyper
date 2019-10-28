@@ -10,12 +10,12 @@ namespace ZWave.BasicApplication
 {
     public class SmartStartSupport : ApiOperation
     {
-        private NetworkViewPoint _network;
+        private readonly NetworkViewPoint _network;
         private byte[] _homeId;
-        private Action<NodeStatuses> _setNodeStatusSignal;
-        private Func<byte[], Tuple<byte, byte[], int>> _dskNeededCallback;
-        private Action<bool, byte[], ActionResult> _busyCallback;
-        private int _timeoutMs;
+        private readonly Action<NodeStatuses> _setNodeStatusSignal;
+        private readonly Func<byte[], Tuple<byte, byte[], int>> _dskNeededCallback;
+        private readonly Action<bool, byte[], ActionResult> _busyCallback;
+        private readonly int _timeoutMs;
         public SmartStartSupport(NetworkViewPoint network, Action<NodeStatuses> setNodeStatusSignal, Func<byte[], Tuple<byte, byte[], int>> dskNeededCallback, Action<bool, byte[], ActionResult> busyCallback, int timeoutMs)
             : base(false, null, false)
         {

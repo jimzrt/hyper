@@ -11,7 +11,7 @@ namespace ZWave.TextApplication
         public byte SessionId { get; set; }
         public Action<CustomDataFrame> ReceiveFrameCallback { get; set; }
         public Func<byte[], int> SendDataCallback { get; set; }
-        private Action<TextDataFrame> mTransmitCallback;
+        private readonly Action<TextDataFrame> mTransmitCallback;
         public void ResetParser()
         { }
 

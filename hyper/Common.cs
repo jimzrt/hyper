@@ -198,13 +198,13 @@ namespace hyper
 
                 }
             }
-            if(config.wakeup != 0)
+            if (config.wakeup != 0)
             {
-               // var wakeupSet = SetWakeup(controller, nodeId, config.wakeup);
-              //  if (wakeupSet)
-              //  {
-                    GetWakeUp(controller, nodeId);
-             //   }
+                // var wakeupSet = SetWakeup(controller, nodeId, config.wakeup);
+                //  if (wakeupSet)
+                //  {
+                GetWakeUp(controller, nodeId);
+                //   }
             }
 
             return true;

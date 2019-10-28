@@ -5,8 +5,8 @@ namespace ZWave.Operations
     public class RequestOperation : ActionBase
     {
         public byte[] Data { get; set; }
-        private ByteIndex[] _mask;
-        private int _timeoutMs;
+        private readonly ByteIndex[] _mask;
+        private readonly int _timeoutMs;
         public RequestOperation(byte[] data, ByteIndex[] mask, int timeoutMs)
             : base(false)
         {

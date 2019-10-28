@@ -13,7 +13,7 @@ namespace ZWave.BasicApplication
             return handler.DataFrame.Data;
         }
 
-        private FrameTypes HandlerType;
+        private readonly FrameTypes HandlerType;
 
         public RequestApiOperation(FrameTypes handlerType, CommandTypes command, bool isSequenceNumberRequired)
             : base(true, command, isSequenceNumberRequired)

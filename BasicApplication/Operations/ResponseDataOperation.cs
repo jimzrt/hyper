@@ -52,9 +52,9 @@ namespace ZWave.BasicApplication.Operations
             TxOptions = txOptions;
         }
 
-        byte handlingRequestFromNode = 0;
-        static byte[] emptyArray = new byte[0];
-        byte[] handlingRequest = emptyArray;
+        private byte handlingRequestFromNode = 0;
+        private static readonly byte[] emptyArray = new byte[0];
+        private byte[] handlingRequest = emptyArray;
         protected override void OnHandledInternal(DataReceivedUnit ou)
         {
             byte nodeId = ReceivedAchData.SrcNodeId;

@@ -10,9 +10,9 @@ namespace ZWave.BasicApplication
     {
         private const byte MAX_FRAME_SIZE = 255;
         private const byte MIN_FRAME_SIZE = 3;
-        private static byte[] ACK = new[] { (byte)HeaderTypes.Acknowledge };
-        private static byte[] NAK = new[] { (byte)HeaderTypes.NotAcknowledged };
-        private static byte[] CAN = new[] { (byte)HeaderTypes.Can };
+        private static readonly byte[] ACK = new[] { (byte)HeaderTypes.Acknowledge };
+        private static readonly byte[] NAK = new[] { (byte)HeaderTypes.NotAcknowledged };
+        private static readonly byte[] CAN = new[] { (byte)HeaderTypes.Can };
 
         public byte SessionId { get; set; }
         public Action<CustomDataFrame> ReceiveFrameCallback { get; set; }
@@ -22,11 +22,11 @@ namespace ZWave.BasicApplication
         public int ReceivingDataFrameLength { get; set; }
 
         private int _receivingDataFrameLengthCounter;
-        private byte[] _receivingDataFrameBuffer = new byte[MAX_FRAME_SIZE];
+        private readonly byte[] _receivingDataFrameBuffer = new byte[MAX_FRAME_SIZE];
         private FrameReceiveStates _parserState;
         private readonly object _locker = new object();
         private bool _isDisposed = false;
-        private Action<DataFrame> _transmitCallback;
+        private readonly Action<DataFrame> _transmitCallback;
 
         public BasicFrameClient(Action<DataFrame> transmitCallback)
         {
@@ -128,7 +128,8 @@ namespace ZWave.BasicApplication
                 }
             }
         }
-        bool _isTestInterface = false;
+
+        private bool _isTestInterface = false;
         private byte[] ParseRawData(byte buffer, bool isOutcome, DateTime timeStamp, bool isFromFile)
         {
             byte[] ret = null;

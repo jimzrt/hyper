@@ -11,8 +11,8 @@ namespace ZWave
         private Timer _timer;
         public static int TICK = 100;
         private const int CAPACITY = 1000;
-        private ConcurrentList<ActionToken> _values = new ConcurrentList<ActionToken>(CAPACITY);
-        private ConcurrentList<TimeInterval> _timeIntervals = new ConcurrentList<TimeInterval>(CAPACITY);
+        private readonly ConcurrentList<ActionToken> _values = new ConcurrentList<ActionToken>(CAPACITY);
+        private readonly ConcurrentList<TimeInterval> _timeIntervals = new ConcurrentList<TimeInterval>(CAPACITY);
 
         public void Stop()
         {

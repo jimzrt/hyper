@@ -12,36 +12,36 @@ namespace ZWave.BasicApplication.Tasks
 {
     public class InclusionTask : ActionParallelGroup
     {
-        const byte PROXY_INCLUSION = 0x01;
-        const byte PROXY_INCLUSION_REPLACE = 0x03;
+        private const byte PROXY_INCLUSION = 0x01;
+        private const byte PROXY_INCLUSION_REPLACE = 0x03;
 
         public static int TIMEOUT = 60000;
 
-        private NetworkViewPoint _network;
-        private Modes _mode;
-        private int _timeoutMs;
-        private Action<NodeStatuses> _nodeStatusCallback;
-        private TransmitOptions _txOptions =
+        private readonly NetworkViewPoint _network;
+        private readonly Modes _mode;
+        private readonly int _timeoutMs;
+        private readonly Action<NodeStatuses> _nodeStatusCallback;
+        private readonly TransmitOptions _txOptions =
             TransmitOptions.TransmitOptionAcknowledge |
             TransmitOptions.TransmitOptionAutoRoute |
             TransmitOptions.TransmitOptionExplore;
 
-        private FilterAchOperation _peerFilter;
-        private IAddRemoveNode _addNode;
-        private MemoryGetIdOperation _memoryGetId;
-        private GetSucNodeIdOperation _getSucNodeId;
+        private readonly FilterAchOperation _peerFilter;
+        private readonly IAddRemoveNode _addNode;
+        private readonly MemoryGetIdOperation _memoryGetId;
+        private readonly GetSucNodeIdOperation _getSucNodeId;
 
-        private IsFailedNodeOperation _isFailedSucNodeOperation;
-        private RequestNodeInfoOperation _getSucNodeInfo;
-        private ActionSerialGroup _requestSucNodeInfoGroup;
+        private readonly IsFailedNodeOperation _isFailedSucNodeOperation;
+        private readonly RequestNodeInfoOperation _getSucNodeInfo;
+        private readonly ActionSerialGroup _requestSucNodeInfoGroup;
 
-        private InclusionController.Initiate _requestInclusionController;
-        private SerialApiGetInitDataOperation _serialApiGetInitData;
-        private SetupNodeLifelineTask _setupNodeLifelineTask;
+        private readonly InclusionController.Initiate _requestInclusionController;
+        private readonly SerialApiGetInitDataOperation _serialApiGetInitData;
+        private readonly SetupNodeLifelineTask _setupNodeLifelineTask;
 
         private IsFailedNodeOperation _isFailedNodeOperation;
         private RemoveFailedNodeIdOperation _removeFailedNodeIdOperation;
-        private bool _isSmartStart = false;
+        private readonly bool _isSmartStart = false;
 
         public InclusionTask(NetworkViewPoint network, IAddRemoveNode addRemoveNode)
             : this(network, addRemoveNode, false)

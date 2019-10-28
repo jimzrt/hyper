@@ -4,7 +4,7 @@ namespace Utils
 {
     public class LazyDictionary<TKey, TValue>
     {
-        Dictionary<TKey, TValue> _innerDictionary;
+        private readonly Dictionary<TKey, TValue> _innerDictionary;
         public LazyDictionary()
         {
             _innerDictionary = new Dictionary<TKey, TValue>();

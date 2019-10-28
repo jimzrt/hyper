@@ -13,7 +13,7 @@ namespace ZWave.Security
         public const ushort NONCE_SIZE = 16;
         public const ushort PERSONALIZATION_SIZE = 32;
 
-        private static object _syncObj = new object();
+        private static readonly object _syncObj = new object();
         private static bool Is64Bit { get { return Environment.Is64BitProcess; } }
 
         #region DllImports
@@ -482,12 +482,12 @@ namespace ZWave.Security
     [StructLayout(LayoutKind.Sequential)]
     public struct CTR_DRBG_CTX
     {
-        private byte _df;    /**< Use DF or not */
+        private readonly byte _df;    /**< Use DF or not */
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-        private byte[] _v;   /**< Internal working state */
+        private readonly byte[] _v;   /**< Internal working state */
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-        private byte[] _k;   /**< Key working state */
-        private uint _c;     /**< Reseed counter */
+        private readonly byte[] _k;   /**< Key working state */
+        private readonly uint _c;     /**< Reseed counter */
 
         public override string ToString()
         {

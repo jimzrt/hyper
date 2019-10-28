@@ -6,10 +6,10 @@ namespace ZWave.Layers.Transport.TcpToSerialBridge
 {
     public class SocketBinding
     {
-        private string _comPortSource;
-        private int _baudRate;
-        private Socket _socket;
-        private byte[] _inBuffer = new byte[1024];
+        private readonly string _comPortSource;
+        private readonly int _baudRate;
+        private readonly Socket _socket;
+        private readonly byte[] _inBuffer = new byte[1024];
         private SerialPortTransportClient _transportClient;
         public Action<string> LogOutput { get; set; }
 

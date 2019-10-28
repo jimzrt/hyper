@@ -30,8 +30,8 @@ namespace ZWave.BasicApplication.Operations
             TimeoutMs = timeoutMs;
         }
 
-        SendDataExOperation sendData;
-        ExpectDataOperation expectData;
+        private SendDataExOperation sendData;
+        private ExpectDataOperation expectData;
         public bool IsSendDataCompleted()
         {
             bool res = false;

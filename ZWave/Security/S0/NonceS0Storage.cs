@@ -5,7 +5,7 @@ namespace ZWave.Security
 {
     public class NonceS0Storage
     {
-        private SizeLimitedTable<OrdinalPeerNodeId, NonceContainer> _table;
+        private readonly SizeLimitedTable<OrdinalPeerNodeId, NonceContainer> _table;
         public NonceS0Storage(int capacity)
         {
             _table = new SizeLimitedTable<OrdinalPeerNodeId, NonceContainer>(capacity);
@@ -52,7 +52,7 @@ namespace ZWave.Security
 
     public class NonceContainer
     {
-        private byte[] _nonce = new byte[8];
+        private readonly byte[] _nonce = new byte[8];
         public byte[] Nonce
         {
             get

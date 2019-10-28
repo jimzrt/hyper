@@ -4,15 +4,15 @@ namespace ZWave.BasicApplication.Operations
 {
     public class SerialApiSetupOperation : ApiOperation
     {
-        private byte[] _args;
+        private readonly byte[] _args;
         public SerialApiSetupOperation(params byte[] args)
             : base(true, CommandTypes.CmdSerialApiSetup, false)
         {
             _args = args;
         }
 
-        ApiMessage _message;
-        ApiHandler _handler;
+        private ApiMessage _message;
+        private ApiHandler _handler;
         protected override void CreateWorkflow()
         {
             ActionUnits.Add(new StartActionUnit(null, 200, _message));

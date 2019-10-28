@@ -8,7 +8,7 @@ namespace ZWave.BasicApplication.EmulatedLink
 {
     public class BasicLinkTransportClient : TransportClientBase
     {
-        CancellationTokenSource _cts = new CancellationTokenSource();
+        private CancellationTokenSource _cts = new CancellationTokenSource();
 
         public override event Action<ITransportClient> Connected;
         public override event Action<ITransportClient> Disconnected;
@@ -16,13 +16,13 @@ namespace ZWave.BasicApplication.EmulatedLink
         private Thread _workerThread;
         private readonly object _lockObject = new object();
         private bool _isCancelled = false;
-        private byte[] _buffer = new byte[512];
-        private byte[] _ack = { 0x06 };
-        private AutoResetEvent _readDataSignal = new AutoResetEvent(false);
-        private Action<DataChunk> _transmitCallback;
-        private Func<byte, byte[], int> _writeDataCallback;
-        private Func<byte, byte[], CancellationToken, int> _readDataCallback;
-        private Action<byte> _disposeClient;
+        private readonly byte[] _buffer = new byte[512];
+        private readonly byte[] _ack = { 0x06 };
+        private readonly AutoResetEvent _readDataSignal = new AutoResetEvent(false);
+        private readonly Action<DataChunk> _transmitCallback;
+        private readonly Func<byte, byte[], int> _writeDataCallback;
+        private readonly Func<byte, byte[], CancellationToken, int> _readDataCallback;
+        private readonly Action<byte> _disposeClient;
 
         private bool _isOpen;
         public override bool IsOpen

@@ -18,8 +18,8 @@ namespace ZWave.BasicApplication.Operations
             Destination = destination;
         }
 
-        ApiMessage message;
-        ApiHandler handler;
+        private ApiMessage message;
+        private ApiHandler handler;
 
         protected override void CreateWorkflow()
         {

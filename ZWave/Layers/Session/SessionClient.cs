@@ -12,7 +12,7 @@ namespace ZWave.Layers.Session
 {
     public class SessionClient : ISessionClient
     {
-        private AutoResetEvent _actionStartSignal = new AutoResetEvent(false);
+        private readonly AutoResetEvent _actionStartSignal = new AutoResetEvent(false);
         private byte _funcIdCounter = 0;
         public byte SessionId { get; set; }
         public bool SuppressDebugOutput { get; set; }
@@ -64,9 +64,9 @@ namespace ZWave.Layers.Session
             }
         }
 
-        private List<ISubstituteManager> _substituteManagers = new List<ISubstituteManager>();
-        private Dictionary<SubstituteIncomingFlags, ISubstituteManager> _substituteManagersDictionary = new Dictionary<SubstituteIncomingFlags, ISubstituteManager>();
-        private Action<ActionToken> _actionChangeCallback;
+        private readonly List<ISubstituteManager> _substituteManagers = new List<ISubstituteManager>();
+        private readonly Dictionary<SubstituteIncomingFlags, ISubstituteManager> _substituteManagersDictionary = new Dictionary<SubstituteIncomingFlags, ISubstituteManager>();
+        private readonly Action<ActionToken> _actionChangeCallback;
         internal ApiTypes ApiType { get; set; }
         public SessionClient(Action<ActionToken> actionChangeCallback)
         {
@@ -120,7 +120,7 @@ namespace ZWave.Layers.Session
             }
         }
 
-        private object _actionStateLock = new object();
+        private readonly object _actionStateLock = new object();
         public void ProcessNext(ActionHandlerResult ahResult)
         {
             if (ahResult != null && ahResult.NextActions != null)
@@ -448,7 +448,7 @@ namespace ZWave.Layers.Session
             }
         }
 
-        Stopwatch sw = new Stopwatch();
+        private readonly Stopwatch sw = new Stopwatch();
         public ActionToken ExecuteAsync(IActionItem actionCase)
         {
             var action = actionCase as ActionBase;

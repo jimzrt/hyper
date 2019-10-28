@@ -16,7 +16,8 @@ namespace ZWave.BasicApplication.Operations
         public int GrantSchemesValue { get; set; }
         public byte[] Args { get; set; }
         internal int TimeoutMs { get; set; }
-        byte mReplacedNodeId;
+
+        private byte mReplacedNodeId;
         public byte ReplacedNodeId
         {
             get { return mReplacedNodeId; }

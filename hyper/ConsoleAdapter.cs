@@ -1,19 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace hyper
 {
-    class ConsoleAdapter : IAdapter
+    internal class ConsoleAdapter : IAdapter
     {
-     
-            private int threshold;
-            private int total;
+
+        private readonly int threshold;
+        private readonly int total;
         private bool running = false;
-            public ConsoleAdapter()
-            {
+        public ConsoleAdapter()
+        {
             Console.WriteLine("Adapter Created");
-            }
+        }
 
         public event EventHandler<string> CommandHandler;
 
@@ -25,9 +23,9 @@ namespace hyper
             {
                 var input = Console.ReadLine();
                 OnCommand(input);
-                
+
             }
-          
+
 
         }
 
@@ -38,11 +36,11 @@ namespace hyper
 
 
 
-            protected virtual void OnCommand(string command)
-            {
-            CommandHandler?.Invoke(this,command);
-              }
+        protected virtual void OnCommand(string command)
+        {
+            CommandHandler?.Invoke(this, command);
+        }
 
-        
+
     }
 }

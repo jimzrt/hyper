@@ -28,14 +28,14 @@ namespace ZWave.Layers.Transport
         private const int MAX_DATA_BUFFER_LENGTH = 10000;
 
         private Socket _socket;
-        private object _socketAccessLock = new object();
+        private readonly object _socketAccessLock = new object();
 
         public event Action<ReceivedDataArgs> DataReceived;
 
         public event Action<string, ushort> ConnectionCreated;
         public event Action<string, ushort> ConnectionClosed;
 
-        private HashSet<EndPoint> _clientsTable = new HashSet<EndPoint>();
+        private readonly HashSet<EndPoint> _clientsTable = new HashSet<EndPoint>();
 
         public bool SuppressDebugOutput { get; set; }
         public ushort PortNumber { get; private set; }

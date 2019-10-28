@@ -12,16 +12,16 @@ namespace ZWave.BasicApplication.Operations
     public class SecurityS2ReportTask : ApiAchOperation
     {
         #region Timeouts
-        const int SEND_DATA_TIMER = 2000;
+        private const int SEND_DATA_TIMER = 2000;
         #endregion
 
         private const byte MULTICAST_MASK = 0x08;
         private const byte BROADCAST_MASK = 0x04;
 
-        private SecurityS2CryptoProvider _securityS2CryptoProvider;
-        private SecurityManagerInfo _securityManagerInfo;
-        private MpanTable _mpanTable;
-        private SpanTable _spanTable;
+        private readonly SecurityS2CryptoProvider _securityS2CryptoProvider;
+        private readonly SecurityManagerInfo _securityManagerInfo;
+        private readonly MpanTable _mpanTable;
+        private readonly SpanTable _spanTable;
         private readonly ISecurityTestSettingsService _securityTestSettingsService;
 
         internal SecurityS2ReportTask(SecurityManagerInfo securityManagerInfo,
@@ -35,7 +35,7 @@ namespace ZWave.BasicApplication.Operations
             _securityTestSettingsService = new SecurityTestSettingsService(_securityManagerInfo, false);
         }
 
-        byte handlingNonceGetFromNode = 0;
+        private byte handlingNonceGetFromNode = 0;
         protected override void OnHandledInternal(DataReceivedUnit ou)
         {
             var destNodeId = ReceivedAchData.DestNodeId > 0 ? ReceivedAchData.DestNodeId : _securityManagerInfo.Network.NodeId;

@@ -9,8 +9,8 @@ namespace ZWave.Security
     {
         public const int MAX_RECORDS_COUNT = 10;
 
-        private object _synchObject = new object();
-        private SizeLimitedTable<NodeGroupId, MpanContainer> _table;
+        private readonly object _synchObject = new object();
+        private readonly SizeLimitedTable<NodeGroupId, MpanContainer> _table;
 
         public MpanContainer this[NodeGroupId peerGroupId]
         {

@@ -6,7 +6,7 @@ namespace ZWave.BasicApplication.Operations
     /// HOST->ZW: REQ | 0xD4 | maxRoutesTries
     /// ZW->HOST: RES | 0xD4 | TRUE
     /// </summary>
-    class SetRoutingMAXOperation : ControlApiOperation
+    internal class SetRoutingMAXOperation : ControlApiOperation
     {
         private byte MaxRouteTries { get; set; }
         public SetRoutingMAXOperation(byte maxRouteTries)

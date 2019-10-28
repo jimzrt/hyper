@@ -13,7 +13,7 @@ namespace ZWave.Security
         public byte TxSequenceNumber { get; set; }
         public byte RxSequenceNumber { get; set; }
         public SpanStates SpanState { get; private set; }
-        private byte[] _receiversNonce;
+        private readonly byte[] _receiversNonce;
         public byte[] ReceiversNonce
         {
             get
@@ -41,7 +41,7 @@ namespace ZWave.Security
             Array.Copy(rNonce, _receiversNonce, 16);
         }
 
-        private byte[] _span;
+        private readonly byte[] _span;
         public byte[] Span
         {
             get
@@ -56,7 +56,7 @@ namespace ZWave.Security
         public SpanContainer(CTR_DRBG_CTX state, byte txSequenceNumber, byte rxSequenceNumber, byte[] nonce)
             : this(txSequenceNumber, rxSequenceNumber)
         {
-            this._state = state;
+            _state = state;
             SpanState = SpanStates.Span;
             Array.Copy(nonce, _span, 16);
         }

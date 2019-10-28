@@ -11,7 +11,7 @@ namespace ZWave.BasicApplication.Operations
 
         internal SlaveLearnModes Mode { get; private set; }
         internal byte NodeId { get; private set; }
-        private byte TxOptions;
+        private readonly byte TxOptions;
         internal int TimeoutMs { get; private set; }
         internal Action<AssignStatuses> AssignStatusCallback { get; private set; }
         public SetSlaveLearnModeOperation(byte nodeId, SlaveLearnModes mode, Action<AssignStatuses> assignStatusCallback, int timeoutMs)

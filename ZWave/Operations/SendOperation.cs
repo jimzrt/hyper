@@ -2,7 +2,7 @@
 {
     public class SendOperation : ActionBase
     {
-        private byte[] _data;
+        private readonly byte[] _data;
         public SendOperation(byte[] data)
             : base(false)
         {

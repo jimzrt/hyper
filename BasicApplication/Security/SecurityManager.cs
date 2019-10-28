@@ -32,9 +32,9 @@ namespace ZWave.BasicApplication
 
         #endregion
 
-        private SecurityS2CryptoProvider _securityS2CryptoProvider;
-        private SecurityS0CryptoProvider _securityS0CryptoProvider;
-        private byte[] _broadcastSeqNoCache = new byte[0xFF];
+        private readonly SecurityS2CryptoProvider _securityS2CryptoProvider;
+        private readonly SecurityS0CryptoProvider _securityS0CryptoProvider;
+        private readonly byte[] _broadcastSeqNoCache = new byte[0xFF];
 
         public SecurityManagerInfo SecurityManagerInfo { get; set; }
 
@@ -106,7 +106,7 @@ namespace ZWave.BasicApplication
             return ret;
         }
 
-        private Dictionary<byte, byte[]> _sequencedFirstFrameS0 = new Dictionary<byte, byte[]>();
+        private readonly Dictionary<byte, byte[]> _sequencedFirstFrameS0 = new Dictionary<byte, byte[]>();
 
         public override void OnIncomingSubstituted(CustomDataFrame dataFrameOri, CustomDataFrame dataFrameSub, List<ActionHandlerResult> ahResults)
         {
@@ -1730,7 +1730,7 @@ namespace ZWave.BasicApplication
             _isPrevDecryptFailed = false;
         }
 
-        private List<ActionToken> mRunningActionTokens = new List<ActionToken>();
+        private readonly List<ActionToken> mRunningActionTokens = new List<ActionToken>();
         private readonly object mLockObject = new object();
         public override List<ActionToken> GetRunningActionTokens()
         {

@@ -5,7 +5,7 @@ namespace ZWave.BasicApplication
 {
     public class SetSmartStartAction : ApiOperation
     {
-        private bool _isStart;
+        private readonly bool _isStart;
         public SetSmartStartAction(bool isStart)
             : base(false, null, false)
         {

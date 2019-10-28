@@ -12,9 +12,9 @@ namespace ZWave.BasicApplication.EmulatedLink
 {
     public class BasicLinkTransportLayer : ZWave.Layers.Transport.TransportLayer
     {
-        const byte rssiVal = 0x7e; // RSSI_MAX_POWER_SATURATED
-        Dictionary<byte, BlockingCollection<byte[]>> _pool = new Dictionary<byte, BlockingCollection<byte[]>>();
-        Dictionary<byte, BasicLinkModuleMemory> _modules = new Dictionary<byte, BasicLinkModuleMemory>();
+        private const byte rssiVal = 0x7e; // RSSI_MAX_POWER_SATURATED
+        private readonly Dictionary<byte, BlockingCollection<byte[]>> _pool = new Dictionary<byte, BlockingCollection<byte[]>>();
+        private readonly Dictionary<byte, BasicLinkModuleMemory> _modules = new Dictionary<byte, BasicLinkModuleMemory>();
 
         public override ITransportListener Listener { get; set; }
         private const int MAX_FRAME_SIZE = 54;
@@ -129,7 +129,7 @@ namespace ZWave.BasicApplication.EmulatedLink
             return data.Length;
         }
 
-        private CommandTypes[] _supported = new[]
+        private readonly CommandTypes[] _supported = new[]
        {
             CommandTypes.CmdSerialApiGetCapabilities,
             CommandTypes.CmdZWaveAddNodeToNetwork,

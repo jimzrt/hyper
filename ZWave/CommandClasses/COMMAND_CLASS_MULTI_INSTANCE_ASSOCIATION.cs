@@ -73,7 +73,7 @@ namespace ZWave.CommandClasses
             public const byte ID = 0x04;
             public byte groupingIdentifier;
             public IList<byte> nodeId = new List<byte>();
-            private byte[] marker = { 0x00 };
+            private readonly byte[] marker = { 0x00 };
             public class TVG
             {
                 public byte multiInstanceNodeId;
@@ -136,7 +136,7 @@ namespace ZWave.CommandClasses
             public byte maxNodesSupported;
             public byte reportsToFollow;
             public IList<byte> nodeId = new List<byte>();
-            private byte[] marker = { 0x00 };
+            private readonly byte[] marker = { 0x00 };
             public class TVG
             {
                 public byte multiInstanceNodeId;
@@ -201,7 +201,7 @@ namespace ZWave.CommandClasses
             public const byte ID = 0x01;
             public byte groupingIdentifier;
             public IList<byte> nodeId = new List<byte>();
-            private byte[] marker = { 0x00 };
+            private readonly byte[] marker = { 0x00 };
             public class TVG
             {
                 public byte multiInstanceNodeId;

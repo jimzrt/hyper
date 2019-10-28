@@ -4,7 +4,7 @@ namespace ZWave.BasicApplication.Operations
 {
     public class VersionOperation : RequestApiOperation
     {
-        private bool _isNoAck;
+        private readonly bool _isNoAck;
         public VersionOperation()
             : this(false)
         {

@@ -31,11 +31,11 @@ namespace ZWave.BasicApplication.Operations
 
         //public Action<ActionUnit> OnHandledCallback { get; set; }
 
-        private SecurityManagerInfo _securityManagerInfo;
-        private SecurityS2CryptoProvider _securityS2CryptoProvider;
-        private SpanTable _spanTable;
-        private MpanTable _mpanTable;
-        private SinglecastKey _sckey;
+        private readonly SecurityManagerInfo _securityManagerInfo;
+        private readonly SecurityS2CryptoProvider _securityS2CryptoProvider;
+        private readonly SpanTable _spanTable;
+        private readonly MpanTable _mpanTable;
+        private readonly SinglecastKey _sckey;
         private RequestDataOperation _requestNonce;
         private SendDataBridgeOperation _sendEncData;
         private readonly ISecurityTestSettingsService _securityTestSettingsService;

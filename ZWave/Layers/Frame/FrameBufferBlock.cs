@@ -9,10 +9,10 @@ namespace ZWave.Layers.Frame
     public class FrameBufferBlock : IDisposable
     {
         private const int ACK_TIME = 2000;
-        private Func<byte[], int> _writeData;
-        private Func<CommandMessage, byte[]> _createFrameBuffer;
-        private ConsumerQueue<ActionHandlerResult> _queue;
-        private Signal _ackSignal = new Signal();
+        private readonly Func<byte[], int> _writeData;
+        private readonly Func<CommandMessage, byte[]> _createFrameBuffer;
+        private readonly ConsumerQueue<ActionHandlerResult> _queue;
+        private readonly Signal _ackSignal = new Signal();
         private volatile bool _isTransmitted = false;
 
         public FrameBufferBlock(Func<byte[], int> writeData, Func<CommandMessage, byte[]> createFrameBuffer)

@@ -33,8 +33,8 @@ namespace ZWave.BasicApplication.Operations
             IntervalMs = intervalMs;
         }
 
-        SendDataOperation sendData;
-        RequestDataOperation requestData;
+        private SendDataOperation sendData;
+        private RequestDataOperation requestData;
 
         protected override void CreateWorkflow()
         {

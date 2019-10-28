@@ -11,7 +11,7 @@ namespace ZWave.Devices
     {
         public const int MAX_NODES = 256;
         public const int MAX_ENDPOINTS = 128;
-        private byte[] _secureCommandClasses = new byte[]
+        private readonly byte[] _secureCommandClasses = new byte[]
         {
             COMMAND_CLASS_VERSION_V3.ID,
             COMMAND_CLASS_SWITCH_BINARY_V2.ID,
@@ -147,7 +147,7 @@ namespace ZWave.Devices
         }
 
         private NodeViewPointCollection Nodes { get; set; }
-        private Action<string> _propertyChanged;
+        private readonly Action<string> _propertyChanged;
         public NetworkViewPoint(Action<string> propertyChanged)
         {
             _propertyChanged = propertyChanged;

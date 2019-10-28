@@ -8,7 +8,7 @@ namespace ZWave.BasicApplication.TransportService
 {
     public class SegmentsContainer
     {
-        private Dictionary<ushort, byte[]> _segments;
+        private readonly Dictionary<ushort, byte[]> _segments;
         /// <summary>
         /// For test purposes only
         /// </summary>

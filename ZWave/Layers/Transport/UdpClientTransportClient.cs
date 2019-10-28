@@ -25,7 +25,7 @@ namespace ZWave.Layers.Transport
         private volatile bool _isStoped = true;
         private SocketDataSource _dataSource { get; set; }
         private IPEndPoint _remoteEndPoint;
-        private Action<DataChunk> _transmitCallback;
+        private readonly Action<DataChunk> _transmitCallback;
 
         public override bool IsOpen
         {

@@ -26,8 +26,8 @@ namespace ZWave.BasicApplication.Operations
         internal int DataDelay { get; set; }
         internal byte NodeId { get; private set; }
         internal byte? TestNodeId { get; set; }
-        private SecurityS0CryptoProvider _securityS0CryptoProvider;
-        private SecurityManagerInfo _securityManagerInfo;
+        private readonly SecurityS0CryptoProvider _securityS0CryptoProvider;
+        private readonly SecurityManagerInfo _securityManagerInfo;
 
         public Action<ActionUnit> OnHandledCallback { get; set; }
         internal SendDataSecureTask(SecurityManagerInfo securityManagerInfo, SecurityS0CryptoProvider securityS0CryptoProvider, byte nodeId, byte[] data, TransmitOptions txOptions)
@@ -41,8 +41,8 @@ namespace ZWave.BasicApplication.Operations
             TxOptions = txOptions;
         }
 
-        RequestDataOperation requestNonce;
-        SendDataOperation sendEncData;
+        private RequestDataOperation requestNonce;
+        private SendDataOperation sendEncData;
 
         protected override void CreateWorkflow()
         {

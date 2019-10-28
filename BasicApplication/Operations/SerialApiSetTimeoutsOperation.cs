@@ -6,16 +6,17 @@ namespace ZWave.BasicApplication.Operations
     {
         public byte OldRxAckTimeout { get; set; }
         public byte OldRxByteTimeout { get; set; }
-        private byte RxAckTimeout;
-        private byte RxByteTimeout;
+        private readonly byte RxAckTimeout;
+        private readonly byte RxByteTimeout;
         public SerialApiSetTimeoutsOperation(byte rxAckTimeout, byte rxByteTimeout)
             : base(true, CommandTypes.CmdSerialApiSetTimeouts, true)
         {
             RxAckTimeout = rxAckTimeout;
             RxByteTimeout = rxByteTimeout;
         }
-        ApiMessage message;
-        ApiHandler handler;
+
+        private ApiMessage message;
+        private ApiHandler handler;
 
         protected override void CreateWorkflow()
         {

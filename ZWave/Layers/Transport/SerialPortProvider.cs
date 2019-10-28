@@ -14,7 +14,7 @@ namespace ZWave.Layers.Transport
     {
         public const uint BUFFER_SIZE = 512;
 
-        private ISerialPortProvider _interalProvider;
+        private readonly ISerialPortProvider _interalProvider;
 
         public SerialPortProvider()
         {

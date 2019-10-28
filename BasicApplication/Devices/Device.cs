@@ -170,7 +170,8 @@ namespace ZWave.BasicApplication.Devices
         /// Returns 'buffer' parameter of the Version operation result
         /// </summary>
         public string Version { get; set; }
-        Libraries _library;
+
+        private Libraries _library;
         /// <summary>
         /// Returns 'library type' parameter of the Version operation result or TypeLibrary operation result
         /// </summary>
@@ -217,22 +218,19 @@ namespace ZWave.BasicApplication.Devices
         /// </summary>
         public byte HardwareVersion { get; set; }
 
-        AutoResetEvent _controllerUpdateStatusSignal = new AutoResetEvent(false);
-
-        AutoResetEvent nsLearnReadySignal = new AutoResetEvent(false);
-        AutoResetEvent nodeFoundSignal = new AutoResetEvent(false);
-        AutoResetEvent addingRemovingSlaveSignal = new AutoResetEvent(false);
-        AutoResetEvent addingRemovingControllerSignal = new AutoResetEvent(false);
-        AutoResetEvent protocolDoneSignal = new AutoResetEvent(false);
-        AutoResetEvent doneSignal = new AutoResetEvent(false);
-        AutoResetEvent failedSignal = new AutoResetEvent(false);
-        AutoResetEvent notPrimarySignal = new AutoResetEvent(false);
-
-        AutoResetEvent assignCompleteSignal = new AutoResetEvent(false);
-        AutoResetEvent assignNodeIdDoneSignal = new AutoResetEvent(false);
-        AutoResetEvent assignRangeInfoUpdateSignal = new AutoResetEvent(false);
-
-        volatile ControllerUpdateStatuses _lastControllerUpdateStatusValue;
+        private readonly AutoResetEvent _controllerUpdateStatusSignal = new AutoResetEvent(false);
+        private readonly AutoResetEvent nsLearnReadySignal = new AutoResetEvent(false);
+        private readonly AutoResetEvent nodeFoundSignal = new AutoResetEvent(false);
+        private readonly AutoResetEvent addingRemovingSlaveSignal = new AutoResetEvent(false);
+        private readonly AutoResetEvent addingRemovingControllerSignal = new AutoResetEvent(false);
+        private readonly AutoResetEvent protocolDoneSignal = new AutoResetEvent(false);
+        private readonly AutoResetEvent doneSignal = new AutoResetEvent(false);
+        private readonly AutoResetEvent failedSignal = new AutoResetEvent(false);
+        private readonly AutoResetEvent notPrimarySignal = new AutoResetEvent(false);
+        private readonly AutoResetEvent assignCompleteSignal = new AutoResetEvent(false);
+        private readonly AutoResetEvent assignNodeIdDoneSignal = new AutoResetEvent(false);
+        private readonly AutoResetEvent assignRangeInfoUpdateSignal = new AutoResetEvent(false);
+        private ControllerUpdateStatuses _lastControllerUpdateStatusValue;
         public bool WaitControllerUpdateSignal(ControllerUpdateStatuses updateStatus, int timeout)
         {
             bool ret = false;
@@ -546,7 +544,7 @@ namespace ZWave.BasicApplication.Devices
                                 SerialApiCapability = res.SerialApiCapability;
                                 ChipType = res.ChipType;
                                 ChipRevision = res.ChipRevision;
-                                if (this.GetType() == typeof(Controller))
+                                if (GetType() == typeof(Controller))
                                 {
                                     ((Controller)this).IncludedNodes = res.IncludedNodes;
                                 }
@@ -1564,7 +1562,7 @@ namespace ZWave.BasicApplication.Devices
 
         public override string ToString()
         {
-            return $"{this.GetType().Name}^{SessionId:00} ({Library})";
+            return $"{GetType().Name}^{SessionId:00} ({Library})";
         }
 
         public ReturnValueResult TestInterfaceSendData(byte[] TestInterfaceCmd, int timeoutMs)

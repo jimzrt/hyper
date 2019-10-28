@@ -6,12 +6,12 @@ namespace ZWave.Layers.Transport.TcpToSerialBridge
 {
     public class TcpToSerialServer
     {
-        private static int MAX_THREADS = 1;
+        private static readonly int MAX_THREADS = 1;
 
-        private RunningTask[] _tasks = new RunningTask[MAX_THREADS];
+        private readonly RunningTask[] _tasks = new RunningTask[MAX_THREADS];
         private RunningTask[] Tasks { get { return _tasks; } }
 
-        private object _taskLocker = new object();
+        private readonly object _taskLocker = new object();
         private bool _isRunning;
         public bool IsRunning
         {

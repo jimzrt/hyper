@@ -14,18 +14,18 @@ namespace ZWave.BasicApplication.Operations
         public static int CMD_SUPPORTED_FLIRS = 500;
         public static int START_DELAY = 500;
 
-        private TransmitOptions _txOptions =
+        private readonly TransmitOptions _txOptions =
            TransmitOptions.TransmitOptionAcknowledge |
            TransmitOptions.TransmitOptionAutoRoute |
            TransmitOptions.TransmitOptionExplore;
-        private SecurityManagerInfo _securityManagerInfo;
+        private readonly SecurityManagerInfo _securityManagerInfo;
 
-        private RequestNodeInfoOperation _nodeInfo;
-        private RequestDataExOperation _supportedS0;
-        private RequestDataExOperation _supportedS2_ACCESS;
-        private RequestDataExOperation _supportedS2_AUTHENTICATED;
-        private RequestDataExOperation _supportedS2_UNAUTHENTICATED;
-        private DelayOperation _delayBeforeStart;
+        private readonly RequestNodeInfoOperation _nodeInfo;
+        private readonly RequestDataExOperation _supportedS0;
+        private readonly RequestDataExOperation _supportedS2_ACCESS;
+        private readonly RequestDataExOperation _supportedS2_AUTHENTICATED;
+        private readonly RequestDataExOperation _supportedS2_UNAUTHENTICATED;
+        private readonly DelayOperation _delayBeforeStart;
         private bool _isInclusionTask { get; set; }
 
         public RequestNodeInfoSecureTask(SecurityManagerInfo securityManagerInfo, RequestNodeInfoOperation action, bool isInclusionTask)

@@ -5,8 +5,8 @@ namespace ZWave.Operations
 {
     public class ListenOperation : ActionBase
     {
-        private Action<byte[]> _listenCallback;
-        private ByteIndex[] _mask;
+        private readonly Action<byte[]> _listenCallback;
+        private readonly ByteIndex[] _mask;
         public ListenOperation(ByteIndex[] mask, Action<byte[]> listenCallback)
             : base(false)
         {

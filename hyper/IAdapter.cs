@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace hyper
 {
-    interface IAdapter
+    internal interface IAdapter
     {
         event EventHandler<string> CommandHandler;
 

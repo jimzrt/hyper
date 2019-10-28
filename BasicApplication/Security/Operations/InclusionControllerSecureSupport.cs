@@ -14,21 +14,22 @@ namespace ZWave.BasicApplication.Operations
     public class InclusionControllerSecureSupport : ApiAchOperation
     {
         //Inclusion Controller Initiate Step ID
-        const byte PROXY_INCLUSION = 0x01;
-        const byte S0_INCLUSION = 0x02;
-        const byte PROXY_INCLUSION_REPLACE = 0x03;
+        private const byte PROXY_INCLUSION = 0x01;
+        private const byte S0_INCLUSION = 0x02;
+        private const byte PROXY_INCLUSION_REPLACE = 0x03;
+
         //Inclusion Controller Complete Status
-        const byte STEP_OK = 0x01;
-        const byte STEP_USER_REJECTED = 0x02;
-        const byte STEP_FAILED = 0x03;
-        const byte STEP_NOT_SUPPORTED = 0x04;
+        private const byte STEP_OK = 0x01;
+        private const byte STEP_USER_REJECTED = 0x02;
+        private const byte STEP_FAILED = 0x03;
+        private const byte STEP_NOT_SUPPORTED = 0x04;
 
         public TransmitOptions TxOptions { get; set; }
         public TransmitOptions2 TxOptions2 { get; set; }
         public TransmitSecurityOptions TxSecOptions { get; set; }
-        private SecurityManagerInfo _securityManagerInfo;
-        private Action<ActionResult> _updateCallback;
-        private Action<ActionToken, bool> _inclusionControllerStatusUpdateCallback;
+        private readonly SecurityManagerInfo _securityManagerInfo;
+        private readonly Action<ActionResult> _updateCallback;
+        private readonly Action<ActionToken, bool> _inclusionControllerStatusUpdateCallback;
 
         public InclusionControllerSecureSupport(SecurityManagerInfo securityManagerInfo, Action<ActionResult> updateCallback,
                 Action<ActionToken, bool> inclusionControllerStatusUpdateCallback)
@@ -47,7 +48,7 @@ namespace ZWave.BasicApplication.Operations
         {
         }
 
-        byte nodeIdToInclude = 0;
+        private byte nodeIdToInclude = 0;
         protected override void OnHandledInternal(DataReceivedUnit ou)
         {
             byte nodeId = ReceivedAchData.SrcNodeId;
@@ -237,7 +238,7 @@ namespace ZWave.BasicApplication.Operations
     {
         public class Initiate : ApiOperation
         {
-            private SecurityManagerInfo _securityManagerInfo;
+            private readonly SecurityManagerInfo _securityManagerInfo;
             private RequestDataOperation _requestInclusionSupport;
             private readonly ISecurityTestSettingsService _securityTestSettingsService;
             public InclusionController.Initiate RequestInclusionSupport { get; set; }
@@ -302,7 +303,7 @@ namespace ZWave.BasicApplication.Operations
 
         public class Complete : ApiOperation
         {
-            private SecurityManagerInfo _securityManagerInfo;
+            private readonly SecurityManagerInfo _securityManagerInfo;
             private SendDataOperation _sendInclusionComplete;
             private readonly ISecurityTestSettingsService _securityTestSettingsService;
             public InclusionController.Complete SendInclusionComplete { get; set; }

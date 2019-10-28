@@ -9,7 +9,8 @@ namespace ZWave.BasicApplication.Operations
     public class SerialApiTestOperation : ApiOperation
     {
         private const byte MAX_NODES_COUNT = 232;
-        Action<SerialApiTestResult> ResponseCallback { get; set; }
+
+        private Action<SerialApiTestResult> ResponseCallback { get; set; }
         private byte TestCmd { get; set; }
         private byte[] TestNodeMask { get; set; }
         private ushort TestDelay { get; set; }
@@ -38,10 +39,10 @@ namespace ZWave.BasicApplication.Operations
             IsStopOnErrors = isStopOnErrors;
         }
 
-        ApiMessage message;
-        ApiMessage messageStop;
-        ApiHandler handlerRetFailed;
-        ApiHandler handlerCallback;
+        private ApiMessage message;
+        private ApiMessage messageStop;
+        private ApiHandler handlerRetFailed;
+        private ApiHandler handlerCallback;
 
         protected override void CreateWorkflow()
         {

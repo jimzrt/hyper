@@ -6,7 +6,7 @@ namespace ZWave.BasicApplication.Operations
 {
     public class ListenDebugDataOperation : ApiOperation
     {
-        private ListenDebugDataDelegate _listenCallback;
+        private readonly ListenDebugDataDelegate _listenCallback;
         public ListenDebugDataOperation(ListenDebugDataDelegate listenCallback)
             : base(false, null, false)
         {
