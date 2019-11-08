@@ -32,7 +32,7 @@ namespace hyper
 
             if (!File.Exists("events.db"))
             {
-                //using (File.Create("events.db")) ;
+              //  using (File.Create("events.db")) ;
 
                 using SQLiteConnection connection = new SQLiteConnection("Data Source=events.db;");
                 using SQLiteCommand command = new SQLiteCommand(
@@ -282,7 +282,6 @@ connection);
 
                     return;
                 }
-                //  new ReconfigureCommand(controller, config).Start();
                 currentCommand = new ListenCommand(controller, config);
                 currentCommand.Start();
             }
@@ -321,7 +320,8 @@ connection);
                 }
 
 
-                new PingCommand(controller, nodeId).Start();
+                currentCommand = new PingCommand(controller, nodeId);
+                currentCommand.Start();
             }
             else if (args[1] == "rc" || args[1] == "reconfigure")
             {
@@ -336,8 +336,8 @@ connection);
 
                     return;
                 }
-                new ReconfigureCommand(controller, config).Start();
-                // new ListenCommand(controller).Start();
+                currentCommand = new ReconfigureCommand(controller, config);
+                currentCommand.Start();
             }
             else if (args[1] == "it" || args[1] == "interactive")
             {
@@ -539,7 +539,7 @@ connection);
             this.configList = configList;
         }
 
-        internal void Start()
+        internal bool Start()
         {
             Common.logger.Info("-----------");
             Common.logger.Info("Configuration mode");
@@ -554,16 +554,20 @@ connection);
             if (config == null)
             {
                 Common.logger.Info("could not find configuration!");
-                Common.logger.Info("you need to add this device to the configuration file.");
-                return;
+                Common.logger.Info("Either there is no configuration or device did not reply!");
+                return false ;
             }
 
             Common.logger.Info("configuration found for {0}!", config.deviceName);
             Common.logger.Info("Setting values.");
-            Common.SetConfiguration(controller, nodeId, config);
+            if(Common.SetConfiguration(controller, nodeId, config))
+            {
+                Common.logger.Info("Configuration successful!");
+                Common.logger.Info("-------------------");
+                return true;
+            }
 
-            Common.logger.Info("Configuration done!");
-            Common.logger.Info("-------------------");
+            return false;
 
 
 
@@ -781,7 +785,8 @@ connection);
 
                 var dummyInstance = Activator.CreateInstance(nestedType);
 
-
+                Event evt = new Event();
+                evt.NodeId = x.SrcNodeId;
                 switch (dummyInstance)
                 {
                     case COMMAND_CLASS_NOTIFICATION_V3.NOTIFICATION_REPORT _:
@@ -791,67 +796,58 @@ connection);
                         Common.logger.Info("mevent: {0}", alarmReport.mevent);
                         Common.logger.Info("v1AlarmLevel: {0}", alarmReport.v1AlarmLevel);
                         Common.logger.Info("v1AlarmType: {0}", alarmReport.v1AlarmType);
-                        var evtNotification = new Event
-                        {
-                            NodeId = x.SrcNodeId,
-                            EventType = EventType.NOTIFICATION
-                        };
-                        EventDAO.InsertEventAsync(evtNotification);
+                        evt.EventType = EventType.NOTIFICATION;
+
 
                         // buffer = new byte[] { x.SrcNodeId, x.Command[0], alarmReport.zwaveAlarmEvent };
-                        return;
+                        break;
                     case COMMAND_CLASS_BASIC.BASIC_SET _:
                         var basicSet = (COMMAND_CLASS_BASIC.BASIC_SET)x.Command;
                         Common.logger.Info("value: {0}", basicSet.value);
+                        evt.EventType = EventType.BASIC_SET;
+                        evt.Value = basicSet.value;
                         //      buffer = new byte[] { x.SrcNodeId, x.Command[0], basicSet.value };
                         break;
                     case COMMAND_CLASS_SWITCH_BINARY.SWITCH_BINARY_REPORT _:
                         var binaryReport = (COMMAND_CLASS_SWITCH_BINARY.SWITCH_BINARY_REPORT)x.Command;
+                        evt.EventType = EventType.SWITCH_BINARY_REPORT;
+                        evt.Value = binaryReport.value;
                         //     buffer = new byte[] { x.SrcNodeId, x.Command[0], binaryReport.value };
                         break;
                     case COMMAND_CLASS_WAKE_UP.WAKE_UP_NOTIFICATION _:
-                        var evtWakeup = new Event
-                        {
-                            NodeId = x.SrcNodeId,
-                            EventType = EventType.WAKEUP,
-                        };
-                        EventDAO.InsertEventAsync(evtWakeup);
+                        evt.EventType = EventType.WAKEUP;
+
                         queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
-                        return;
+                        break;
                     case COMMAND_CLASS_BATTERY.BATTERY_REPORT _:
                         var batteryReport = (COMMAND_CLASS_BATTERY.BATTERY_REPORT)x.Command;
                         Common.logger.Info("battery value: {0}", batteryReport.batteryLevel);
-                        var evtBattery = new Event
-                        {
-                            NodeId = x.SrcNodeId,
-                            EventType = EventType.BATTERY,
-                            Value = batteryReport.batteryLevel
-                        };
-                        EventDAO.InsertEventAsync(evtBattery);
+                        evt.EventType = EventType.BATTERY;
+                        evt.Value = batteryReport.batteryLevel;
+
                         //      buffer = new byte[] { x.SrcNodeId, x.Command[0], batteryReport.batteryLevel };
                         break;
                     case COMMAND_CLASS_SENSOR_MULTILEVEL.SENSOR_MULTILEVEL_REPORT _:
                         var multilevelReport = (COMMAND_CLASS_SENSOR_MULTILEVEL.SENSOR_MULTILEVEL_REPORT)x.Command;
                         Common.logger.Info("properties: {0}, type: {1}, value: {2}", multilevelReport.properties1.ToString(), multilevelReport.sensorType, multilevelReport.sensorValue);
-                        return;
+                        evt.EventType = EventType.SENSOR_MULTILEVEL_REPORT;
+                        evt.Value = multilevelReport.sensorValue[0];
+                        break;
                     case COMMAND_CLASS_SENSOR_BINARY_V2.SENSOR_BINARY_REPORT _:
                         var sensorBinaryReport = (COMMAND_CLASS_SENSOR_BINARY_V2.SENSOR_BINARY_REPORT)x.Command;
                         Common.logger.Info("values: {0} - {1}", sensorBinaryReport.sensorType, sensorBinaryReport.sensorValue);
-                        var evtBinaryreport = new Event
-                        {
-                            NodeId = x.SrcNodeId,
-                            EventType = EventType.SENSOR_BINARY,
-                            Value = sensorBinaryReport.sensorValue
-                        };
-                        EventDAO.InsertEventAsync(evtBinaryreport);
+                        evt.EventType = EventType.SENSOR_BINARY;
+                        evt.Value = sensorBinaryReport.sensorValue;
+
                         break;
 
                     default:
                         Common.logger.Info("Unhandled command class: {0}", nestedType.Name);
-                        return;
+                        evt.EventType = EventType.UNHANDLED;
+                        break;
 
                 }
-
+                EventDAO.InsertEventAsync(evt);
                 //    SendBytes(udpClient, buffer);
 
 
@@ -909,10 +905,12 @@ connection);
     }
 
 
-    internal class ReconfigureCommand
+    internal class ReconfigureCommand : ICommand
     {
         private readonly Controller controller;
         private readonly List<ConfigItem> configList;
+        readonly BlockingCollection<byte> queueItems = new BlockingCollection<byte>(255);
+
 
         public ReconfigureCommand(Controller controller, List<ConfigItem> configList)
         {
@@ -922,11 +920,16 @@ connection);
 
 
         public readonly object lockObject = new object();
+        private ActionToken token;
+        private bool abort = false;
 
+        private HashSet<byte> nodesToCheck = new HashSet<byte>(255);
 
+        public bool Active { get; private set; } = false;
 
-        internal void Start()
+        public void Start()
         {
+            Active = true;
             Common.logger.Info("-----------");
             Common.logger.Info("Listening mode");
             Common.logger.Info("Press Enter to exit");
@@ -938,37 +941,81 @@ connection);
             Common.logger.Info("Got {0} command classes", commandClasses.Count);
 
 
-            var nodesToCheck = new HashSet<byte>(controller.IncludedNodes);
+            nodesToCheck.AddRange(controller.IncludedNodes);
             nodesToCheck.Remove(1);
+            //nodesToCheck.AddRange(new List<byte>{ 9, 25, 33 });
 
 
             // ping all nodes
             // all nodes that respond are probably not battery powered and we can overwrite the configuration without delay
             Common.logger.Info("There are {0} to check/reconfigure. Pinging each node...", nodesToCheck.Count);
-            foreach (var nodeId in nodesToCheck.ToList())
-            {
-                Common.logger.Info("Pinging node {0}...", nodeId);
-                if (!Common.CheckReachable(controller, nodeId))
-                {
-                    Common.logger.Info("node {0} is not reachable, waiting for a wakuep.", nodeId);
-                    continue;
-                }
+            //foreach (var nodeId in nodesToCheck.ToList())
+            //{
+            //    Common.logger.Info("Pinging node {0}...", nodeId);
+            //    bool notReachable;
+            //    int retryCount = 0;
+            //    while ((notReachable = !Common.CheckReachable(controller, nodeId)) && retryCount < 3 && !abort)
+            //    {
+            //        Common.logger.Info("node {0} is not reachable, trying again.", nodeId);
+            //        retryCount++;
+            //    }
+            //    if (abort)
+            //    {
+            //        Common.logger.Info("Aborting!");
+            //        return;
+            //    }
+            //    if (notReachable)
+            //    {
+            //        Common.logger.Info("node {0} is not reachable, wait for wakeup!", nodeId);
+            //        continue;
+            //    }
+            //    Common.logger.Info("node {0} is reachable! Configure directly.", nodeId);
 
-                Common.logger.Info("node {0} is reachable! Configure directly.", nodeId);
-                nodesToCheck.Remove(nodeId);
-                Common.logger.Info("{0} nodes left to check.", nodesToCheck.Count);
-                new ConfigCommand(controller, nodeId, configList).Start();
-            }
+            //    //ZWave.Enums.RequestNeighborUpdateStatuses nodeNeighborUpdateResult = ZWave.Enums.RequestNeighborUpdateStatuses.Started;
+
+            //    //int retryCounter = 0;
+            //    //while (true){
+            //    //    nodeNeighborUpdateResult = controller.RequestNodeNeighborUpdate(nodeId, 60000 * 5).NeighborUpdateStatus;
+            //    //    if(nodeNeighborUpdateResult != ZWave.Enums.RequestNeighborUpdateStatuses.Done && retryCounter < 10)
+            //    //    {
+            //    //        Common.logger.Info("not done, again!");
+            //    //        retryCounter++;
+            //    //        continue;
+            //    //    }
+            //    //    Common.logger.Info("done or too many retries!");
+            //    //    break;
+            //    //}
+
+            //    //controller.DeleteReturnRoute(nodeId, out ActionToken deleteToken);
+            //    //var resDelete = (ZWave.BasicApplication.Operations.DeleteReturnRouteResult)deleteToken.Result;
+            //    //Common.logger.Info("delete return:");
+            //    //Common.logger.Info(deleteToken.State);
+            //    //Common.logger.Info(resDelete.RetStatus);
+
+            //    //controller.AssignReturnRoute(1, nodeId, out ActionToken assignToken);
+            //    //var resAssign = (ZWave.BasicApplication.Operations.AssignReturnRouteResult)assignToken.Result;
+            //    //Common.logger.Info("assign return:");
+            //    //Common.logger.Info(resAssign.State);
+            //    //Common.logger.Info(resAssign.RetStatus);
+
+            //    //Common.logger.Info("Neighbour update successful!");
+
+            //    if (new ConfigCommand(controller, nodeId, configList).Start())
+            //    {
+            //        nodesToCheck.Remove(nodeId);
+            //    }
+            //    Common.logger.Info("{0} nodes left to check.", nodesToCheck.Count);
+            //}
 
             Common.logger.Info("There are {0} nodes left to check/reconfigure. Waiting for wake up notifications...", nodesToCheck.Count);
-            Common.logger.Info("Exit by pressing ENTER");
+            Common.logger.Info("Exit by pressing CTRL-C");
 
-            var queueItems = new BlockingCollection<byte>(nodesToCheck.Count);
+           
 
             bool inProgress = false;
 
 
-            var token = controller.ListenData((x) =>
+            token = controller.ListenData((x) =>
             {
                 if (inProgress)
                 {
@@ -1013,12 +1060,11 @@ connection);
             //});
 
 
-            var waitingForInput = Task.Run(() =>
+            if (nodesToCheck.Count == 0)
             {
-                Console.ReadLine();
                 token.SetCompleted();
                 queueItems.CompleteAdding();
-            });
+            }
 
 
             while (!queueItems.IsCompleted)
@@ -1029,9 +1075,13 @@ connection);
                     //   Common.logger.Info("Got queue element for node {0}", nodeId);
                     //token.SetCancelled();
                     inProgress = true;
-                    new ConfigCommand(controller, nodeId, configList).Start();
+                    if(!new ConfigCommand(controller, nodeId, configList).Start())
+                    {
+                        Common.logger.Info("Adding node back to queue");
+                        nodesToCheck.Add(nodeId);
+                    }
                     Common.logger.Info("{0} nodes left to check.", nodesToCheck.Count);
-                    if (nodesToCheck.Count == 1)
+                    if (nodesToCheck.Count == 0)
                     {
                         token.SetCompleted();
                         queueItems.CompleteAdding();
@@ -1049,6 +1099,20 @@ connection);
 
             Common.logger.Info("Reconfiguration done!");
             Common.logger.Info("---------------------");
+            Active = false;
+        }
+
+        public void Stop()
+        {
+            Common.logger.Info("Stopping Reconfiguration");
+            abort = true;
+            token?.SetCompleted();
+            queueItems?.CompleteAdding();
+
+            var nodesToList = new List<byte>(nodesToCheck);
+            nodesToList.Sort();
+            Common.logger.Info("Nodes left:");
+            Common.logger.Info(string.Join(",", nodesToList));
         }
     }
 

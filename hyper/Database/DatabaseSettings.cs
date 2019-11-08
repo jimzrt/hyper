@@ -20,7 +20,7 @@ namespace hyper.Database
                     {
                         Name = "SQLite",
                         ProviderName = "System.Data.SQLite",
-                        ConnectionString = @"Data Source=logs/events.db;"
+                        ConnectionString = @"Data Source=events.db;"
                     };
             }
         }

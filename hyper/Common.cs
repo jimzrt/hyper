@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Utils;
 using ZWave.BasicApplication;
 using ZWave.BasicApplication.Devices;
@@ -99,11 +100,18 @@ namespace hyper
 
         public static ConfigItem GetConfigurationForDevice(Controller controller, byte nodeId, List<ConfigItem> configList)
         {
+            var retryCount = 10;
             var gotDeviceIds = GetManufactor(controller, nodeId, out int manufacturerId, out int productTypeId);
-            while (!gotDeviceIds)
+            while (!gotDeviceIds && retryCount >= 0)
             {
                 Common.logger.Info("could not get device data! Trying again, wake up device!");
                 gotDeviceIds = GetManufactor(controller, nodeId, out manufacturerId, out productTypeId);
+                retryCount--;
+            }
+            if (!gotDeviceIds)
+            {
+                Common.logger.Info("Too many retrys, aborting!");
+                return null;
             }
             var config = configList.Find(item => item.manufacturerId == manufacturerId && item.productTypeId == productTypeId);
             return config;
@@ -135,6 +143,8 @@ namespace hyper
 
         public static bool SetConfiguration(Controller controller, byte nodeId, ConfigItem config)
         {
+
+            int retryCount = 15;
             if (config.groups != null && config.groups.Count != 0)
             {
                 Common.logger.Info("Setting " + config.groups.Count + " associtions");
@@ -148,7 +158,15 @@ namespace hyper
                     {
                         Common.logger.Info("Not successful! Trying again, please wake up device.");
                         associationCleared = ClearAssiciation(controller, nodeId, groupIdentifier);
+                        retryCount--;
+                        if (retryCount <= 0)
+                        {
+                            Common.logger.Info("Too many retrys, aborting!");
+                            return false;
+                        }
+                        Thread.Sleep(200);
                     }
+                    retryCount = 15;
 
                     var associationAdded = AddAssociation(controller, nodeId, groupIdentifier, member);
                     var associationValidated = false;
@@ -166,7 +184,15 @@ namespace hyper
                             associationValidated = AssociationContains(controller, nodeId, groupIdentifier, member);
 
                         }
+                        retryCount--;
+                        if (retryCount <= 0)
+                        {
+                            Common.logger.Info("Too many retrys, aborting!");
+                            return false;
+                        }
+                        Thread.Sleep(200);
                     }
+                    retryCount = 15;
                 }
             }
 
@@ -193,7 +219,14 @@ namespace hyper
                         {
                             parameterValidated = ValidateParameter(controller, nodeId, configParameter, configValue);
                         }
+                        retryCount--;
+                        if (retryCount <= 0)
+                        {
+                            Common.logger.Info("Too many retrys, aborting!");
+                            return false;
+                        }
                     }
+                    Thread.Sleep(200);
 
 
                 }

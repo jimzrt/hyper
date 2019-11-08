@@ -12,7 +12,15 @@ namespace hyper.Models
         [LinqToDB.Mapping.MapValue(Value = "NOTIFICATION")]
         NOTIFICATION,
         [LinqToDB.Mapping.MapValue(Value = "SENSOR_BINARY")]
-        SENSOR_BINARY
+        SENSOR_BINARY,
+        [LinqToDB.Mapping.MapValue(Value = "BASIC_SET")]
+        BASIC_SET,
+        [LinqToDB.Mapping.MapValue(Value = "UNHANDLED")]
+        UNHANDLED,
+        [LinqToDB.Mapping.MapValue(Value = "SWITCH_BINARY_REPORT")]
+        SWITCH_BINARY_REPORT,
+        [LinqToDB.Mapping.MapValue(Value = "SENSOR_MULTILEVEL_REPORT")]
+        SENSOR_MULTILEVEL_REPORT
     }
 
 
