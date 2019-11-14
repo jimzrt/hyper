@@ -2,7 +2,7 @@
   "profiles": {
     "hyper": {
       "commandName": "Project",
-      "commandLineArgs": "COM9 r 43"
+      "commandLineArgs": "COM9 i"
     }
   }
 }

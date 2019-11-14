@@ -343,6 +343,42 @@ connection);
             {
                 currentCommand = new InteractiveCommand(controller, config);
                 currentCommand.Start();
+            } else if(args[1] == "fr" || args[1] == "forceRemove")
+            {
+                if (args.Length != 3)
+                {
+                    Common.logger.Info("wrong arguments!");
+                    Common.logger.Info("correct usage:");
+
+                    Common.logger.Info("./hyper [serialPort] fr [nodeid]");
+
+
+                    return;
+                }
+
+                if (!byte.TryParse(args[2], out byte nodeId))
+                {
+                    Common.logger.Info("argument should be node id! " + args[2] + " is not a number!");
+                    return;
+
+                }
+
+
+
+
+
+
+
+                if (!controller.IncludedNodes.Contains(nodeId))
+                {
+                    Common.logger.Info("NodeID " + nodeId + " not included in network!");
+                    Common.logger.Info(string.Join(", ", controller.IncludedNodes));
+                    return;
+                }
+
+
+                currentCommand = new ForceRemoveCommand(controller, nodeId);
+                currentCommand.Start();
             }
             else
             {
@@ -571,6 +607,68 @@ connection);
 
 
 
+        }
+    }
+
+
+    internal class ForceRemoveCommand : ICommand
+    {
+        public bool Active { get; private set; } = false;
+
+
+        private readonly Controller controller;
+        private readonly byte nodeId;
+        public ForceRemoveCommand(Controller controller, byte nodeId)
+        {
+            this.controller = controller;
+            this.nodeId = nodeId;
+        }
+
+        public void Start()
+        {
+            Active = true;
+            Common.logger.Info("-----------");
+            Common.logger.Info("Force Remove mode");
+            Common.logger.Info("node to replace: " + nodeId);
+            Common.logger.Info("-----------");
+            Common.logger.Info("Check if node is reachable...");
+            var reachable = Common.CheckReachable(controller, nodeId);
+            if (reachable)
+            {
+                Common.logger.Info("Node is reachable!");
+                Common.logger.Info("If node is reachable, we cannot replace it!");
+                return;
+            }
+            else
+            {
+                Common.logger.Info("OK, node is not reachable");
+            }
+            Common.logger.Info("Mark node as failed...");
+            var markedAsFailed = Common.MarkNodeFailed(controller, nodeId);
+            if (!markedAsFailed)
+            {
+                Common.logger.Info("Node could not be marked as failed!");
+                Common.logger.Info("Try again and ensure that node is not reachable.");
+                return;
+            }
+            else
+            {
+                Common.logger.Info("OK, node is marked as failed");
+            }
+
+            Common.logger.Info("Removing Node...");
+            var result = controller.RemoveFailedNodeId(nodeId);
+            Common.logger.Info(result.State);
+            Common.logger.Info("Removing Done!");
+
+
+            Active = false;
+
+        }
+
+        public void Stop()
+        {
+            Common.logger.Info("Not stoppable");
         }
     }
 
