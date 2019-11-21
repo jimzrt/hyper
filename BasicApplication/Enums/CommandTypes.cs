@@ -146,6 +146,14 @@
         /// </summary>
         CmdMemoryPutBuffer = 0x24,
         /// <summary>
+        /// Command to Read NVRam
+        /// </summary>
+        CmdNVMExtRead = 0x2a,
+        /// <summary>
+        /// Command to Write NVRam
+        /// </summary>
+        CmdNVMExtWrite = 0x2b,
+        /// <summary>
         /// Command to write the specified time to the current Real Time Clock.
         /// </summary>
         CmdClockSet = 0x30,

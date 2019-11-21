@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BasicApplication_netcore.Operations;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -1006,6 +1007,16 @@ namespace ZWave.BasicApplication.Devices
         public MemoryGetBufferResult MemoryGetBuffer(ushort offset, byte length)
         {
             return (MemoryGetBufferResult)Execute(new MemoryGetBufferOperation(offset, length));
+        }
+
+        public ReadNVRamResult ReadNVRam(ushort offset, byte length)
+        {
+            return (ReadNVRamResult)Execute(new ReadNVRamOperation(offset, length));
+        }
+
+        public WriteNVRamResult WriteNVRam(ushort offset, byte length, byte[] data)
+        {
+            return (WriteNVRamResult)Execute(new WriteNVRamOperation(offset, length, data));
         }
 
         public MemoryGetByteResult MemoryGetByte(ushort offset)

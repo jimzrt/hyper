@@ -98,11 +98,11 @@ namespace hyper
             return true;
         }
 
-        public static ConfigItem GetConfigurationForDevice(Controller controller, byte nodeId, List<ConfigItem> configList)
+        public static ConfigItem GetConfigurationForDevice(Controller controller, byte nodeId, List<ConfigItem> configList, ref bool abort)
         {
             var retryCount = 10;
             var gotDeviceIds = GetManufactor(controller, nodeId, out int manufacturerId, out int productTypeId);
-            while (!gotDeviceIds && retryCount >= 0)
+            while (!gotDeviceIds && retryCount >= 0 && !abort)
             {
                 Common.logger.Info("could not get device data! Trying again, wake up device!");
                 gotDeviceIds = GetManufactor(controller, nodeId, out manufacturerId, out productTypeId);
@@ -392,6 +392,111 @@ namespace hyper
             return clearAssociation.TransmitStatus == TransmitStatuses.CompleteOk;
         }
 
+        public static bool SetBasic(Controller controller, byte nodeId, bool value)
+        {
+            Common.logger.Info("Basic_Set for node {0}: {1}", nodeId, value);
+            var cmd = new COMMAND_CLASS_BASIC_V2.BASIC_SET
+            {
+                value = Convert.ToByte(value)
+            };
+            var setBasic = controller.SendData(nodeId, cmd, txOptions);
+            return setBasic.TransmitStatus == TransmitStatuses.CompleteOk;
+        }
+
+
+        public static bool WriteNVRam(Controller controller, byte[] eeprom)
+        {
+            if(eeprom.Length != 65536)
+            {
+                Common.logger.Warn("Wrong file size!");
+                return false;
+            }
+            int counter = 0;
+            while (counter < 65536)
+            {
+                var result = controller.WriteNVRam((ushort)counter, 128, eeprom.Skip(counter).Take(128).ToArray());
+                if (result.State == ZWave.ActionStates.Completed)
+                {
+
+                  //  Buffer.BlockCopy(result.RetValue, 0, eeprom, counter, 128);
+                }
+                else
+                {
+                    Common.logger.Error("error reading NVRam");
+                    return false;
+                }
+                counter += 128;
+                if (counter % 1024 == 0)
+                {
+                    DrawTextProgressBar("Writing", counter, 65536);
+
+                }
+            }
+            Console.WriteLine();
+
+            return true;
+        }
+
+        public static bool ReadNVRam(Controller controller, out byte[] eeprom)
+        {
+            eeprom = new byte[65536];
+            int counter = 0;
+            while (counter < 65536)
+            {
+                var result = controller.ReadNVRam((ushort)counter, 128);
+                if (result.State == ZWave.ActionStates.Completed)
+                {
+
+                    Buffer.BlockCopy(result.RetValue, 0, eeprom, counter, 128);
+                } else
+                {
+                    Common.logger.Error("error reading NVRam");
+                    return false;
+                }
+                counter += 128;
+                if(counter % 1024 == 0)
+                {
+                    DrawTextProgressBar("Reading", counter, 65536);
+
+                }
+            }
+            Console.WriteLine();
+
+            return true;        
+        }
+
+
+        public static void DrawTextProgressBar(string stepDescription, int progress, int total)
+        {
+            int totalChunks = 50;
+
+            //draw empty progress bar
+            Console.CursorLeft = 0;
+            Console.Write("["); //start
+            Console.CursorLeft = totalChunks + 1;
+            Console.Write("]"); //end
+            Console.CursorLeft = 1;
+
+            double pctComplete = Convert.ToDouble(progress) / total;
+            int numChunksComplete = Convert.ToInt16(totalChunks * pctComplete);
+
+            //draw completed chunks
+            Console.BackgroundColor = ConsoleColor.Green;
+            Console.Write("".PadRight(numChunksComplete));
+
+            //draw incomplete chunks
+            Console.BackgroundColor = ConsoleColor.Gray;
+            Console.Write("".PadRight(totalChunks - numChunksComplete));
+
+            //draw totals
+            Console.CursorLeft = totalChunks + 5;
+            Console.BackgroundColor = ConsoleColor.Black;
+
+            string output = String.Format("{0}% of 100%", numChunksComplete * (100d / totalChunks));
+            Console.Write(output.PadRight(15) + stepDescription); //pad the output so when changing from 3 to 4 digits we avoid text shifting
+        }
+
+
         public static bool RequestBatteryReport(Controller controller, byte nodeId)
         {
             //var cmd = new COMMAND_CLASS_BATTERY.BATTERY_GET();
@@ -441,10 +546,6 @@ namespace hyper
         {
             var excludeNode = controller.ExcludeNode(Modes.NodeOptionHighPower | Modes.NodeOptionNetworkWide, 20000);
             nodeId = excludeNode.AddRemoveNode.Id;
-            if (nodeId == 0)
-            {
-                return false;
-            }
             return true;
         }
 

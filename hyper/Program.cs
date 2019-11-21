@@ -10,6 +10,8 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Utils;
 using YamlDotNet.Serialization;
@@ -32,7 +34,7 @@ namespace hyper
 
             if (!File.Exists("events.db"))
             {
-              //  using (File.Create("events.db")) ;
+                //  using (File.Create("events.db")) ;
 
                 using SQLiteConnection connection = new SQLiteConnection("Data Source=events.db;");
                 using SQLiteCommand command = new SQLiteCommand(
@@ -107,21 +109,7 @@ connection);
 
             ICommand currentCommand = null;
 
-            Console.CancelKeyPress += new ConsoleCancelEventHandler((evtSender, evtArgs) =>
-            {
-                evtArgs.Cancel = true;
 
-                if (currentCommand?.Active ?? false)
-                {
-                    Common.logger.Info("master: stopping current command!");
-                    currentCommand.Stop();
-                }
-                else
-                {
-                    Common.logger.Info("No current command, stopping application");
-
-                }
-            });
 
 
 
@@ -343,7 +331,8 @@ connection);
             {
                 currentCommand = new InteractiveCommand(controller, config);
                 currentCommand.Start();
-            } else if(args[1] == "fr" || args[1] == "forceRemove")
+            }
+            else if (args[1] == "fr" || args[1] == "forceRemove")
             {
                 if (args.Length != 3)
                 {
@@ -433,6 +422,8 @@ connection);
         private readonly List<ConfigItem> configList;
         private ICommand currentCommand = null;
 
+        private bool blockExit = false;
+
         public InteractiveCommand(Controller controller, List<ConfigItem> configList)
         {
             this.controller = controller;
@@ -441,32 +432,184 @@ connection);
 
         public bool Active { get; private set; } = false;
 
-        public void Start()
+
+        private void CancelHandler(object evtSender, ConsoleCancelEventArgs evtArgs)
         {
+
+            if (currentCommand == null)
+            {
+                Common.logger.Info("No current command, stopping application");
+                evtArgs.Cancel = false;
+                Environment.Exit(0);
+                return;
+            }
+
+
+            evtArgs.Cancel = true;
+            if (blockExit)
+            {
+                Common.logger.Info("\nCannot abort application now!\nPlease wait for operation to finish.\n");
+                return;
+            }
+
+            Common.logger.Info("Stopping current command!");
+            currentCommand.Stop();
+
+
+        }
+
+        public bool Start()
+        {
+
+            Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
+
+            var oneTo255Regex = @"((?<!\d)(?:1\d{2}|2[0-4]\d|[1-9]?\d|25[0-5])(?!\d))";
+
+            var pingRegex = new Regex(@"^ping\s*" + oneTo255Regex);
+            var configRegex = new Regex(@"^config\s*" + oneTo255Regex);
+            var replaceRegex = new Regex(@"^replace\s*" + oneTo255Regex);
+            var basicRegex = new Regex(@"^basic\s*" + oneTo255Regex + @"\s*(false|true)");
+
+
             Active = true;
             Common.logger.Info("-----------");
             Common.logger.Info("Interaction mode");
             Common.logger.Info("-----------");
 
+
+            controller.SetPromiscuousMode(false);
+
+
+            ListenCommand listenComand = new ListenCommand(controller, configList);
+
+            Thread InstanceCaller = new Thread(
+            new ThreadStart(() => listenComand.Start()));
+
+            InstanceCaller.Start();
+
             while (Active)
             {
-                Common.logger.Info("press l girl!");
-                var input = Console.ReadKey();
-                if (input.Key == ConsoleKey.L)
+                while (Console.KeyAvailable)
+                    Console.ReadKey(true);
+
+                Common.logger.Info("choose your destiny girl!");
+                var input = Console.ReadLine();
+                if (input == null)
                 {
-                    Common.logger.Info("yes my master");
-                    currentCommand = new ListenCommand(controller, configList);
-                    currentCommand.Start();
+                    return false;
                 }
+                switch (input.Trim().ToLower())
+                {
+                    case "reset!":
+                        {
+                            blockExit = true;
+                            Common.logger.Info("Resetting controller...");
+                            controller.SetDefault();
+                            controller.SerialApiGetInitData();
+                            Common.logger.Info("Done!");
+
+                            blockExit = false;
+                            break;
+                        }
+                    case "listen":
+                        {
+                            currentCommand = new ListenCommand(controller, configList);
+                            break;
+                        }
+                    case "include":
+                        {
+                            currentCommand = new IncludeCommand(controller, configList);
+                            break;
+                        }
+                    case "exclude":
+                        {
+                            currentCommand = new ExcludeCommand(controller);
+                            break;
+                        }
+                    case var pingVal when pingRegex.IsMatch(pingVal):
+                        {
+
+
+                            var val = pingRegex.Match(pingVal).Groups[1].Value;
+                            var nodeId = byte.Parse(val);
+                            currentCommand = new PingCommand(controller, nodeId);
+                            break;
+                        }
+                    case var basicSetVal when basicRegex.IsMatch(basicSetVal):
+                        {
+
+                            blockExit = true;
+                            var val = basicRegex.Match(basicSetVal).Groups[1].Value;
+                            var nodeId = byte.Parse(val);
+                            val = basicRegex.Match(basicSetVal).Groups[2].Value;
+                            var value = bool.Parse(val);
+
+                            Common.SetBasic(controller, nodeId, value);
+                            blockExit = false;
+                            break;
+                        }
+                    case var configVal when configRegex.IsMatch(configVal):
+                        {
+                            var val = configRegex.Match(configVal).Groups[1].Value;
+                            var nodeId = byte.Parse(val);
+                            currentCommand = new ConfigCommand(controller, nodeId, configList);
+                            break;
+                        }
+                    case var replaceVal when replaceRegex.IsMatch(replaceVal):
+                        {
+                            var val = replaceRegex.Match(replaceVal).Groups[1].Value;
+                            var nodeId = byte.Parse(val);
+                            currentCommand = new ReplaceCommand(controller, nodeId, configList);
+                            break;
+                        }
+
+                    case "read":
+                        {
+                            blockExit = true;
+                            var result = Common.ReadNVRam(controller, out byte[] eeprom);
+                            if (result)
+                            {
+                                File.WriteAllBytes("eeprom.bin", eeprom);
+                                Common.logger.Info("Result is {0}", result);
+
+                            }
+                            blockExit = false;
+                            break;
+                        }
+                    case "write!":
+                        {
+                            blockExit = true;
+                            byte[] read = File.ReadAllBytes("eeprom.bin");
+                            var result = Common.WriteNVRam(controller, read);
+                            Common.logger.Info("Result is {0}", result);
+                            controller.SerialApiGetInitData();
+
+                            blockExit = false;
+                            break;
+                        }
+                    default:
+                        break;
+                }
+                if (currentCommand == null)
+                {
+                    continue;
+                }
+                listenComand.Active = false;
+                currentCommand.Start();
+                currentCommand = null;
+                listenComand.Active = true;
+
+
             }
 
 
             Common.logger.Info("goodby master,,,");
+            return true;
         }
 
         public void Stop()
         {
-            if (currentCommand?.Active ?? false)
+            if (currentCommand != null)
             {
                 Common.logger.Info("stoppping current command!");
                 currentCommand.Stop();
@@ -480,7 +623,7 @@ connection);
         }
     }
 
-    internal class ExcludeCommand
+    internal class ExcludeCommand : ICommand
     {
 
 
@@ -488,12 +631,15 @@ connection);
 
         private readonly Controller controller;
 
+
+        private bool abort = false;
+
         public ExcludeCommand(Controller controller)
         {
             this.controller = controller;
         }
 
-        internal void Start()
+        public bool Start()
         {
 
             Common.logger.Info("-----------");
@@ -503,20 +649,33 @@ connection);
             Common.logger.Info("Starting exclusion, please wake up device...");
 
             var nodeExcluded = Common.ExcludeNode(controller, out byte nodeId);
-            while (!nodeExcluded)
+            while (!nodeExcluded && !abort)
             {
                 Common.logger.Info("Could not exclude any node, trying again...");
                 nodeExcluded = Common.ExcludeNode(controller, out nodeId);
+            }
+
+            if (abort)
+            {
+                Common.logger.Info("Aborted!");
+                return false;
             }
 
             Common.logger.Info("Success! node with id: {0} excluded.", nodeId);
 
 
             Common.logger.Info("Exclusion done!");
+            return true;
+        }
+
+        public void Stop()
+        {
+            Common.logger.Info("aborting... please wait.");
+            abort = true;
         }
     }
 
-    internal class IncludeCommand
+    internal class IncludeCommand : ICommand
     {
 
 
@@ -525,40 +684,62 @@ connection);
         private readonly Controller controller;
         private readonly List<ConfigItem> configList;
 
+        private bool abort = false;
+
+        public bool Active { get; private set; } = false;
+
+
+        ICommand currentCommand = null;
+
+
         public IncludeCommand(Controller controller, List<ConfigItem> configList)
         {
             this.controller = controller;
             this.configList = configList;
         }
 
-        internal void Start()
+        public bool Start()
         {
+            Active = true;
             Common.logger.Info("-----------");
             Common.logger.Info("Inclusion mode");
             Common.logger.Info("-----------");
 
             Common.logger.Info("Starting inclusion, please wake up device...");
 
+
             var nodeIncluded = Common.IncludeNode(controller, out byte nodeId);
-            while (!nodeIncluded)
+            while (!nodeIncluded && !abort)
             {
                 Common.logger.Info("Could not include any node, trying again...");
                 nodeIncluded = Common.IncludeNode(controller, out nodeId);
             }
 
+            if (abort)
+            {
+                Common.logger.Info("aborted!");
+                return false;
+            }
             Common.logger.Info("Success! New node id: {0}", nodeId);
-
-            new ConfigCommand(controller, nodeId, configList).Start();
 
 
             Common.logger.Info("Inclusion done!");
 
+            currentCommand = new ConfigCommand(controller, nodeId, configList);
+            return currentCommand.Start();
 
 
         }
+
+        public void Stop()
+        {
+            Common.logger.Info("aborting... Please wait.");
+            abort = true;
+            currentCommand?.Stop();
+        }
     }
 
-    internal class ConfigCommand
+    internal class ConfigCommand : ICommand
     {
 
 
@@ -568,6 +749,11 @@ connection);
         private readonly byte nodeId;
         private readonly List<ConfigItem> configList;
 
+        private bool abort = false;
+
+        public bool Active { get; private set; } = false;
+
+
         public ConfigCommand(Controller controller, byte nodeId, List<ConfigItem> configList)
         {
             this.controller = controller;
@@ -575,8 +761,10 @@ connection);
             this.configList = configList;
         }
 
-        internal bool Start()
+        public bool Start()
         {
+
+            Active = true;
             Common.logger.Info("-----------");
             Common.logger.Info("Configuration mode");
             Common.logger.Info("node to configure: " + nodeId);
@@ -586,20 +774,22 @@ connection);
 
 
             Common.logger.Info("Getting configuration for device...");
-            ConfigItem config = Common.GetConfigurationForDevice(controller, nodeId, configList);
+            ConfigItem config = Common.GetConfigurationForDevice(controller, nodeId, configList, ref abort);
             if (config == null)
             {
                 Common.logger.Info("could not find configuration!");
                 Common.logger.Info("Either there is no configuration or device did not reply!");
-                return false ;
+                Active = false;
+                return false;
             }
 
             Common.logger.Info("configuration found for {0}!", config.deviceName);
             Common.logger.Info("Setting values.");
-            if(Common.SetConfiguration(controller, nodeId, config))
+            if (Common.SetConfiguration(controller, nodeId, config))
             {
                 Common.logger.Info("Configuration successful!");
                 Common.logger.Info("-------------------");
+                Active = false;
                 return true;
             }
 
@@ -607,6 +797,14 @@ connection);
 
 
 
+
+        }
+
+        public void Stop()
+        {
+            Common.logger.Info("aborting... Please wait.");
+            abort = true;
+            // Common.logger.Warn("Cannot abort!");
         }
     }
 
@@ -624,7 +822,7 @@ connection);
             this.nodeId = nodeId;
         }
 
-        public void Start()
+        public bool Start()
         {
             Active = true;
             Common.logger.Info("-----------");
@@ -637,7 +835,7 @@ connection);
             {
                 Common.logger.Info("Node is reachable!");
                 Common.logger.Info("If node is reachable, we cannot replace it!");
-                return;
+                return false;
             }
             else
             {
@@ -649,7 +847,7 @@ connection);
             {
                 Common.logger.Info("Node could not be marked as failed!");
                 Common.logger.Info("Try again and ensure that node is not reachable.");
-                return;
+                return false;
             }
             else
             {
@@ -663,7 +861,7 @@ connection);
 
 
             Active = false;
-
+            return true;
         }
 
         public void Stop()
@@ -672,7 +870,7 @@ connection);
         }
     }
 
-    internal class ReplaceCommand
+    internal class ReplaceCommand : ICommand
     {
 
 
@@ -681,6 +879,12 @@ connection);
         private readonly byte nodeId;
         private readonly List<ConfigItem> configList;
 
+        private ICommand currentCommand = null;
+
+        public bool Active { get; private set; } = false;
+
+        private bool abort = false;
+
         public ReplaceCommand(Controller controller, byte nodeId, List<ConfigItem> configList)
         {
             this.controller = controller;
@@ -688,8 +892,9 @@ connection);
             this.configList = configList;
         }
 
-        internal void Start()
+        public bool Start()
         {
+            Active = true;
             Common.logger.Info("-----------");
             Common.logger.Info("Replacement mode");
             Common.logger.Info("node to replace: " + nodeId);
@@ -700,11 +905,15 @@ connection);
             {
                 Common.logger.Info("Node is reachable!");
                 Common.logger.Info("If node is reachable, we cannot replace it!");
-                return;
+                return false;
             }
             else
             {
                 Common.logger.Info("OK, node is not reachable");
+            }
+            if (abort)
+            {
+                return false;
             }
             Common.logger.Info("Mark node as failed...");
             var markedAsFailed = Common.MarkNodeFailed(controller, nodeId);
@@ -712,7 +921,7 @@ connection);
             {
                 Common.logger.Info("Node could not be marked as failed!");
                 Common.logger.Info("Try again and ensure that node is not reachable.");
-                return;
+                return false;
             }
             else
             {
@@ -720,16 +929,20 @@ connection);
             }
             Common.logger.Info("Replacing Node... Set new device to inclusion mode!");
             bool nodeReplaced = Common.ReplaceNode(controller, nodeId);
-            if (!nodeReplaced)
+            while (!nodeReplaced && !abort)
             {
-                Common.logger.Info("Could not replace device!");
-                Common.logger.Info("Please try again.");
-                return;
+                Common.logger.Info("Could not replace device! Trying again.");
+                nodeReplaced = Common.ReplaceNode(controller, nodeId);
             }
-            else
+
+            if (abort)
             {
-                Common.logger.Info("Node sucessfully replaced!");
+                Common.logger.Info("aborted!");
+                return false;
             }
+
+            Common.logger.Info("Node sucessfully replaced!");
+
 
             //     Common.logger.Info("Write new Configuration...");
             //     bool configurationSet = SetConfiguration();
@@ -741,19 +954,20 @@ connection);
             //   GetManufactor();
             //GetWakeUp();
             //Console.ReadLine();
-
-            new ConfigCommand(controller, nodeId, configList).Start();
-
-
-
             Common.logger.Info("Replacement done!");
 
-
+            currentCommand = new ConfigCommand(controller, nodeId, configList);
+            return currentCommand.Start();
 
 
         }
 
-
+        public void Stop()
+        {
+            Common.logger.Info("aborting... Please wait.");
+            abort = true;
+            currentCommand?.Stop();
+        }
 
 
 
@@ -834,20 +1048,25 @@ connection);
         //readonly object syncObjectServer = new object();
 
 
-        public bool Active { get; private set; } = false;
+        public bool Active { get; set; } = true;
+
+
 
         private readonly BlockingCollection<Action> queueItems = new BlockingCollection<Action>();
         private ActionToken dataListener;
         private ActionToken controllerListener;
 
-        public void Start()
+        public void AddToQueue(Action action)
+        {
+            queueItems.Add(action);
+        }
+
+        public bool Start()
         {
 
 
-            Active = true;
             Common.logger.Info("-----------");
             Common.logger.Info("Listening mode");
-            Common.logger.Info("Press Enter to exit");
             Common.logger.Info("-----------");
 
             Common.logger.Info("Loading available command classes...");
@@ -861,6 +1080,10 @@ connection);
 
             dataListener = controller.ListenData((x) =>
             {
+                if (!Active)
+                {
+                    return;
+                }
                 var _commandClass = commandClasses.TryGetValue(x.Command[0], out Type commandClass);
                 var nestedDict = nestedCommandClasses[commandClass];
                 var _nestedType = nestedDict.TryGetValue(x.Command[1], out Type nestedType);
@@ -953,6 +1176,10 @@ connection);
 
             controllerListener = controller.HandleControllerUpdate((r) =>
             {
+                if (!Active)
+                {
+                    return;
+                }
                 Common.logger.Info("{0}: Got {2} for node {1}", DateTime.Now, r.NodeId, r.Status);
                 queueItems.Add(() => Common.RequestBatteryReport(controller, r.NodeId));
 
@@ -967,7 +1194,8 @@ connection);
                 try
                 {
                     var action = queueItems.Take();
-                    action();
+                    if (Active)
+                        action();
 
                 }
                 catch (InvalidOperationException) { }
@@ -977,6 +1205,7 @@ connection);
 
             Active = false;
             Common.logger.Info("Listening done!");
+            return true;
         }
 
         //private void OnCommand(object sender, string e)
@@ -1025,7 +1254,7 @@ connection);
 
         public bool Active { get; private set; } = false;
 
-        public void Start()
+        public bool Start()
         {
             Active = true;
             Common.logger.Info("-----------");
@@ -1108,7 +1337,7 @@ connection);
             Common.logger.Info("There are {0} nodes left to check/reconfigure. Waiting for wake up notifications...", nodesToCheck.Count);
             Common.logger.Info("Exit by pressing CTRL-C");
 
-           
+
 
             bool inProgress = false;
 
@@ -1173,7 +1402,7 @@ connection);
                     //   Common.logger.Info("Got queue element for node {0}", nodeId);
                     //token.SetCancelled();
                     inProgress = true;
-                    if(!new ConfigCommand(controller, nodeId, configList).Start())
+                    if (!new ConfigCommand(controller, nodeId, configList).Start())
                     {
                         Common.logger.Info("Adding node back to queue");
                         nodesToCheck.Add(nodeId);
@@ -1198,6 +1427,7 @@ connection);
             Common.logger.Info("Reconfiguration done!");
             Common.logger.Info("---------------------");
             Active = false;
+            return true;
         }
 
         public void Stop()
@@ -1231,7 +1461,7 @@ connection);
 
         public bool Active { get; private set; } = false;
 
-        public void Start()
+        public bool Start()
         {
             Active = true;
             Common.logger.Info("-----------");
@@ -1255,11 +1485,13 @@ connection);
 
             Common.logger.Info("Goodbye...", nodeId);
             Active = false;
+            return true;
 
         }
 
         public void Stop()
         {
+            Common.logger.Info("aborting... Please wait.");
             running = false;
         }
     }
