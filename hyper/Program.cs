@@ -436,6 +436,13 @@ connection);
         private void CancelHandler(object evtSender, ConsoleCancelEventArgs evtArgs)
         {
 
+            evtArgs.Cancel = true;
+            if (blockExit)
+            {
+                Common.logger.Info("\nCannot abort application now!\nPlease wait for operation to finish.\n");
+                return;
+            }
+
             if (currentCommand == null)
             {
                 Common.logger.Info("No current command, stopping application");
@@ -445,12 +452,7 @@ connection);
             }
 
 
-            evtArgs.Cancel = true;
-            if (blockExit)
-            {
-                Common.logger.Info("\nCannot abort application now!\nPlease wait for operation to finish.\n");
-                return;
-            }
+
 
             Common.logger.Info("Stopping current command!");
             currentCommand.Stop();
@@ -469,6 +471,7 @@ connection);
             var configRegex = new Regex(@"^config\s*" + oneTo255Regex);
             var replaceRegex = new Regex(@"^replace\s*" + oneTo255Regex);
             var basicRegex = new Regex(@"^basic\s*" + oneTo255Regex + @"\s*(false|true)");
+            var listenRegex = new Regex(@"^listen\s*(stop|start)");
 
 
             Active = true;
@@ -511,9 +514,10 @@ connection);
                             blockExit = false;
                             break;
                         }
-                    case "listen":
+                    case var listenVal when listenRegex.IsMatch(listenVal):
                         {
-                            currentCommand = new ListenCommand(controller, configList);
+                            var val = listenRegex.Match(listenVal).Groups[1].Value;
+                            listenComand.Active = val == "start";
                             break;
                         }
                     case "include":
@@ -563,7 +567,7 @@ connection);
                             break;
                         }
 
-                    case "read":
+                    case "backup":
                         {
                             blockExit = true;
                             var result = Common.ReadNVRam(controller, out byte[] eeprom);
@@ -576,7 +580,7 @@ connection);
                             blockExit = false;
                             break;
                         }
-                    case "write!":
+                    case "restore!":
                         {
                             blockExit = true;
                             byte[] read = File.ReadAllBytes("eeprom.bin");
@@ -1048,7 +1052,17 @@ connection);
         //readonly object syncObjectServer = new object();
 
 
-        public bool Active { get; set; } = true;
+      //  public bool Active { get; set; } = true;
+
+        private bool _active = true;
+        public bool Active
+        {
+            get { return _active; }
+            set {
+                Common.logger.Info("listening {0}", value == true ? "active" : "inactive");               
+                _active = value; }
+        }
+
 
 
 
