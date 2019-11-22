@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controller\**" />
+    <EmbeddedResource Remove="Controller\**" />
+    <None Remove="Controller\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="linq2db" Version="3.0.0-preview.1" />
     <PackageReference Include="NLog" Version="4.6.8" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.112" />
@@ -35,10 +41,6 @@
     <None Update="config.yaml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Controller\" />
   </ItemGroup>
 
 </Project>
