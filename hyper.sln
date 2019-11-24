@@ -13,6 +13,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZWaveXml_netcore", "ZWaveXm
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Utils_netcore", "Utils\Utils_netcore.csproj", "{9AE78673-7ED1-4B65-BAFF-BB97F7743A19}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{0547C279-C1E2-4999-AFEA-58D17965D37D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clifton.Core.Pipes_netcore", "Clifton.Core.Pipes_netcore\Clifton.Core.Pipes_netcore.csproj", "{DAE44D41-AC59-4FCF-ABF4-05163FF63B6C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{9AE78673-7ED1-4B65-BAFF-BB97F7743A19}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9AE78673-7ED1-4B65-BAFF-BB97F7743A19}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9AE78673-7ED1-4B65-BAFF-BB97F7743A19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0547C279-C1E2-4999-AFEA-58D17965D37D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0547C279-C1E2-4999-AFEA-58D17965D37D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0547C279-C1E2-4999-AFEA-58D17965D37D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0547C279-C1E2-4999-AFEA-58D17965D37D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DAE44D41-AC59-4FCF-ABF4-05163FF63B6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAE44D41-AC59-4FCF-ABF4-05163FF63B6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAE44D41-AC59-4FCF-ABF4-05163FF63B6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAE44D41-AC59-4FCF-ABF4-05163FF63B6C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

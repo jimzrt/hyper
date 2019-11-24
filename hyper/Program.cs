@@ -1,13 +1,19 @@
-﻿using hyper.commands;
+﻿using Clifton.Core.Pipes;
+using hyper.commands;
 using hyper.config;
 using hyper.Database;
 using hyper.Database.DAO;
+using hyper.Endpoints;
 using hyper.Models;
+using NLog;
+using NLog.Config;
+using NLog.Targets;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -24,12 +30,43 @@ namespace hyper
 {
     internal class Program
     {
+
+
         private static void Main(string[] args)
         {
 
 
+            //target
+         //   Target.Register<hyper.Endpoints.PipeEndpoint>("PipeEndpoint"); //
+         //   Target.Register<hyper.Endpoints.ConsoleEndpoint>("ConsoleEndpoint"); //generic
+
+            var configuration = new LoggingConfiguration();
+            //LogManager.Configuration;
+            var pipeTarget = new hyper.Endpoints.PipeEndpoint();
+
+            //var consoleTarget = new ColoredConsoleTarget("target1")
+            //{
+            //    Layout = @"${date:format=HH\:mm\:ss} ${level} ${message} ${exception}"
+            //};
+
+            var consoleTarget = new hyper.Endpoints.ConsoleEndpoint();
+
+            configuration.AddTarget(pipeTarget);
+            configuration.AddTarget(consoleTarget);
+
+            //      configuration.AddTarget("Console", consoleTarget);
+
+            configuration.AddRuleForAllLevels(pipeTarget);
+            configuration.AddRuleForAllLevels(consoleTarget);
 
 
+            //   configuration.AddRuleForAllLevels(consoleTarget);
+            LogManager.Configuration = configuration;
+
+            EndpointManager.AddEndpoint(pipeTarget);
+            EndpointManager.AddEndpoint(consoleTarget);
+
+            //  Target.Register("MyFirst", typeof(MyNamespace.MyFirstTarget)); //OR, dynamic
 
 
             if (!File.Exists("events.db"))
@@ -55,56 +92,7 @@ connection);
 
 
 
-            //var events = new List<Event>();
-
-
-            //for (int i = 0; i < 100; i++)
-            //{
-            //    Event evt = new Event();
-            //    evt.Value =  i;
-            //    evt.EventType = EventType.BATTERY;
-            //    evt.NodeId = 10;
-            //    events.Add(evt);
-
-            //}
-            //var dbTask = EventDAO.InsertEventsAsync(events);
-            //Console.WriteLine("done");
-            //Console.WriteLine("now waiting");
-            //dbTask.Wait();
-            //Console.WriteLine("really done!");
-
-
-
-
-            //Console.WriteLine("getting...");
-            //var eventos = EventDAO.GetAll();
-
-            ////foreach (var eventoss in eventos)
-            ////{
-            ////    Console.WriteLine(eventoss.id);
-            ////    Console.WriteLine(eventoss.Name);
-            ////    Console.WriteLine(eventoss.EventType);
-            ////}
-            //Console.WriteLine(eventos.Count());
-
-            //return;
-            //  if (File.Exists("logs\\database.db"))
-            //       return;
-
-
-
-            //string[] ports = SerialPort.GetPortNames();
-
-            //Console.WriteLine("The following serial ports were found:");
-
-            //// Display each port name to the console.
-            //foreach (string porta in ports)
-            //{
-            //    Console.WriteLine(porta);
-            //}
-
-            //Console.ReadLine();
-            //return;
+       
 
 
             ICommand currentCommand = null;
@@ -436,7 +424,11 @@ connection);
         private void CancelHandler(object evtSender, ConsoleCancelEventArgs evtArgs)
         {
 
-            evtArgs.Cancel = true;
+            if(evtArgs != null)
+            {
+                evtArgs.Cancel = true;
+
+            }
             if (blockExit)
             {
                 Common.logger.Info("\nCannot abort application now!\nPlease wait for operation to finish.\n");
@@ -446,7 +438,10 @@ connection);
             if (currentCommand == null)
             {
                 Common.logger.Info("No current command, stopping application");
-                evtArgs.Cancel = false;
+                if (evtArgs != null)
+                {
+                    evtArgs.Cancel = false;
+                }
                 Environment.Exit(0);
                 return;
             }
@@ -464,6 +459,7 @@ connection);
         {
 
             Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
+            EndpointManager.AddCancelEventHandler(CancelHandler);
 
             var oneTo255Regex = @"((?<!\d)(?:1\d{2}|2[0-4]\d|[1-9]?\d|25[0-5])(?!\d))";
 
@@ -496,7 +492,7 @@ connection);
                     Console.ReadKey(true);
 
                 Common.logger.Info("choose your destiny girl!");
-                var input = Console.ReadLine();
+                var input = EndpointManager.ReadAny();
                 if (input == null)
                 {
                     return false;

@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BasicApplication\BasicApplication_netcore.csproj" />
+    <ProjectReference Include="..\Clifton.Core.Pipes_netcore\Clifton.Core.Pipes_netcore.csproj" />
     <ProjectReference Include="..\Utils\Utils_netcore.csproj" />
     <ProjectReference Include="..\ZWaveXml\ZWaveXml_netcore.csproj" />
     <ProjectReference Include="..\ZWave\ZWave_netcore.csproj" />
