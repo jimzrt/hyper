@@ -583,7 +583,7 @@ namespace hyper
         {
             var keySet = new HashSet<byte>();
 
-            var allClasses = assembly.GetTypes().Where(a => a.IsClass && a.Namespace != null && a.Namespace.Contains(nameSpace) && a.Name.StartsWith("COMMAND_CLASS") && !a.Name.Contains("CLASS_ALARM")).Select(t =>
+            var allClasses = assembly.GetTypes().Where(a => a.IsClass && a.Namespace != null && a.Namespace.Contains(nameSpace) && a.Name.StartsWith("COMMAND_CLASS") && !a.Name.Contains("CLASS_ALARM")).OrderByDescending(a => a.Name).Select(t =>
             {
                 var constValue = t?.GetField("ID")?.GetRawConstantValue();
                 object returnValue = null;

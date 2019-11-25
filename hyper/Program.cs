@@ -5,6 +5,8 @@ using hyper.Database;
 using hyper.Database.DAO;
 using hyper.Inputs;
 using hyper.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -16,6 +18,8 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,19 +41,25 @@ namespace hyper
 
 
             //target
-         //   Target.Register<hyper.Inputs.PipeInput>("PipeInput"); //
-         //   Target.Register<hyper.Inputs.ConsoleInput>("ConsoleInput"); //generic
+            //   Target.Register<hyper.Inputs.PipeInput>("PipeInput"); //
+            //   Target.Register<hyper.Inputs.ConsoleInput>("ConsoleInput"); //generic
 
             var configuration = new LoggingConfiguration();
             //LogManager.Configuration;
-            var pipeTarget = new hyper.Inputs.PipeInput();
+            var pipeTarget = new hyper.Inputs.PipeInput()
+            {
+                Layout = @"${longdate} ${uppercase:${level}} ${message}"
+            };
 
             //var consoleTarget = new ColoredConsoleTarget("target1")
             //{
             //    Layout = @"${date:format=HH\:mm\:ss} ${level} ${message} ${exception}"
             //};
 
-            var consoleTarget = new hyper.Inputs.ConsoleInput();
+            var consoleTarget = new hyper.Inputs.ConsoleInput()
+            {
+                Layout = @"${longdate} ${uppercase:${level}} ${message}"
+            };
 
             configuration.AddTarget(pipeTarget);
             configuration.AddTarget(consoleTarget);
@@ -92,7 +102,7 @@ connection);
 
 
 
-       
+
 
 
             ICommand currentCommand = null;
@@ -423,7 +433,7 @@ connection);
         private void CancelHandler(object evtSender, ConsoleCancelEventArgs evtArgs)
         {
 
-            if(evtArgs != null)
+            if (evtArgs != null)
             {
                 evtArgs.Cancel = true;
 
@@ -459,7 +469,7 @@ connection);
 
             Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
             InputManager.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
-           // InputManager.AddCancelEventHandler(CancelHandler);
+            // InputManager.AddCancelEventHandler(CancelHandler);
 
             var oneTo255Regex = @"((?<!\d)(?:1\d{2}|2[0-4]\d|[1-9]?\d|25[0-5])(?!\d))";
 
@@ -1048,15 +1058,17 @@ connection);
         //readonly object syncObjectServer = new object();
 
 
-      //  public bool Active { get; set; } = true;
+        //  public bool Active { get; set; } = true;
 
         private bool _active = true;
         public bool Active
         {
             get { return _active; }
-            set {
-                Common.logger.Info("listening {0}", value == true ? "active" : "inactive");               
-                _active = value; }
+            set
+            {
+                Common.logger.Info("listening {0}", value == true ? "active" : "inactive");
+                _active = value;
+            }
         }
 
 
@@ -1070,6 +1082,25 @@ connection);
         {
             queueItems.Add(action);
         }
+
+
+        //public void Handle(object type, byte srcNodeId, byte[] command)
+        //{
+        //    switch(type)
+        //    {
+        //        case COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION _:
+        //            var wakeUp = (COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION)command;
+        //            Common.logger.Info("WAKEUPPPP!!! from {0}", srcNodeId);
+        //            break;
+        //        default:
+        //            Console.WriteLine("cannot handle this shit!");
+        //            break;
+        //    }
+        //}
+
+
+
+
 
         public bool Start()
         {
@@ -1100,9 +1131,6 @@ connection);
 
                 Common.logger.Info("{0}: {2}:{3} from node {1}", x.TimeStamp, x.SrcNodeId, _commandClass ? commandClass.Name : string.Format("unknown(id:{0})", x.Command[0]), _nestedType ? nestedType.Name : string.Format("unknown(id:{0})", x.Command[1]));
 
-                Common.logger.Info(string.Join(",", x.Command));
-                // Common.logger.Info("command type: {0}, type name: {1}", x.CommandType, x.GetType().Name);
-
                 if (commandClass == null)
                 {
                     Common.logger.Error("command class is null!");
@@ -1114,70 +1142,124 @@ connection);
                     return;
                 }
 
-                var dummyInstance = Activator.CreateInstance(nestedType);
+                //     var dummyInstance = Activator.CreateInstance(nestedType);
+
+                var implicitCastMethod =
+          nestedType.GetMethod("op_Implicit",
+                               new[] { x.Command.GetType() });
+
+                if (implicitCastMethod == null)
+                {
+                    Common.logger.Warn("byteArray to {0} not possible!", nestedType.Name);
+                    return;
+                }
+                var report = implicitCastMethod.Invoke(null, new[] { x.Command });
+
+                Common.logger.Info(JObject.FromObject(report).ToString());
+
+
+
+                //    Handle(dummyInstance, x.SrcNodeId, x.Command);
 
                 Event evt = new Event();
                 evt.NodeId = x.SrcNodeId;
-                switch (dummyInstance)
+
+                switch (report)
                 {
-                    case COMMAND_CLASS_NOTIFICATION_V3.NOTIFICATION_REPORT _:
-                        var alarmReport = (COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT)x.Command;
-                        Common.logger.Info("notificationStatus: {0}", alarmReport.notificationStatus);
-                        Common.logger.Info("notificationType: {0}", alarmReport.notificationType);
-                        Common.logger.Info("mevent: {0}", alarmReport.mevent);
-                        Common.logger.Info("v1AlarmLevel: {0}", alarmReport.v1AlarmLevel);
-                        Common.logger.Info("v1AlarmType: {0}", alarmReport.v1AlarmType);
+                    case COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT alarmReport:
                         evt.EventType = EventType.NOTIFICATION;
-
-
-                        // buffer = new byte[] { x.SrcNodeId, x.Command[0], alarmReport.zwaveAlarmEvent };
                         break;
-                    case COMMAND_CLASS_BASIC.BASIC_SET _:
-                        var basicSet = (COMMAND_CLASS_BASIC.BASIC_SET)x.Command;
-                        Common.logger.Info("value: {0}", basicSet.value);
+                    case COMMAND_CLASS_BASIC_V2.BASIC_SET basicSet:
                         evt.EventType = EventType.BASIC_SET;
                         evt.Value = basicSet.value;
-                        //      buffer = new byte[] { x.SrcNodeId, x.Command[0], basicSet.value };
                         break;
-                    case COMMAND_CLASS_SWITCH_BINARY.SWITCH_BINARY_REPORT _:
-                        var binaryReport = (COMMAND_CLASS_SWITCH_BINARY.SWITCH_BINARY_REPORT)x.Command;
+                    case COMMAND_CLASS_SWITCH_BINARY_V2.SWITCH_BINARY_REPORT binaryReport:
                         evt.EventType = EventType.SWITCH_BINARY_REPORT;
-                        evt.Value = binaryReport.value;
-                        //     buffer = new byte[] { x.SrcNodeId, x.Command[0], binaryReport.value };
+                        evt.Value = binaryReport.targetValue;
                         break;
-                    case COMMAND_CLASS_WAKE_UP.WAKE_UP_NOTIFICATION _:
+                    case COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION _:
                         evt.EventType = EventType.WAKEUP;
-
-                        queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
                         break;
-                    case COMMAND_CLASS_BATTERY.BATTERY_REPORT _:
-                        var batteryReport = (COMMAND_CLASS_BATTERY.BATTERY_REPORT)x.Command;
-                        Common.logger.Info("battery value: {0}", batteryReport.batteryLevel);
+                    case COMMAND_CLASS_BATTERY.BATTERY_REPORT batteryReport:
                         evt.EventType = EventType.BATTERY;
                         evt.Value = batteryReport.batteryLevel;
-
-                        //      buffer = new byte[] { x.SrcNodeId, x.Command[0], batteryReport.batteryLevel };
                         break;
-                    case COMMAND_CLASS_SENSOR_MULTILEVEL.SENSOR_MULTILEVEL_REPORT _:
-                        var multilevelReport = (COMMAND_CLASS_SENSOR_MULTILEVEL.SENSOR_MULTILEVEL_REPORT)x.Command;
-                        Common.logger.Info("properties: {0}, type: {1}, value: {2}", multilevelReport.properties1.ToString(), multilevelReport.sensorType, multilevelReport.sensorValue);
+                    case COMMAND_CLASS_SENSOR_MULTILEVEL_V11.SENSOR_MULTILEVEL_REPORT multilevelReport:
                         evt.EventType = EventType.SENSOR_MULTILEVEL_REPORT;
                         evt.Value = multilevelReport.sensorValue[0];
                         break;
-                    case COMMAND_CLASS_SENSOR_BINARY_V2.SENSOR_BINARY_REPORT _:
-                        var sensorBinaryReport = (COMMAND_CLASS_SENSOR_BINARY_V2.SENSOR_BINARY_REPORT)x.Command;
-                        Common.logger.Info("values: {0} - {1}", sensorBinaryReport.sensorType, sensorBinaryReport.sensorValue);
+                    case COMMAND_CLASS_SENSOR_BINARY_V2.SENSOR_BINARY_REPORT sensorBinaryReport:
                         evt.EventType = EventType.SENSOR_BINARY;
                         evt.Value = sensorBinaryReport.sensorValue;
-
                         break;
-
                     default:
-                        Common.logger.Info("Unhandled command class: {0}", nestedType.Name);
                         evt.EventType = EventType.UNHANDLED;
                         break;
-
                 }
+
+
+
+                //switch (dummyInstance)
+                //{
+                //    case COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT _:
+                //        var alarmReport = (COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT)x.Command;
+                //        Common.logger.Info("notificationStatus: {0}", alarmReport.notificationStatus);
+                //        Common.logger.Info("notificationType: {0}", alarmReport.notificationType);
+                //        Common.logger.Info("mevent: {0}", alarmReport.mevent);
+                //        Common.logger.Info("v1AlarmLevel: {0}", alarmReport.v1AlarmLevel);
+                //        Common.logger.Info("v1AlarmType: {0}", alarmReport.v1AlarmType);
+                //        evt.EventType = EventType.NOTIFICATION;
+
+
+                //        // buffer = new byte[] { x.SrcNodeId, x.Command[0], alarmReport.zwaveAlarmEvent };
+                //        break;
+                //    case COMMAND_CLASS_BASIC_V2.BASIC_SET _:
+                //        var basicSet = (COMMAND_CLASS_BASIC_V2.BASIC_SET)x.Command;
+                //        Common.logger.Info("value: {0}", basicSet.value);
+                //        evt.EventType = EventType.BASIC_SET;
+                //        evt.Value = basicSet.value;
+                //        //      buffer = new byte[] { x.SrcNodeId, x.Command[0], basicSet.value };
+                //        break;
+                //    case COMMAND_CLASS_SWITCH_BINARY_V2.SWITCH_BINARY_REPORT _:
+                //        var binaryReport = (COMMAND_CLASS_SWITCH_BINARY_V2.SWITCH_BINARY_REPORT)x.Command;
+                //        evt.EventType = EventType.SWITCH_BINARY_REPORT;
+                //        evt.Value = binaryReport.targetValue;
+                //        //     buffer = new byte[] { x.SrcNodeId, x.Command[0], binaryReport.value };
+                //        break;
+                //    case COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION _:
+                //        evt.EventType = EventType.WAKEUP;
+
+                //        queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
+                //        break;
+                //    case COMMAND_CLASS_BATTERY.BATTERY_REPORT _:
+                //        var batteryReport = (COMMAND_CLASS_BATTERY.BATTERY_REPORT)x.Command;
+
+                //        Common.logger.Info("battery value: {0}", batteryReport.batteryLevel);
+                //        evt.EventType = EventType.BATTERY;
+                //        evt.Value = batteryReport.batteryLevel;
+
+                //        //      buffer = new byte[] { x.SrcNodeId, x.Command[0], batteryReport.batteryLevel };
+                //        break;
+                //    case COMMAND_CLASS_SENSOR_MULTILEVEL_V11.SENSOR_MULTILEVEL_REPORT _:
+                //        var multilevelReport = (COMMAND_CLASS_SENSOR_MULTILEVEL.SENSOR_MULTILEVEL_REPORT)x.Command;
+                //        Common.logger.Info("properties: {0}, type: {1}, value: {2}", multilevelReport.properties1.ToString(), multilevelReport.sensorType, multilevelReport.sensorValue);
+                //        evt.EventType = EventType.SENSOR_MULTILEVEL_REPORT;
+                //        evt.Value = multilevelReport.sensorValue[0];
+                //        break;
+                //    case COMMAND_CLASS_SENSOR_BINARY_V2.SENSOR_BINARY_REPORT _:
+                //        var sensorBinaryReport = (COMMAND_CLASS_SENSOR_BINARY_V2.SENSOR_BINARY_REPORT)x.Command;
+                //        Common.logger.Info("values: {0} - {1}", sensorBinaryReport.sensorType, sensorBinaryReport.sensorValue);
+                //        evt.EventType = EventType.SENSOR_BINARY;
+                //        evt.Value = sensorBinaryReport.sensorValue;
+
+                //        break;
+
+                //    default:
+                //        Common.logger.Info("Unhandled command class: {0}", nestedType.Name);
+                //        evt.EventType = EventType.UNHANDLED;
+                //        break;
+
+                //}
                 EventDAO.InsertEventAsync(evt);
                 //    SendBytes(udpClient, buffer);
 
