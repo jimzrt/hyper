@@ -9,9 +9,13 @@ namespace hyper.Endpoints
     {
         static List<IEndpoint> endpoints = new List<IEndpoint>();
 
+        public static event ConsoleCancelEventHandler CancelKeyPress;
+
         public static void AddEndpoint(IEndpoint endpoint)
         {
             endpoints.Add(endpoint);
+            // endpoint.RegisterEventHandler(CancelKeyPress);
+            endpoint.CancelKeyPress += (sender, args) => CancelKeyPress?.Invoke(sender,args);
         }
 
         public static string ReadAny()
@@ -40,12 +44,5 @@ namespace hyper.Endpoints
             }
         }
 
-        internal static void AddCancelEventHandler(Action<object, ConsoleCancelEventArgs> cancelHandler)
-        {
-            foreach (var endpoint in endpoints)
-            {
-                endpoint.AddCancelEventHandler(cancelHandler);
-            }
-        }
     }
 }

@@ -15,7 +15,7 @@ namespace hyper.Endpoints
 
         private readonly object serverLock = new object();
 
-        Action<object, ConsoleCancelEventArgs> cancelHandler = null;
+        
 
         //List<ServerPipe> serverPipes = new List<ServerPipe>();
         //ConcurrentQueue<ServerPipe> serverPipes = new ConcurrentQueue<ServerPipe>();
@@ -27,6 +27,8 @@ namespace hyper.Endpoints
      //   private bool CanSend { get; set; } = false;
 
         string currentMessage = "";
+
+        public event ConsoleCancelEventHandler CancelKeyPress;
 
         public PipeEndpoint()
         {
@@ -93,7 +95,7 @@ namespace hyper.Endpoints
             {
                 if(args.String == "stop")
                 {
-                    cancelHandler?.Invoke(null, null);
+                    CancelKeyPress?.Invoke(null, null);
                 }
             }
         }
@@ -142,9 +144,5 @@ namespace hyper.Endpoints
 
         }
 
-        public void AddCancelEventHandler(Action<object, ConsoleCancelEventArgs> cancelHandler)
-        {
-            this.cancelHandler = cancelHandler;
-        }
     }
 }

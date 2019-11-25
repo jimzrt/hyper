@@ -142,7 +142,6 @@ connection);
             Common.logger.Info("Included nodes: {0}", controller.IncludedNodes.Length);
             Common.logger.Info("-----------------------------------");
 
-            Task.Delay(2000).Wait();
 
 
 
@@ -459,7 +458,8 @@ connection);
         {
 
             Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
-            EndpointManager.AddCancelEventHandler(CancelHandler);
+            EndpointManager.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
+           // EndpointManager.AddCancelEventHandler(CancelHandler);
 
             var oneTo255Regex = @"((?<!\d)(?:1\d{2}|2[0-4]\d|[1-9]?\d|25[0-5])(?!\d))";
 

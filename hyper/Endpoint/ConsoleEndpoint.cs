@@ -20,6 +20,8 @@ namespace hyper.Endpoints
 
         Task backgroundTask = null;
 
+        public event ConsoleCancelEventHandler CancelKeyPress;
+
         public ConsoleEndpoint()
         {
             Name = "ConsoleEndpoint";
@@ -31,6 +33,13 @@ namespace hyper.Endpoints
                     if (CanRead)
                     {
                         currentMessage = message;
+                    }
+                    else
+                    {
+                        if (message == "stop")
+                        {
+                            CancelKeyPress?.Invoke(null, null);
+                        }
                     }
                 }
 
@@ -70,9 +79,5 @@ namespace hyper.Endpoints
             
         }
 
-        public void AddCancelEventHandler(Action<object, ConsoleCancelEventArgs> cancelHandler)
-        {
-            //throw new NotImplementedException();
-        }
     }
 }
