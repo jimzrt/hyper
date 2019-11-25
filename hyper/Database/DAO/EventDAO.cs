@@ -9,34 +9,37 @@ namespace hyper.Database.DAO
     internal class EventDAO
     {
 
-        public static void InsertEvent(Event _event)
+        private DataConnection db;
+
+        public EventDAO()
         {
-            using var db = new DataConnection();
+            db = new DataConnection();
+        }
+
+        public void InsertEvent(Event _event)
+        {
             db.Insert(_event);
         }
 
-        public static async void InsertEventAsync(Event _event)
+        public async void InsertEventAsync(Event _event)
         {
-            using var db = new DataConnection();
             await db.InsertAsync(_event);
         }
 
-        public static void InsertEvents(IEnumerable<Event> _events)
+        public void InsertEvents(IEnumerable<Event> _events)
         {
-            using var db = new DataConnection();
             foreach (var evt in _events)
             {
                 db.Insert(evt);
             }
         }
 
-        public static async Task InsertEventsAsync(IEnumerable<Event> _events)
+        public async Task InsertEventsAsync(IEnumerable<Event> _events)
         {
 
             await Task.Run(() =>
             {
 
-                using var db = new DataConnection();
                 foreach (var evt in _events)
                 {
                     db.Insert(evt);
@@ -47,15 +50,13 @@ namespace hyper.Database.DAO
 
         }
 
-        public static Event GetFirst()
+        public  Event GetFirst()
         {
-            using var db = new DataConnection();
             return db.Event.First();
         }
 
-        public static IEnumerable<Event> GetAll()
+        public IEnumerable<Event> GetAll()
         {
-            using var db = new DataConnection();
             //var events =  from e in db.Event
             //              select e;
 

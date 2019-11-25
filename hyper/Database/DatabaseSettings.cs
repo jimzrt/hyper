@@ -6,6 +6,12 @@ namespace hyper.Database
 {
     public class DatabaseSettings : ILinqToDBSettings
     {
+        private string fileName;
+        public DatabaseSettings(string fileName)
+        {
+            this.fileName = fileName;
+        }
+
         public IEnumerable<IDataProviderSettings> DataProviders => Enumerable.Empty<IDataProviderSettings>();
 
         public string DefaultConfiguration => "SQLite";
@@ -20,7 +26,7 @@ namespace hyper.Database
                     {
                         Name = "SQLite",
                         ProviderName = "System.Data.SQLite",
-                        ConnectionString = @"Data Source=events.db;"
+                        ConnectionString = @"Data Source="+fileName+";"
                     };
             }
         }

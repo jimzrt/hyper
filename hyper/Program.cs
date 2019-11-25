@@ -5,6 +5,7 @@ using hyper.Database;
 using hyper.Database.DAO;
 using hyper.Inputs;
 using hyper.Models;
+using hyper.Output;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -35,15 +36,8 @@ namespace hyper
     internal class Program
     {
 
-
-        private static void Main(string[] args)
+        private static void SetupInputs()
         {
-
-
-            //target
-            //   Target.Register<hyper.Inputs.PipeInput>("PipeInput"); //
-            //   Target.Register<hyper.Inputs.ConsoleInput>("ConsoleInput"); //generic
-
             var configuration = new LoggingConfiguration();
             //LogManager.Configuration;
             var pipeTarget = new hyper.Inputs.PipeInput()
@@ -51,10 +45,7 @@ namespace hyper
                 Layout = @"${longdate} ${uppercase:${level}} ${message}"
             };
 
-            //var consoleTarget = new ColoredConsoleTarget("target1")
-            //{
-            //    Layout = @"${date:format=HH\:mm\:ss} ${level} ${message} ${exception}"
-            //};
+
 
             var consoleTarget = new hyper.Inputs.ConsoleInput()
             {
@@ -64,40 +55,38 @@ namespace hyper
             configuration.AddTarget(pipeTarget);
             configuration.AddTarget(consoleTarget);
 
-            //      configuration.AddTarget("Console", consoleTarget);
 
             configuration.AddRuleForAllLevels(pipeTarget);
             configuration.AddRuleForAllLevels(consoleTarget);
 
-
-            //   configuration.AddRuleForAllLevels(consoleTarget);
             LogManager.Configuration = configuration;
 
             InputManager.AddInput(pipeTarget);
             InputManager.AddInput(consoleTarget);
+        }
+
+        private static void SetupOutputs()
+        {
+
+            var udpOutput = new UDPOutput("127.0.0.1", 5543);
+            var databaseOutput = new DatabaseOutput("events.db");
+            OutputManager.AddOutput(udpOutput);
+            OutputManager.AddOutput(databaseOutput);
+        }
+
+
+
+            private static void Main(string[] args)
+        {
+            SetupInputs();
+            SetupOutputs();
+
+
 
             //  Target.Register("MyFirst", typeof(MyNamespace.MyFirstTarget)); //OR, dynamic
 
 
-            if (!File.Exists("events.db"))
-            {
-                //  using (File.Create("events.db")) ;
-
-                using SQLiteConnection connection = new SQLiteConnection("Data Source=events.db;");
-                using SQLiteCommand command = new SQLiteCommand(
-@"CREATE TABLE 'Events' ( 
-            `Id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-            `NodeId` INTEGER NOT NULL,
-            `EventType` TEXT NOT NULL,
-            `Value` INTEGER,
-            `Added` DATETIME NOT NULL)",
-connection);
-                connection.Open();
-                command.ExecuteNonQuery();
-
-            }
-
-            LinqToDB.Data.DataConnection.DefaultSettings = new DatabaseSettings();
+            
 
 
 
@@ -384,6 +373,8 @@ connection);
             Console.ReadKey();
 
         }
+
+
 
         private static List<ConfigItem> ParseConfig(string configFile)
         {
@@ -1157,46 +1148,11 @@ connection);
 
                 Common.logger.Info(JObject.FromObject(report).ToString());
 
-
+                OutputManager.HandleCommand(report, x.SrcNodeId, x.DestNodeId);
 
                 //    Handle(dummyInstance, x.SrcNodeId, x.Command);
 
-                Event evt = new Event();
-                evt.NodeId = x.SrcNodeId;
-
-                switch (report)
-                {
-                    case COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT alarmReport:
-                        evt.EventType = EventType.NOTIFICATION;
-                        break;
-                    case COMMAND_CLASS_BASIC_V2.BASIC_SET basicSet:
-                        evt.EventType = EventType.BASIC_SET;
-                        evt.Value = basicSet.value;
-                        break;
-                    case COMMAND_CLASS_SWITCH_BINARY_V2.SWITCH_BINARY_REPORT binaryReport:
-                        evt.EventType = EventType.SWITCH_BINARY_REPORT;
-                        evt.Value = binaryReport.targetValue;
-                        break;
-                    case COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION _:
-                        evt.EventType = EventType.WAKEUP;
-                        break;
-                    case COMMAND_CLASS_BATTERY.BATTERY_REPORT batteryReport:
-                        evt.EventType = EventType.BATTERY;
-                        evt.Value = batteryReport.batteryLevel;
-                        break;
-                    case COMMAND_CLASS_SENSOR_MULTILEVEL_V11.SENSOR_MULTILEVEL_REPORT multilevelReport:
-                        evt.EventType = EventType.SENSOR_MULTILEVEL_REPORT;
-                        evt.Value = multilevelReport.sensorValue[0];
-                        break;
-                    case COMMAND_CLASS_SENSOR_BINARY_V2.SENSOR_BINARY_REPORT sensorBinaryReport:
-                        evt.EventType = EventType.SENSOR_BINARY;
-                        evt.Value = sensorBinaryReport.sensorValue;
-                        break;
-                    default:
-                        evt.EventType = EventType.UNHANDLED;
-                        break;
-                }
-
+               
 
 
                 //switch (dummyInstance)
@@ -1260,7 +1216,7 @@ connection);
                 //        break;
 
                 //}
-                EventDAO.InsertEventAsync(evt);
+                
                 //    SendBytes(udpClient, buffer);
 
 
