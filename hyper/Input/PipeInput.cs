@@ -7,10 +7,10 @@ using NLog.Targets;
 using Clifton.Core.Pipes;
 using System.Collections.Concurrent;
 
-namespace hyper.Endpoints
+namespace hyper.Inputs
 {
-    [Target("PipeEndpoint")]
-    public sealed class PipeEndpoint : TargetWithLayout, IEndpoint
+    [Target("PipeInput")]
+    public sealed class PipeInput : TargetWithLayout, IInput
     {
 
         private readonly object serverLock = new object();
@@ -30,10 +30,10 @@ namespace hyper.Endpoints
 
         public event ConsoleCancelEventHandler CancelKeyPress;
 
-        public PipeEndpoint()
+        public PipeInput()
         {
 
-            Name = "PipeEndpoint";
+            Name = "PipeInput";
             var server = CreateServer();
             serverPipes.Add(server);
             

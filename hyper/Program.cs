@@ -3,7 +3,7 @@ using hyper.commands;
 using hyper.config;
 using hyper.Database;
 using hyper.Database.DAO;
-using hyper.Endpoints;
+using hyper.Inputs;
 using hyper.Models;
 using NLog;
 using NLog.Config;
@@ -37,19 +37,19 @@ namespace hyper
 
 
             //target
-         //   Target.Register<hyper.Endpoints.PipeEndpoint>("PipeEndpoint"); //
-         //   Target.Register<hyper.Endpoints.ConsoleEndpoint>("ConsoleEndpoint"); //generic
+         //   Target.Register<hyper.Inputs.PipeInput>("PipeInput"); //
+         //   Target.Register<hyper.Inputs.ConsoleInput>("ConsoleInput"); //generic
 
             var configuration = new LoggingConfiguration();
             //LogManager.Configuration;
-            var pipeTarget = new hyper.Endpoints.PipeEndpoint();
+            var pipeTarget = new hyper.Inputs.PipeInput();
 
             //var consoleTarget = new ColoredConsoleTarget("target1")
             //{
             //    Layout = @"${date:format=HH\:mm\:ss} ${level} ${message} ${exception}"
             //};
 
-            var consoleTarget = new hyper.Endpoints.ConsoleEndpoint();
+            var consoleTarget = new hyper.Inputs.ConsoleInput();
 
             configuration.AddTarget(pipeTarget);
             configuration.AddTarget(consoleTarget);
@@ -63,8 +63,8 @@ namespace hyper
             //   configuration.AddRuleForAllLevels(consoleTarget);
             LogManager.Configuration = configuration;
 
-            EndpointManager.AddEndpoint(pipeTarget);
-            EndpointManager.AddEndpoint(consoleTarget);
+            InputManager.AddInput(pipeTarget);
+            InputManager.AddInput(consoleTarget);
 
             //  Target.Register("MyFirst", typeof(MyNamespace.MyFirstTarget)); //OR, dynamic
 
@@ -458,8 +458,8 @@ connection);
         {
 
             Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
-            EndpointManager.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
-           // EndpointManager.AddCancelEventHandler(CancelHandler);
+            InputManager.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
+           // InputManager.AddCancelEventHandler(CancelHandler);
 
             var oneTo255Regex = @"((?<!\d)(?:1\d{2}|2[0-4]\d|[1-9]?\d|25[0-5])(?!\d))";
 
@@ -492,7 +492,7 @@ connection);
                     Console.ReadKey(true);
 
                 Common.logger.Info("choose your destiny girl!");
-                var input = EndpointManager.ReadAny();
+                var input = InputManager.ReadAny();
                 if (input == null)
                 {
                     return false;

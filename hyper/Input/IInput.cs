@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace hyper.Endpoints
+namespace hyper.Inputs
 {
-    interface IEndpoint
+    interface IInput
     {
         public event ConsoleCancelEventHandler CancelKeyPress;
         public bool CanRead { get; set; }

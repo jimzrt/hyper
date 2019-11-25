@@ -7,10 +7,10 @@ using NLog.Targets;
 using Clifton.Core.Pipes;
 using System.Threading.Tasks;
 
-namespace hyper.Endpoints
+namespace hyper.Inputs
 {
-    [Target("ConsoleEndpoint")]
-    public sealed class ConsoleEndpoint : TargetWithLayout, IEndpoint
+    [Target("ConsoleInput")]
+    public sealed class ConsoleInput : TargetWithLayout, IInput
     {
 
 
@@ -22,9 +22,9 @@ namespace hyper.Endpoints
 
         public event ConsoleCancelEventHandler CancelKeyPress;
 
-        public ConsoleEndpoint()
+        public ConsoleInput()
         {
-            Name = "ConsoleEndpoint";
+            Name = "ConsoleInput";
             backgroundTask = new Task(() =>
             {
                 while (true)
