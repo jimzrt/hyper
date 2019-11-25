@@ -45,23 +45,29 @@ namespace hyper
                 Layout = @"${longdate} ${uppercase:${level}} ${message}"
             };
 
-
-
+            var tcpTarget = new hyper.Inputs.TCPInput(5432)
+            {
+                Layout = @"${longdate} ${uppercase:${level}} ${message}"
+            };
             var consoleTarget = new hyper.Inputs.ConsoleInput()
             {
                 Layout = @"${longdate} ${uppercase:${level}} ${message}"
             };
 
+
+
             configuration.AddTarget(pipeTarget);
+            configuration.AddTarget(tcpTarget);
             configuration.AddTarget(consoleTarget);
 
-
             configuration.AddRuleForAllLevels(pipeTarget);
+            configuration.AddRuleForAllLevels(tcpTarget);
             configuration.AddRuleForAllLevels(consoleTarget);
 
             LogManager.Configuration = configuration;
 
             InputManager.AddInput(pipeTarget);
+            InputManager.AddInput(tcpTarget);
             InputManager.AddInput(consoleTarget);
         }
 

@@ -15,7 +15,7 @@ namespace hyper.Inputs
 
         private readonly object serverLock = new object();
 
-        
+
 
         //List<ServerPipe> serverPipes = new List<ServerPipe>();
         //ConcurrentQueue<ServerPipe> serverPipes = new ConcurrentQueue<ServerPipe>();
@@ -24,7 +24,7 @@ namespace hyper.Inputs
 
         public bool CanRead { get; set; } = false;
 
-     //   private bool CanSend { get; set; } = false;
+        //   private bool CanSend { get; set; } = false;
 
         string currentMessage = "";
 
@@ -36,7 +36,7 @@ namespace hyper.Inputs
             Name = "PipeInput";
             var server = CreateServer();
             serverPipes.Add(server);
-            
+
 
 
         }
@@ -68,7 +68,7 @@ namespace hyper.Inputs
             {
                 // Console.WriteLine(sndr.ToString() + " connected!");
                 Console.WriteLine("COOONNECCTOS!");
-               
+
 
                 var newServer = CreateServer();
                 lock (serverLock)
@@ -91,9 +91,10 @@ namespace hyper.Inputs
             if (CanRead)
             {
                 currentMessage = args.String;
-            } else
+            }
+            else
             {
-                if(args.String == "stop")
+                if (args.String == "stop")
                 {
                     CancelKeyPress?.Invoke(null, null);
                 }
@@ -118,14 +119,12 @@ namespace hyper.Inputs
             currentMessage = "";
         }
 
-      
+
 
         protected override void Write(LogEventInfo logEvent)
         {
             string logMessage = this.Layout.Render(logEvent);
 
-            if (true)
-            {
                 lock (serverLock)
                 {
                     foreach (var server in serverPipes)
@@ -139,7 +138,7 @@ namespace hyper.Inputs
                 }
 
 
-            }
+            
 
 
         }
