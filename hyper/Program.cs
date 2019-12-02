@@ -40,10 +40,10 @@ namespace hyper
         {
             var configuration = new LoggingConfiguration();
             //LogManager.Configuration;
-            var pipeTarget = new hyper.Inputs.PipeInput()
-            {
-                Layout = @"${longdate} ${uppercase:${level}} ${message}"
-            };
+            //var pipeTarget = new hyper.Inputs.PipeInput()
+            //{
+            //    Layout = @"${longdate} ${uppercase:${level}} ${message}"
+            //};
 
             var tcpTarget = new hyper.Inputs.TCPInput(5432)
             {
@@ -56,17 +56,17 @@ namespace hyper
 
 
 
-            configuration.AddTarget(pipeTarget);
+           // configuration.AddTarget(pipeTarget);
             configuration.AddTarget(tcpTarget);
             configuration.AddTarget(consoleTarget);
 
-            configuration.AddRuleForAllLevels(pipeTarget);
+         //   configuration.AddRuleForAllLevels(pipeTarget);
             configuration.AddRuleForAllLevels(tcpTarget);
             configuration.AddRuleForAllLevels(consoleTarget);
 
             LogManager.Configuration = configuration;
 
-            InputManager.AddInput(pipeTarget);
+          //  InputManager.AddInput(pipeTarget);
             InputManager.AddInput(tcpTarget);
             InputManager.AddInput(consoleTarget);
         }
@@ -495,8 +495,8 @@ namespace hyper
 
             while (Active)
             {
-                while (Console.KeyAvailable)
-                    Console.ReadKey(true);
+             //   while (Console.KeyAvailable)
+             //       Console.ReadKey(true);
 
                 Common.logger.Info("choose your destiny girl!");
                 var input = InputManager.ReadAny();
@@ -504,6 +504,7 @@ namespace hyper
                 {
                     return false;
                 }
+                Common.logger.Info("Command: {0}", input);
                 switch (input.Trim().ToLower())
                 {
                     case "reset!":

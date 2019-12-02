@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="linq2db" Version="3.0.0-preview.1" />
+    <PackageReference Include="NetCoreServer" Version="3.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NLog" Version="4.6.8" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.112" />
@@ -22,7 +23,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BasicApplication\BasicApplication_netcore.csproj" />
-    <ProjectReference Include="..\Clifton.Core.Pipes_netcore\Clifton.Core.Pipes_netcore.csproj" />
     <ProjectReference Include="..\Utils\Utils_netcore.csproj" />
     <ProjectReference Include="..\ZWaveXml\ZWaveXml_netcore.csproj" />
     <ProjectReference Include="..\ZWave\ZWave_netcore.csproj" />
@@ -34,9 +34,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="C:\Users\james\.nuget\packages\nlog.config\4.6.7\contentFiles\any\any\NLog.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

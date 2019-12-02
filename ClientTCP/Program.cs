@@ -10,56 +10,26 @@ namespace ClientTCP
 
         static void Main(string[] args)
         {
-            Program p = new Program(5432);
-            p.Run();
-            //while (true)
-            //{
-            //    Task.Delay(1000).Wait();
-            //}
+            string address = "127.0.0.1";
+            if (args.Length > 0)
+                address = args[0];
 
-        }
+            var client = new TCPClient(address, 5432);
 
-        public Program(int port)
-        {
-           // Run();
-        }
+            // Connect the client
+            Console.Write("Client connecting...");
+            client.ConnectAsync();
+            Console.WriteLine("Done!");
 
-        public void Run()
-        {
-            TcpClient client = new TcpClient("localhsot", 5432);
-            NetworkStream stream = client.GetStream();
-            StreamReader reader = new StreamReader(stream);
-            StreamWriter writer = new StreamWriter(stream);
-            writer.AutoFlush = true;
-            Task.Run(() =>
-            {
-                while (true)
-                {
-                    try
-                    {
 
-             
-                    string request = reader.ReadLine();
-                    if (request != null)
-                    {
-                        Console.WriteLine(request);
-                    }
-                    } catch(Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                        return;
-                    }
-                }
-                
-
-            });
-           
             while (true)
             {
-                string message = Console.ReadLine();
-                writer.WriteLine(message);
+                string line = Console.ReadLine();
+                if (!string.IsNullOrEmpty(line))
+                {
+                    client.SendAsync(line);
+                }
             }
-
 
         }
 
