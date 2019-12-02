@@ -64,7 +64,7 @@ namespace hyper
         private static void SetupOutputs()
         {
 
-            var udpOutput = new UDPOutput("127.0.0.1", 5543);
+            var udpOutput = new UDPOutput("127.0.0.1", 54321);
             var databaseOutput = new DatabaseOutput("events.db");
             OutputManager.AddOutput(udpOutput);
             OutputManager.AddOutput(databaseOutput);
@@ -1113,9 +1113,24 @@ namespace hyper
                 {
                     return;
                 }
-                var _commandClass = commandClasses.TryGetValue(x.Command[0], out Type commandClass);
-                var nestedDict = nestedCommandClasses[commandClass];
+                var _commandClass = commandClasses.TryGetValue(x.Command[0], out var commandClass);
+                if (!_commandClass)
+                {
+                    Common.logger.Error("command class {0} not found!", x.Command[0]);
+                    return;
+                }
+                var _nestedDict = nestedCommandClasses.TryGetValue(commandClass, out var nestedDict);
+                if (!_nestedDict)
+                {
+                    Common.logger.Error("nested command classes for command class {0} not found!", commandClass.Name);
+                    return;
+                }
                 var _nestedType = nestedDict.TryGetValue(x.Command[1], out Type nestedType);
+                if(!_nestedType)
+                {
+                    Common.logger.Error("nested command class {0} for command class {1} not found!", x.Command[1], commandClass.Name);
+                    return;
+                }
 
                 Common.logger.Info("{0}: {2}:{3} from node {1}", x.TimeStamp, x.SrcNodeId, _commandClass ? commandClass.Name : string.Format("unknown(id:{0})", x.Command[0]), _nestedType ? nestedType.Name : string.Format("unknown(id:{0})", x.Command[1]));
 

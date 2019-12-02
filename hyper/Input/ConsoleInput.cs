@@ -4,7 +4,6 @@ using System.Text;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
-using Clifton.Core.Pipes;
 using System.Threading.Tasks;
 
 namespace hyper.Inputs
