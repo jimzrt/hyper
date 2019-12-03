@@ -1,11 +1,15 @@
 ﻿using hyper.config;
+using hyper.Helper;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Utils;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 using ZWave.BasicApplication;
 using ZWave.BasicApplication.Devices;
 using ZWave.BasicApplication.Tasks;
@@ -583,7 +587,7 @@ namespace hyper
         {
             var keySet = new HashSet<byte>();
 
-            var allClasses = assembly.GetTypes().Where(a => a.IsClass && a.Namespace != null && a.Namespace.Contains(nameSpace) && a.Name.StartsWith("COMMAND_CLASS") && !a.Name.Contains("CLASS_ALARM")).OrderByDescending(a => a.Name).Select(t =>
+            var allClasses = assembly.GetTypes().Where(a => a.IsClass && a.Namespace != null && a.Namespace.Contains(nameSpace) && a.Name.StartsWith("COMMAND_CLASS") && !a.Name.Contains("CLASS_ALARM")).OrderBy(x => x.Name, new NaturalSortComparer<string>(false)).Select(t =>
             {
                 var constValue = t?.GetField("ID")?.GetRawConstantValue();
                 object returnValue = null;
@@ -617,76 +621,105 @@ namespace hyper
             return nestedTypeDict;
         }
 
-        //public static int GetValueWithBitmask(int value, int bitmask)
-        //{
-        //    value = value & bitmask;
-        //    int bits = bitmask;
-        //    while ((bits & 0x01) == 0)
-        //    {
-        //        value = value >> 1;
-        //        bits = bits >> 1;
-        //    }
+
+        public static List<ConfigItem> ParseConfig(string configFile)
+        {
+
+            var yamlText = File.ReadAllText(configFile);
+            //  var input = new StringReader(yamlText);
 
 
-        //    return value;
-        //}
+            var deserializer = new DeserializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .Build();
+            List<ConfigItem> configList = null;
+            try
+            {
+                configList = deserializer.Deserialize<List<ConfigItem>>(yamlText);
+            }
+            catch
+            {
+
+            }
+
+            return configList;
 
 
-        //public static void GetAssociation(Controller controller, byte nodeId)
-        //{
-        //    for (byte id = 1; id <= 5; id++)
-        //    {
-        //        var cmd = new COMMAND_CLASS_ASSOCIATION.ASSOCIATION_GET();
-        //        cmd.groupingIdentifier = id;
-        //        var result = controller.RequestData(nodeId, cmd, Common.txOptions, new COMMAND_CLASS_ASSOCIATION.ASSOCIATION_REPORT(), 20000);
-        //        if (result)
-        //        {
-        //            var rpt = (COMMAND_CLASS_ASSOCIATION.ASSOCIATION_REPORT)result.Command;
-        //            var _groupId = rpt.groupingIdentifier;
-        //            if (_groupId != id)
-        //            {
-        //                continue;
-        //            }
-        //            var maxSupported = rpt.maxNodesSupported;
-        //            var reportToFollow = rpt.reportsToFollow;
-        //            var member = string.Join(", ", rpt.nodeid);
+        }
 
-        //            Common.logger.Info("Group: {0} - Member: {1} - Max: {2} - Follow: {3}", _groupId, member, maxSupported, reportToFollow);
-        //        }
-        //    }
-
-        //}
-
-
-        //public static void GetConfig(Controller controller, byte nodeId)
-        //{
-        //    for (byte parameterNumber = 1; parameterNumber < 100; parameterNumber++)
-        //    {
-        //        var cmd = new COMMAND_CLASS_CONFIGURATION.CONFIGURATION_GET();
-        //        cmd.parameterNumber = parameterNumber;
-        //        RequestDataResult result;
-        //        result = controller.RequestData(nodeId, cmd, Common.txOptions, new COMMAND_CLASS_CONFIGURATION.CONFIGURATION_REPORT(), 100);
-        //        if (result)
-        //        {
-        //            var rpt = (COMMAND_CLASS_CONFIGURATION.CONFIGURATION_REPORT)result.Command;
-
-        //            var _parameterNumber = rpt.parameterNumber;
-        //            if (_parameterNumber != parameterNumber)
-        //            {
-        //                continue;
-        //            }
-        //            var value = Tools.GetInt32(rpt.configurationValue.ToArray());
-
-
-        //            Common.logger.Info("ParameterNumber: {0} - {1}", _parameterNumber, value);
-        //        }
-        //        else
-        //        {
-        //            //  Common.logger.Info("Parameter {0} does not exist!", parameterNumber);
-        //        }
-        //    }
-
-        //}
 
     }
+
+    //public static int GetValueWithBitmask(int value, int bitmask)
+    //{
+    //    value = value & bitmask;
+    //    int bits = bitmask;
+    //    while ((bits & 0x01) == 0)
+    //    {
+    //        value = value >> 1;
+    //        bits = bits >> 1;
+    //    }
+
+
+    //    return value;
+    //}
+
+
+    //public static void GetAssociation(Controller controller, byte nodeId)
+    //{
+    //    for (byte id = 1; id <= 5; id++)
+    //    {
+    //        var cmd = new COMMAND_CLASS_ASSOCIATION.ASSOCIATION_GET();
+    //        cmd.groupingIdentifier = id;
+    //        var result = controller.RequestData(nodeId, cmd, Common.txOptions, new COMMAND_CLASS_ASSOCIATION.ASSOCIATION_REPORT(), 20000);
+    //        if (result)
+    //        {
+    //            var rpt = (COMMAND_CLASS_ASSOCIATION.ASSOCIATION_REPORT)result.Command;
+    //            var _groupId = rpt.groupingIdentifier;
+    //            if (_groupId != id)
+    //            {
+    //                continue;
+    //            }
+    //            var maxSupported = rpt.maxNodesSupported;
+    //            var reportToFollow = rpt.reportsToFollow;
+    //            var member = string.Join(", ", rpt.nodeid);
+
+    //            Common.logger.Info("Group: {0} - Member: {1} - Max: {2} - Follow: {3}", _groupId, member, maxSupported, reportToFollow);
+    //        }
+    //    }
+
+    //}
+
+
+    //public static void GetConfig(Controller controller, byte nodeId)
+    //{
+    //    for (byte parameterNumber = 1; parameterNumber < 100; parameterNumber++)
+    //    {
+    //        var cmd = new COMMAND_CLASS_CONFIGURATION.CONFIGURATION_GET();
+    //        cmd.parameterNumber = parameterNumber;
+    //        RequestDataResult result;
+    //        result = controller.RequestData(nodeId, cmd, Common.txOptions, new COMMAND_CLASS_CONFIGURATION.CONFIGURATION_REPORT(), 100);
+    //        if (result)
+    //        {
+    //            var rpt = (COMMAND_CLASS_CONFIGURATION.CONFIGURATION_REPORT)result.Command;
+
+    //            var _parameterNumber = rpt.parameterNumber;
+    //            if (_parameterNumber != parameterNumber)
+    //            {
+    //                continue;
+    //            }
+    //            var value = Tools.GetInt32(rpt.configurationValue.ToArray());
+
+
+    //            Common.logger.Info("ParameterNumber: {0} - {1}", _parameterNumber, value);
+    //        }
+    //        else
+    //        {
+    //            //  Common.logger.Info("Parameter {0} does not exist!", parameterNumber);
+    //        }
+    //    }
+
+    //}
+
 }
+

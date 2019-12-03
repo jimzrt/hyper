@@ -47,6 +47,5 @@ namespace hyper.Models
         [Column(Name = "added"), NotNull]
         public DateTime Added { get; }
 
-        // ... other columns ...
     }
 }
