@@ -6,7 +6,10 @@ using hyper.Output;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Reflection;
+using Utils;
 using ZWave;
 using ZWave.BasicApplication.Devices;
 using ZWave.CommandClasses;
@@ -26,17 +29,12 @@ namespace hyper
             this.configList = configList;
         }
 
-        private bool _active = true;
+        // private bool _active = true;
 
         public bool Active
         {
-            get { return _active; }
-            set
-            {
-                // Common.logger.Info("listening {0}", value == true ? "active" : "inactive");
-                //  _active = value;
-            }
-        }
+            get; set;
+        } = false;
 
         private byte _filterNodeId = 0;
 
@@ -86,14 +84,14 @@ namespace hyper
             Common.logger.Info("Listening...");
 
             //    byte[] bytes = new byte[256];
-            //    byte[] numArray = File.ReadAllBytes(@"C:\Users\james\Desktop\tmp\MultiSensor 6_OTA_EU_A_V1_13.exe");
-            //    int length = (int)numArray[numArray.Length - 4] << 24 | (int)numArray[numArray.Length - 3] << 16 | (int)numArray[numArray.Length - 2] << 8 | (int)numArray[numArray.Length - 1];
-            //    byte[] flashDataB = new byte[length];
-            //    Array.Copy((Array)numArray, numArray.Length - length - 4 - 4 - 256, (Array)flashDataB, 0, length);
+            byte[] numArray = File.ReadAllBytes(@"C:\Users\james\Desktop\tmp\MultiSensor 6_OTA_EU_A_V1_13.exe");
+            int length = (int)numArray[numArray.Length - 4] << 24 | (int)numArray[numArray.Length - 3] << 16 | (int)numArray[numArray.Length - 2] << 8 | (int)numArray[numArray.Length - 1];
+            byte[] flashDataB = new byte[length];
+            Array.Copy((Array)numArray, numArray.Length - length - 4 - 4 - 256, (Array)flashDataB, 0, length);
             //    //Array.Copy((Array)numArray, numArray.Length - 256 - 4 - 4, (Array)bytes, 0, 256);
-            //    List<byte> flashData = new List<byte>(flashDataB);
+            List<byte> flashData = new List<byte>(flashDataB);
             ////   var filename = Encoding.UTF8.GetString(bytes);
-            // //   flashData = flashData.Take(5146).ToArray();
+            // flashData = flashData.Take(5146).ToArray();
             //   // Console.WriteLine(filename);
             //  //  Console.WriteLine(flashData.Length);
 
@@ -167,9 +165,7 @@ namespace hyper
                     case COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION _:
                         // TODO EVENT, last Battery
                         var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, x.SrcNodeId);
-                        Console.WriteLine("difference in hours: {0}", (DateTime.Now - lastDate).TotalHours);
-                        Console.WriteLine("difference in minutes: {0}", (DateTime.Now - lastDate).TotalHours);
-                        if ((DateTime.Now - lastDate).Hours >= 6)
+                        if ((DateTime.Now - lastDate).TotalHours >= 6)
                         {
                             queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
                         }
@@ -178,41 +174,41 @@ namespace hyper
 
                     case COMMAND_CLASS_FIRMWARE_UPDATE_MD_V5.FIRMWARE_UPDATE_MD_GET fupdateReport:
 
-                        //var rep1 = fupdateReport.properties1.reportNumber1;
-                        //var rep2 = fupdateReport.reportNumber2;
-                        //var count = fupdateReport.numberOfReports;
+                        var rep1 = fupdateReport.properties1.reportNumber1;
+                        var rep2 = fupdateReport.reportNumber2;
+                        var count = fupdateReport.numberOfReports;
 
-                        //queueItems.Add(() => {
-                        //    var take = 40;
-                        //    var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT();
-                        //    cmd.properties1.last = 0;
-                        //    cmd.properties1.reportNumber1 = rep1;
-                        //    cmd.reportNumber2 = rep2;
-                        //    short repNumber = BitConverter.ToInt16(new byte[] { rep2, rep1 });
-                        //    //Console.WriteLine($"Repnumber: {repNumber}");
-                        //    var offset = (repNumber - 1) * 40;
-                        //    Common.logger.Info("Progress: {0}", (offset / (float)flashData.Count).ToString("0.00%"));
+                        queueItems.Add(() =>
+                        {
+                            var take = 40;
+                            var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT();
+                            cmd.properties1.last = 0;
+                            cmd.properties1.reportNumber1 = rep1;
+                            cmd.reportNumber2 = rep2;
+                            short repNumber = BitConverter.ToInt16(new byte[] { rep2, rep1 });
+                            //Console.WriteLine($"Repnumber: {repNumber}");
+                            var offset = (repNumber - 1) * 40;
+                            Common.logger.Info("Progress: {0}", (offset / (float)flashData.Count).ToString("0.00%"));
 
-                        //    if ((flashData.Count - offset) < 40)
-                        //    {
-                        //       // Console.WriteLine("ima full!");
-                        //        Console.WriteLine(offset);
-                        //        Console.WriteLine(flashData.Count);
-                        //        take = flashData.Count - offset;
-                        //        Console.WriteLine(take);
-                        //        cmd.properties1.last = 1;
-                        //        Common.logger.Info("Progress: {0}", (1).ToString("0.00%"));
-                        //    }
-                        //    var data = flashData.Skip(offset).Take(take).ToArray();
-                        //    cmd.data = data;
-                        //    //7A 97
-                        //   // Common.logger.Info(Util.ObjToJson((byte[])cmd));
-                        //   // Common.logger.Info(Util.ObjToJson(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT.ID }.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data).ToArray()));
-                        //    cmd.checksum = Tools.CalculateCrc16Array((byte[])cmd,0,((byte[])cmd).Length -2);
-                        //        //cmd.checksum =  Tools.CalculateCrc16Array(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT .ID}.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data));
-                        //    controller.SendData(x.SrcNodeId, cmd, Common.txOptions);
-
-                        //});
+                            if ((flashData.Count - offset) < 40)
+                            {
+                                // Console.WriteLine("ima full!");
+                                Console.WriteLine(offset);
+                                Console.WriteLine(flashData.Count);
+                                take = flashData.Count - offset;
+                                Console.WriteLine(take);
+                                cmd.properties1.last = 1;
+                                Common.logger.Info("Progress: {0}", (1).ToString("0.00%"));
+                            }
+                            var data = flashData.Skip(offset).Take(take).ToArray();
+                            cmd.data = data;
+                            //7A 97
+                            // Common.logger.Info(Util.ObjToJson((byte[])cmd));
+                            // Common.logger.Info(Util.ObjToJson(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT.ID }.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data).ToArray()));
+                            cmd.checksum = Tools.CalculateCrc16Array((byte[])cmd, 0, ((byte[])cmd).Length - 2);
+                            //cmd.checksum =  Tools.CalculateCrc16Array(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT .ID}.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data));
+                            controller.SendData(x.SrcNodeId, cmd, Common.txOptions);
+                        });
 
                         break;
 
@@ -229,14 +225,13 @@ namespace hyper
                 }
                 Common.logger.Info("{0}: Got {2} for node {1}", DateTime.Now, r.NodeId, r.Status);
                 var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, r.NodeId);
-                Console.WriteLine("difference in hours: {0}", (DateTime.Now - lastDate).TotalHours);
-                Console.WriteLine("difference in minutes: {0}", (DateTime.Now - lastDate).TotalMinutes);
                 if ((DateTime.Now - lastDate).TotalHours >= 6)
                 {
                     queueItems.Add(() => Common.RequestBatteryReport(controller, r.NodeId));
                 }
             });
 
+            Active = true;
             while (!queueItems.IsCompleted)
             {
                 try
@@ -269,8 +264,10 @@ namespace hyper
         public void Stop()
         {
             Common.logger.Info("stop listening!");
-            dataListener?.SetCompleted();
-            controllerListener?.SetCompleted();
+            dataListener?.SetCancelled();
+            //dataListener?.SetCompletedSignal();
+            controllerListener?.SetCancelled();
+            // controllerListener?.SetCompletedSignal();
             queueItems?.CompleteAdding();
         }
 

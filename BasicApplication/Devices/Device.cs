@@ -19,7 +19,9 @@ namespace ZWave.BasicApplication.Devices
     public abstract class Device : ApplicationClient, IDevice
     {
         #region Properties
+
         private NetworkViewPoint _network;
+
         public NetworkViewPoint Network
         {
             get { return _network; }
@@ -31,6 +33,7 @@ namespace ZWave.BasicApplication.Devices
         }
 
         private byte[] _dsk;
+
         public byte[] DSK
         {
             get { return _dsk; }
@@ -43,6 +46,7 @@ namespace ZWave.BasicApplication.Devices
             0x77, 0x07, 0x6d, 0x0a, 0x73, 0x18, 0xa5, 0x7d, 0x3c, 0x16, 0xc1, 0x72, 0x51, 0xb2, 0x66, 0x45,
             0xdf, 0x4c, 0x2f, 0x87, 0xeb, 0xc0, 0x99, 0x2a, 0xb1, 0x77, 0xfb, 0xa5, 0x1d, 0xb9, 0x2c, 0x2a
         };
+
         public byte[] PRK
         {
             get { return _prk; }
@@ -83,6 +87,7 @@ namespace ZWave.BasicApplication.Devices
         }
 
         #endregion Properties
+
         internal Device(byte sessionId, ISessionClient sc, IFrameClient fc, ITransportClient tc)
             : base(ApiTypes.Basic, sessionId, sc, fc, tc)
         {
@@ -155,24 +160,29 @@ namespace ZWave.BasicApplication.Devices
                 return (SerialApiCapability & 0x02) > 0; //Bit 1
             }
         }
+
         /// <summary>
         /// Returns 'ver' parameter of the SerialApiGetInitData operation result
         /// </summary>
         public byte SerialApiVersion { get; set; }
+
         /// <summary>
         /// Returns 'chip_type' parameter of the SerialApiGetInitData operation result
         /// </summary>
         public ChipTypes ChipType { get; set; }
+
         /// <summary>
         /// Returns 'chip_version' parameter of the SerialApiGetInitData operation result
         /// </summary>
         public byte ChipRevision { get; set; }
+
         /// <summary>
         /// Returns 'buffer' parameter of the Version operation result
         /// </summary>
         public string Version { get; set; }
 
         private Libraries _library;
+
         /// <summary>
         /// Returns 'library type' parameter of the Version operation result or TypeLibrary operation result
         /// </summary>
@@ -190,30 +200,37 @@ namespace ZWave.BasicApplication.Devices
         /// Returns 'background RSSI' parameter of the GetBackgroundRSSI operation result
         /// </summary>
         public byte[] BackgroundRSSILevels { get; set; }
+
         /// <summary>
         /// Returns 'SERIAL_APPL_VERSION' parameter of the SerialApiGetCapabilities operation result
         /// </summary>
         public byte SerialApplicationVersion { get; set; }
+
         /// <summary>
         /// Returns 'SERIAL_APPL_REVISION' parameter of the SerialApiGetCapabilities operation result
         /// </summary>
         public byte SerialApplicationRevision { get; set; }
+
         /// <summary>
         /// Returns 'SERIALAPI_MANUFACTURER_ID' parameter of the SerialApiGetCapabilities operation result
         /// </summary>
         public ushort ManufacturerId { get; set; }
+
         /// <summary>
         /// Returns 'SERIALAPI_MANUFACTURER_PRODUCT_TYPE' parameter of the SerialApiGetCapabilities operation result
         /// </summary>
         public ushort ManufacturerProductType { get; set; }
+
         /// <summary>
         /// Returns 'SERIALAPI_MANUFACTURER_PRODUCT_ID' parameter of the SerialApiGetCapabilities operation result
         /// </summary>
         public ushort ManufacturerProductId { get; set; }
+
         /// <summary>
         /// Returns 'FUNCID_SUPPORTED_BITMASK' parameter of the SerialApiGetCapabilities operation result. Bitmask converted to list.
         /// </summary>
         public byte[] SupportedSerialApiCommands { get; set; }
+
         /// <summary>
         /// Return Hardware Version from NVR of device. Sets on device open.
         /// </summary>
@@ -232,6 +249,7 @@ namespace ZWave.BasicApplication.Devices
         private readonly AutoResetEvent assignNodeIdDoneSignal = new AutoResetEvent(false);
         private readonly AutoResetEvent assignRangeInfoUpdateSignal = new AutoResetEvent(false);
         private ControllerUpdateStatuses _lastControllerUpdateStatusValue;
+
         public bool WaitControllerUpdateSignal(ControllerUpdateStatuses updateStatus, int timeout)
         {
             bool ret = false;
@@ -256,30 +274,39 @@ namespace ZWave.BasicApplication.Devices
             {
                 case NodeStatuses.Unknown:
                     break;
+
                 case NodeStatuses.LearnReady:
                     ret = nsLearnReadySignal.WaitOne(timeout, true);
                     break;
+
                 case NodeStatuses.NodeFound:
                     ret = nodeFoundSignal.WaitOne(timeout);
                     break;
+
                 case NodeStatuses.AddingRemovingSlave:
                     ret = addingRemovingSlaveSignal.WaitOne(timeout, true);
                     break;
+
                 case NodeStatuses.AddingRemovingController:
                     ret = addingRemovingControllerSignal.WaitOne(timeout, true);
                     break;
+
                 case NodeStatuses.ProtocolDone:
                     ret = protocolDoneSignal.WaitOne(timeout, true);
                     break;
+
                 case NodeStatuses.Done:
                     ret = doneSignal.WaitOne(timeout, true);
                     break;
+
                 case NodeStatuses.Failed:
                     ret = failedSignal.WaitOne(timeout, true);
                     break;
+
                 case NodeStatuses.NotPrimary:
                     ret = notPrimarySignal.WaitOne(timeout, true);
                     break;
+
                 default:
                     break;
             }
@@ -297,30 +324,39 @@ namespace ZWave.BasicApplication.Devices
                 {
                     case NodeStatuses.Unknown:
                         break;
+
                     case NodeStatuses.LearnReady:
                         signals[i] = nsLearnReadySignal;
                         break;
+
                     case NodeStatuses.NodeFound:
                         signals[i] = nodeFoundSignal;
                         break;
+
                     case NodeStatuses.AddingRemovingSlave:
                         signals[i] = addingRemovingSlaveSignal;
                         break;
+
                     case NodeStatuses.AddingRemovingController:
                         signals[i] = addingRemovingControllerSignal;
                         break;
+
                     case NodeStatuses.ProtocolDone:
                         signals[i] = protocolDoneSignal;
                         break;
+
                     case NodeStatuses.Done:
                         signals[i] = doneSignal;
                         break;
+
                     case NodeStatuses.Failed:
                         signals[i] = failedSignal;
                         break;
+
                     case NodeStatuses.NotPrimary:
                         signals[i] = notPrimarySignal;
                         break;
+
                     default:
                         break;
                 }
@@ -337,12 +373,15 @@ namespace ZWave.BasicApplication.Devices
                 case AssignStatuses.AssignComplete:
                     ret = assignCompleteSignal.WaitOne(timeout, true);
                     break;
+
                 case AssignStatuses.AssignNodeIdDone:
                     ret = assignNodeIdDoneSignal.WaitOne(timeout, true);
                     break;
+
                 case AssignStatuses.AssignRangeInfoUpdate:
                     ret = assignRangeInfoUpdateSignal.WaitOne(timeout, true);
                     break;
+
                 default:
                     break;
             }
@@ -355,30 +394,39 @@ namespace ZWave.BasicApplication.Devices
             {
                 case NodeStatuses.Unknown:
                     break;
+
                 case NodeStatuses.LearnReady:
                     nsLearnReadySignal.Set();
                     break;
+
                 case NodeStatuses.NodeFound:
                     nodeFoundSignal.Set();
                     break;
+
                 case NodeStatuses.AddingRemovingSlave:
                     addingRemovingSlaveSignal.Set();
                     break;
+
                 case NodeStatuses.AddingRemovingController:
                     addingRemovingControllerSignal.Set();
                     break;
+
                 case NodeStatuses.ProtocolDone:
                     protocolDoneSignal.Set();
                     break;
+
                 case NodeStatuses.Done:
                     doneSignal.Set();
                     break;
+
                 case NodeStatuses.Failed:
                     failedSignal.Set();
                     break;
+
                 case NodeStatuses.NotPrimary:
                     notPrimarySignal.Set();
                     break;
+
                 default:
                     break;
             }
@@ -391,12 +439,15 @@ namespace ZWave.BasicApplication.Devices
                 case AssignStatuses.AssignComplete:
                     assignCompleteSignal.Set();
                     break;
+
                 case AssignStatuses.AssignNodeIdDone:
                     assignNodeIdDoneSignal.Set();
                     break;
+
                 case AssignStatuses.AssignRangeInfoUpdate:
                     assignRangeInfoUpdateSignal.Set();
                     break;
+
                 default:
                     break;
             }
@@ -729,12 +780,18 @@ namespace ZWave.BasicApplication.Devices
         }
 
         #region SetLearnMode
+
         public ApiOperation learnModeOperation = null;
+
         public abstract SetLearnModeResult SetLearnMode(LearnModes mode, bool isSubstituteDenied, int timeoutMs);
+
         public abstract ActionToken SetLearnMode(LearnModes mode, bool isSubstituteDenied, int timeoutMs, Action<IActionItem> completedCallback);
+
         public abstract SetLearnModeResult SetLearnMode(LearnModes mode, int timeoutMs);
+
         public abstract ActionToken SetLearnMode(LearnModes mode, int timeoutMs, Action<IActionItem> completedCallback);
-        #endregion
+
+        #endregion SetLearnMode
 
         #region SerialApiGetCapabilities
 
@@ -748,9 +805,10 @@ namespace ZWave.BasicApplication.Devices
             return ExecuteAsync(new SerialApiGetCapabilitiesOperation(), completedCallback);
         }
 
-        #endregion
+        #endregion SerialApiGetCapabilities
 
         #region SetDefault
+
         public ActionResult SetDefault()
         {
             return Execute(new SetDefaultOperation());
@@ -760,7 +818,8 @@ namespace ZWave.BasicApplication.Devices
         {
             return ExecuteAsync(new SetDefaultOperation(), completedCallback);
         }
-        #endregion
+
+        #endregion SetDefault
 
         #region GetPRK
 
@@ -783,7 +842,7 @@ namespace ZWave.BasicApplication.Devices
             return ret;
         }
 
-        #endregion
+        #endregion GetPRK
 
         #region MemoryGetId
 
@@ -797,7 +856,7 @@ namespace ZWave.BasicApplication.Devices
             return ExecuteAsync(new MemoryGetIdOperation(), completedCallback);
         }
 
-        #endregion
+        #endregion MemoryGetId
 
         #region SendDataEx
 
@@ -829,7 +888,7 @@ namespace ZWave.BasicApplication.Devices
             return (SendDataResult)token.WaitCompletedSignal();
         }
 
-        #endregion
+        #endregion SendDataEx
 
         #region SendData
 
@@ -879,7 +938,7 @@ namespace ZWave.BasicApplication.Devices
             return ExecuteAsync(operation, completedCallback);
         }
 
-        #endregion
+        #endregion SendData
 
         #region SendDataMulti
 
@@ -914,7 +973,7 @@ namespace ZWave.BasicApplication.Devices
             return ExecuteAsync(sendDataMultiOperation, completedCallback);
         }
 
-        #endregion
+        #endregion SendDataMulti
 
         #region SendDataMultiEx
 
@@ -935,7 +994,7 @@ namespace ZWave.BasicApplication.Devices
             return (SendDataResult)token.WaitCompletedSignal();
         }
 
-        #endregion
+        #endregion SendDataMultiEx
 
         #region SendNodeInformation
 
@@ -949,7 +1008,7 @@ namespace ZWave.BasicApplication.Devices
             return ExecuteAsync(new SendNodeInformationOperation(destination, txOptions), completedCallback);
         }
 
-        #endregion
+        #endregion SendNodeInformation
 
         #region SetPromiscuousMode
 
@@ -963,7 +1022,7 @@ namespace ZWave.BasicApplication.Devices
             return ExecuteAsync(new SetPromiscuousModeOperation(state), completedCallback);
         }
 
-        #endregion
+        #endregion SetPromiscuousMode
 
         #region ExploreRequestInclusion
 
@@ -974,6 +1033,7 @@ namespace ZWave.BasicApplication.Devices
                 learnFuncId = learnModeOperation.SequenceNumber;
             return Execute(new ExploreRequestInclusionOperation(learnFuncId));
         }
+
         public ActionResult ExploreRequestExclusion()
         {
             byte learnFuncId = 0;
@@ -982,7 +1042,7 @@ namespace ZWave.BasicApplication.Devices
             return Execute(new ExploreRequestExclusionOperation(learnFuncId));
         }
 
-        #endregion
+        #endregion ExploreRequestInclusion
 
         public ActionResult SerialApiSoftReset()
         {
@@ -1173,6 +1233,7 @@ namespace ZWave.BasicApplication.Devices
         }
 
         #region SetRFReceiveMode
+
         public ActionResult SetRFReceiveMode(byte mode)
         {
             return Execute(new SetRFReceiveModeOperation(mode));
@@ -1187,7 +1248,8 @@ namespace ZWave.BasicApplication.Devices
         {
             return ExecuteAsync(new SetRFReceiveModeOperation(mode), completedCallback);
         }
-        #endregion
+
+        #endregion SetRFReceiveMode
 
         public ActionResult SetSleepMode(SleepModes sleepModes, byte intEnable)
         {
@@ -1497,7 +1559,7 @@ namespace ZWave.BasicApplication.Devices
             return (FirmwareUpdateNvmWriteResult)Execute(new FirmwareUpdateNvmWriteOperation(offset, length, buffer));
         }
 
-        #endregion
+        #endregion FirmwareUpdateLocal / OTW
 
         #region NVM Backup/Restore
 
@@ -1521,9 +1583,10 @@ namespace ZWave.BasicApplication.Devices
             return Execute(new NvmBackupRestoreCloseOperation());
         }
 
-        #endregion
+        #endregion NVM Backup/Restore
 
         #region SoftReset
+
         public ActionResult SoftReset()
         {
             return Execute(new SoftResetOperation());
@@ -1533,7 +1596,8 @@ namespace ZWave.BasicApplication.Devices
         {
             return ExecuteAsync(new SoftResetOperation(), completedCallback);
         }
-        #endregion
+
+        #endregion SoftReset
 
         public ActionResult SetRoutingMAX(byte maxRouteTries)
         {
@@ -1569,7 +1633,6 @@ namespace ZWave.BasicApplication.Devices
         {
             return (ActionResult)Execute(new ClearTxTimersOperation());
         }
-
 
         public override string ToString()
         {

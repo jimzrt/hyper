@@ -1,4 +1,5 @@
 ﻿using hyper.commands;
+using hyper.config;
 using hyper.Input;
 using hyper.Inputs;
 using hyper.Output;
@@ -6,6 +7,7 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Utils;
@@ -15,6 +17,9 @@ namespace hyper
 {
     public class Program
     {
+        public static Controller controller;
+        public static List<ConfigItem> configList;
+
         private static void SetupInputs()
         {
             var configuration = new LoggingConfiguration();
@@ -92,10 +97,11 @@ namespace hyper
                 Common.logger.Error("Could not parse configuration file config.yaml!");
                 return;
             }
+            Program.configList = config;
             Common.logger.Info("Got configuration for " + config.Count + " devices.");
             Common.logger.Debug("-----------------------------------");
 
-            if (args.Length < 2)
+            if (args.Length < 1)
             {
                 Common.logger.Info("usage:");
                 Common.logger.Info("./hyper [serialPort] [command]");
@@ -113,11 +119,15 @@ namespace hyper
                 Common.logger.Error(errorMessage);
                 return;
             }
+            Program.controller = controller;
             Common.logger.Info("Version: {0}", controller.Version);
             Common.logger.Info("Included nodes: {0}", controller.IncludedNodes.Length);
             Common.logger.Info("-----------------------------------");
 
-            if (args[1] == "r" || args[1] == "replace" || args[1] == "c" || args[1] == "config")
+            currentCommand = new InteractiveCommand(string.Join(" ", args.Skip(1)));
+            currentCommand.Start();
+
+            /*if (args[1] == "r" || args[1] == "replace" || args[1] == "c" || args[1] == "config")
             {
                 if (args.Length != 3)
                 {
@@ -279,7 +289,7 @@ namespace hyper
                 Common.logger.Info("unknown command: {0}", args[1]);
                 Common.logger.Info("valid commands:");
                 Common.logger.Info("r/replace, c/config, i/include, e/exclude, l/listen, p/ping");
-            }
+            }*/
 
             Common.logger.Info("----------");
             Common.logger.Info("Press any key to exit...");

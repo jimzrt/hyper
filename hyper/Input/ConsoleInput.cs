@@ -71,5 +71,11 @@ namespace hyper.Inputs
         {
             this.resetEvent = resetEvent;
         }
+
+        public void Interrupt()
+        {
+            //TODO
+            //stop console read
+        }
     }
 }

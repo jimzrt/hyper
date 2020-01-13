@@ -16,5 +16,6 @@ namespace hyper.Inputs
         public string Read();
 
         void SetResetEvent(ManualResetEvent resetEvent);
+        void Interrupt();
     }
 }

@@ -17,11 +17,13 @@ namespace hyper.Input
 
         public event ConsoleCancelEventHandler CancelKeyPress;
 
+        private UdpClient listener;
+
         public UDPInput(int listenPort)
         {
             try
             {
-                UdpClient listener = new UdpClient(listenPort);
+                listener = new UdpClient(listenPort);
                 IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
 
                 Task.Run(async () =>
@@ -71,6 +73,11 @@ namespace hyper.Input
         public void SetResetEvent(ManualResetEvent resetEvent)
         {
             this.resetEvent = resetEvent;
+        }
+
+        public void Interrupt()
+        {
+            listener?.Close();
         }
     }
 }

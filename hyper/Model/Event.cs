@@ -62,5 +62,10 @@ namespace hyper.Models
 
         [Column(Name = "added"), NotNull]
         public DateTime Added { get; set; }
+
+        public override string ToString()
+        {
+            return $"Event: nodeId: {NodeId} - type: {EventType} - value: {Value}";
+        }
     }
 }

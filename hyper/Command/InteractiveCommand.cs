@@ -1,27 +1,33 @@
 ﻿using hyper.commands;
 using hyper.config;
+using hyper.Database.DAO;
+using hyper.Helper;
 using hyper.Inputs;
+using hyper.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
+using Utils;
 using ZWave.BasicApplication.Devices;
+using ZWave.CommandClasses;
 
 namespace hyper
 {
     public class InteractiveCommand : ICommand
     {
-        private readonly Controller controller;
-        private List<ConfigItem> configList;
         private ICommand currentCommand = null;
 
         private bool blockExit = false;
+        private string args;
 
-        public InteractiveCommand(Controller controller, List<ConfigItem> configList)
+        private EventDAO eventDao = new EventDAO();
+
+        public InteractiveCommand(string args)
         {
-            this.controller = controller;
-            this.configList = configList;
+            this.args = args;
         }
 
         public bool Active { get; private set; } = false;
@@ -59,36 +65,53 @@ namespace hyper
             InputManager.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
             // InputManager.AddCancelEventHandler(CancelHandler);
 
-            var oneTo255Regex = @"((?<!\d)(?:1\d{2}|2[0-4]\d|[1-9]?\d|25[0-5])(?!\d))";
+            var oneTo255Regex = @"\b([1-9]|[1-8][0-9]|9[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\b";
+            var zeroTo255Regex = @"\b([0-9]|[1-8][0-9]|9[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\b";
 
             var pingRegex = new Regex(@$"^ping\s*{oneTo255Regex}");
             var configRegex = new Regex(@"^config\s*" + oneTo255Regex);
             var replaceRegex = new Regex(@"^replace\s*" + oneTo255Regex);
             var basicRegex = new Regex(@"^basic\s*" + oneTo255Regex + @"\s*(false|true)");
             var listenRegex = new Regex(@"^listen\s*(stop|start|filter\s*" + oneTo255Regex + ")");
-            //var testRegex = new Regex(@"^firmware\s*" + oneTo255Regex);
+            var testRegex = new Regex(@"^firmware\s*" + oneTo255Regex);
             var forceRemoveRegex = new Regex(@"^remove\s*" + oneTo255Regex);
             var debugRegex = new Regex(@"^debug\s*(false|true)");
+            var lastEventsRegex = new Regex(@$"^show\s*{zeroTo255Regex}\s*{zeroTo255Regex}\s*([a-zA-Z_]+)");
 
             Active = true;
+            bool oneShot = args.Length > 0;
+
             Common.logger.Info("-----------");
-            Common.logger.Info("Interaction mode");
+            if (oneShot)
+            {
+                Common.logger.Info("Oneshot mode");
+            }
+            else
+            {
+                Common.logger.Info("Interaction mode");
+            }
             Common.logger.Info("-----------");
 
-            ListenCommand listenComand = new ListenCommand(controller, configList);
+            ListenCommand listenComand = new ListenCommand(Program.controller, Program.configList);
 
             Thread InstanceCaller = new Thread(
             new ThreadStart(() => listenComand.Start()));
 
             InstanceCaller.Start();
 
-            while (Active)
+            do
             {
-                //   while (Console.KeyAvailable)
-                //       Console.ReadKey(true);
-
                 Common.logger.Info("choose your destiny girl!");
-                var input = InputManager.ReadAny();
+
+                var input = "";
+                if (oneShot)
+                {
+                    input = args;
+                }
+                else
+                {
+                    input = InputManager.ReadAny();
+                }
                 if (input == null)
                 {
                     return false;
@@ -100,8 +123,8 @@ namespace hyper
                         {
                             blockExit = true;
                             Common.logger.Info("Resetting controller...");
-                            controller.SetDefault();
-                            controller.SerialApiGetInitData();
+                            Program.controller.SetDefault();
+                            Program.controller.SerialApiGetInitData();
                             Common.logger.Info("Done!");
 
                             blockExit = false;
@@ -110,18 +133,23 @@ namespace hyper
 
                     case "include":
                         {
-                            currentCommand = new IncludeCommand(controller, configList);
+                            currentCommand = new IncludeCommand(Program.controller, Program.configList);
+                            break;
+                        }
+                    case "included":
+                        {
+                            Common.logger.Info("included nodes: " + string.Join(", ", Program.controller.IncludedNodes));
                             break;
                         }
                     case "exclude":
                         {
-                            currentCommand = new ExcludeCommand(controller);
+                            currentCommand = new ExcludeCommand(Program.controller);
                             break;
                         }
                     case "backup":
                         {
                             blockExit = true;
-                            var result = Common.ReadNVRam(controller, out byte[] eeprom);
+                            var result = Common.ReadNVRam(Program.controller, out byte[] eeprom);
                             if (result)
                             {
                                 File.WriteAllBytes("eeprom.bin", eeprom);
@@ -134,9 +162,9 @@ namespace hyper
                         {
                             blockExit = true;
                             byte[] read = File.ReadAllBytes("eeprom.bin");
-                            var result = Common.WriteNVRam(controller, read);
+                            var result = Common.WriteNVRam(Program.controller, read);
                             Common.logger.Info("Result is {0}", result);
-                            controller.SerialApiGetInitData();
+                            Program.controller.SerialApiGetInitData();
 
                             blockExit = false;
                             break;
@@ -144,8 +172,8 @@ namespace hyper
                     case "reload":
                         {
                             Common.logger.Info("Reloading conifg!");
-                            configList = Common.ParseConfig("config.yaml");
-                            listenComand.UpdateConfig(configList);
+                            Program.configList = Common.ParseConfig("config.yaml");
+                            listenComand.UpdateConfig(Program.configList);
                             break;
                         }
                     case var listenVal when listenRegex.IsMatch(listenVal):
@@ -163,6 +191,23 @@ namespace hyper
                             }
                             break;
                         }
+                    case var eventsVal when lastEventsRegex.IsMatch(eventsVal):
+                        {
+                            var nodeId = byte.Parse(lastEventsRegex.Match(eventsVal).Groups[1].Value);
+                            var count = int.Parse(lastEventsRegex.Match(eventsVal).Groups[2].Value);
+                            var command = lastEventsRegex.Match(eventsVal).Groups[3].Value;
+                            Console.WriteLine($"node: {nodeId} - count: {count} - command: {command}");
+                            EventFilter filter = new EventFilter();
+                            filter.NodeId = nodeId;
+                            filter.Count = count;
+                            filter.Command = command;
+                            List<Event> events = eventDao.GetByFilter(filter);
+                            foreach (var evt in events)
+                            {
+                                Common.logger.Info(evt);
+                            }
+                            break;
+                        }
                     case var debugVal when debugRegex.IsMatch(debugVal):
                         {
                             var val = debugRegex.Match(debugVal).Groups[1].Value;
@@ -174,34 +219,34 @@ namespace hyper
                         {
                             var val = forceRemoveRegex.Match(removeVal).Groups[1].Value;
                             var nodeId = byte.Parse(val);
-                            currentCommand = new ForceRemoveCommand(controller, nodeId);
+                            currentCommand = new ForceRemoveCommand(Program.controller, nodeId);
                             break;
                         }
-                    /*                        case var testVal when testRegex.IsMatch(testVal):
-                                                {
-                                                    var val = testRegex.Match(testVal).Groups[1].Value;
-                                                    var nodeId = Byte.Parse(val);
+                    case var testVal when testRegex.IsMatch(testVal):
+                        {
+                            var val = testRegex.Match(testVal).Groups[1].Value;
+                            var nodeId = Byte.Parse(val);
 
-                                                    byte[] bytes = new byte[256];
-                                                    byte[] numArray = File.ReadAllBytes(@"C:\Users\james\Desktop\tmp\MultiSensor 6_OTA_EU_A_V1_13.exe");
-                                                    int length = (int)numArray[numArray.Length - 4] << 24 | (int)numArray[numArray.Length - 3] << 16 | (int)numArray[numArray.Length - 2] << 8 | (int)numArray[numArray.Length - 1];
-                                                    byte[] flashData = new byte[length];
-                                                    Array.Copy((Array)numArray, numArray.Length - length - 4 - 4 - 256, (Array)flashData, 0, length);
-                                                    Array.Copy((Array)numArray, numArray.Length - 256 - 4 - 4, (Array)bytes, 0, 256);
+                            byte[] bytes = new byte[256];
+                            byte[] numArray = File.ReadAllBytes(@"C:\Users\james\Desktop\tmp\MultiSensor 6_OTA_EU_A_V1_13.exe");
+                            int length = (int)numArray[numArray.Length - 4] << 24 | (int)numArray[numArray.Length - 3] << 16 | (int)numArray[numArray.Length - 2] << 8 | (int)numArray[numArray.Length - 1];
+                            byte[] flashData = new byte[length];
+                            Array.Copy((Array)numArray, numArray.Length - length - 4 - 4 - 256, (Array)flashData, 0, length);
+                            Array.Copy((Array)numArray, numArray.Length - 256 - 4 - 4, (Array)bytes, 0, 256);
 
-                                                    var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REQUEST_GET();
-                                                    cmd.manufacturerId = new byte[] { 0, 0x86 };
-                                                    cmd.firmwareId = new byte[] { 0, 0 };
-                                                    cmd.checksum = Tools.CalculateCrc16Array(flashData);
-                                                    controller.SendData(nodeId, cmd, Common.txOptions);
+                            var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REQUEST_GET();
+                            cmd.manufacturerId = new byte[] { 0, 0x86 };
+                            cmd.firmwareId = new byte[] { 0, 0 };
+                            cmd.checksum = Tools.CalculateCrc16Array(flashData);
+                            Program.controller.SendData(nodeId, cmd, Common.txOptions);
 
-                                                    break;
-                                                }*/
+                            break;
+                        }
                     case var pingVal when pingRegex.IsMatch(pingVal):
                         {
                             var val = pingRegex.Match(pingVal).Groups[1].Value;
                             var nodeId = byte.Parse(val);
-                            currentCommand = new PingCommand(controller, nodeId);
+                            currentCommand = new PingCommand(Program.controller, nodeId);
                             break;
                         }
                     case var basicSetVal when basicRegex.IsMatch(basicSetVal):
@@ -212,7 +257,7 @@ namespace hyper
                             val = basicRegex.Match(basicSetVal).Groups[2].Value;
                             var value = bool.Parse(val);
                             var trys = 5;
-                            Common.SetBinary(controller, nodeId, value);
+                            Common.SetBinary(Program.controller, nodeId, value);
                             /* Thread.Sleep(500);
                              while(trys >= 0 && (!Common.GetBinary(controller, nodeId, out bool retValue) || retValue != value))
                              {
@@ -227,14 +272,14 @@ namespace hyper
                         {
                             var val = configRegex.Match(configVal).Groups[1].Value;
                             var nodeId = byte.Parse(val);
-                            currentCommand = new ConfigCommand(controller, nodeId, configList);
+                            currentCommand = new ConfigCommand(Program.controller, nodeId, Program.configList);
                             break;
                         }
                     case var replaceVal when replaceRegex.IsMatch(replaceVal):
                         {
                             var val = replaceRegex.Match(replaceVal).Groups[1].Value;
                             var nodeId = byte.Parse(val);
-                            currentCommand = new ReplaceCommand(controller, nodeId, configList);
+                            currentCommand = new ReplaceCommand(Program.controller, nodeId, Program.configList);
                             break;
                         }
 
@@ -250,9 +295,15 @@ namespace hyper
                 currentCommand.Start();
                 currentCommand = null;
                 listenComand.Active = true;
-            }
+            } while (Active && !oneShot);
 
-            Common.logger.Info("goodby master,,,");
+            while (!listenComand.Active)
+            {
+                Thread.Sleep(100);
+            }
+            InputManager.Interrupt();
+            listenComand.Stop();
+            Common.logger.Info("goodby master...");
             return true;
         }
 

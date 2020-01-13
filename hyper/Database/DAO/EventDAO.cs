@@ -75,5 +75,25 @@ namespace hyper.Database.DAO
 
             return lastEvent?.Added ?? new DateTime();
         }
+
+        internal List<Event> GetByFilter(EventFilter filter)
+        {
+            var events = db.Event.Where(t => true);
+            if (filter.NodeId != 0)
+            {
+                events = events.Where(e => e.NodeId == filter.NodeId);
+            }
+            if (filter.Command.ToUpper() != "ALL")
+            {
+                events = events.Where(e => e.EventType == filter.Command.ToUpper());
+            }
+            events = events.OrderByDescending(e => e.Added);
+            if (filter.Count != 0)
+            {
+                events = events.Take(filter.Count);
+            }
+
+            return events.Reverse().ToList();
+        }
     }
 }

@@ -11,6 +11,11 @@ namespace hyper.Inputs
 
         public static event ConsoleCancelEventHandler CancelKeyPress;
 
+        public static void Interrupt()
+        {
+            Inputs.ForEach(Input => Input.Interrupt());
+        }
+
         public static void AddInput(IInput Input)
         {
             Input.SetResetEvent(resetEvent);

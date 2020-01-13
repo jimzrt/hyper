@@ -87,5 +87,10 @@ namespace hyper.Inputs
         {
             this.resetEvent = resetEvent;
         }
+
+        public void Interrupt()
+        {
+            server.Stop();
+        }
     }
 }
