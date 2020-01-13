@@ -7,6 +7,7 @@ namespace hyper.Database
     public class DatabaseSettings : ILinqToDBSettings
     {
         private string fileName;
+
         public DatabaseSettings(string fileName)
         {
             this.fileName = fileName;
@@ -26,7 +27,7 @@ namespace hyper.Database
                     {
                         Name = "SQLite",
                         ProviderName = "System.Data.SQLite",
-                        ConnectionString = @"Data Source="+fileName+";"
+                        ConnectionString = @"Data Source=" + fileName + ";"
                     };
             }
         }

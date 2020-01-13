@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>ZWave</AssemblyName>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RuntimeIdentifiers>win-x64;win-arm;ubuntu-x64;debian-arm;linux-arm</RuntimeIdentifiers>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
@@ -13,15 +13,15 @@
     <Delete Files="@(FilesToDelete)" />
   </Target>
   <ItemGroup Condition="$(RuntimeIdentifier.Contains('win'))">
-	<Content Include="..\lib\CryptoLibraryS2\s2crypto32.dll" CopyToOutputDirectory="PreserveNewest" />
-	<Content Include="..\lib\CryptoLibraryS2\s2crypto64.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\lib\CryptoLibraryS2\s2crypto32.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\lib\CryptoLibraryS2\s2crypto64.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'debian-arms'">
     <Content Include="..\lib\CryptoLibraryS2\arm\libs2crypto32.so" CopyToOutputDirectory="PreserveNewest" />
-	<Content Include="..\lib\BasicTransport\arm\libbasictrans32.so" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\lib\BasicTransport\arm\libbasictrans32.so" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-	<Content Include="..\lib\CryptoLibraryS2\libs2crypto64.so" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\lib\CryptoLibraryS2\libs2crypto64.so" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\lib\BasicTransport\libbasictrans64.so" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
@@ -30,6 +30,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.7.0-preview3.19551.4" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.7.0" />
   </ItemGroup>
 </Project>

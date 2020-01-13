@@ -1,9 +1,6 @@
 ﻿using hyper.Helper;
 using LinqToDB.Mapping;
 using System;
-using System.IO;
-using System.IO.Compression;
-using System.Text;
 
 namespace hyper.Models
 {
@@ -25,18 +22,14 @@ namespace hyper.Models
     //    SWITCH_BINARY_REPORT,
     //    [LinqToDB.Mapping.MapValue(Value = "SENSOR_MULTILEVEL_REPORT")]
     //    SENSOR_MULTILEVEL_REPORT
-   // }
-
-
-
+    // }
 
     [Table(Name = "Events")]
     public class Event
     {
-
         public Event()
         {
-            if(Added == default)
+            if (Added == default)
                 Added = DateTime.Now;
         }
 
@@ -69,6 +62,5 @@ namespace hyper.Models
 
         [Column(Name = "added"), NotNull]
         public DateTime Added { get; set; }
-
     }
 }

@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>Utils</AssemblyName>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RuntimeIdentifiers>win-x64;win-arm;ubuntu-x64;debian-arm;linux-arm</RuntimeIdentifiers>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <EnableDefaultCompileItems>False</EnableDefaultCompileItems>
@@ -10,14 +10,14 @@
   <Target Name="ClearObjFolderTarget" BeforeTargets="Restore">
     <ItemGroup>
       <FilesToDelete Include="obj\**\*" />
-    </ItemGroup> 
+    </ItemGroup>
     <Delete Files="@(FilesToDelete)" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="System.IO.Ports" Version="4.7.0-preview3.19551.4" />
-    <PackageReference Include="System.IO.Packaging" Version="4.7.0-preview3.19551.4" />
+    <PackageReference Include="System.IO.Ports" Version="4.7.0" />
+    <PackageReference Include="System.IO.Packaging" Version="4.7.0" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
     <Compile Include="**\*.cs" Exclude="WinBased\**" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using ZWave.CommandClasses;
 
 namespace hyper.Helper.Extension
@@ -10,7 +8,7 @@ namespace hyper.Helper.Extension
     {
         public static bool GetKeyValue(this object obj, out Enums.EventKey eventType, out float floatVal)
         {
-            //if obj is COMMAND_CLASS_SENSOR_MULTILEVEL_V11.SENSOR_MULTILEVEL_REPORT 
+            //if obj is COMMAND_CLASS_SENSOR_MULTILEVEL_V11.SENSOR_MULTILEVEL_REPORT
             switch (obj)
             {
                 case COMMAND_CLASS_SENSOR_MULTILEVEL_V11.SENSOR_MULTILEVEL_REPORT multiReport:
@@ -31,7 +29,6 @@ namespace hyper.Helper.Extension
                         {
                             var byteVal = multiReport.sensorValue[0];
                             floatVal = (float)byteVal;
-
                         }
                         else if (size == 2)
                         {
@@ -87,7 +84,6 @@ namespace hyper.Helper.Extension
 
                             floatVal = mevent == 0x17 ? 1.0f : 0.0f;
                             return true;
-
                         }
                         else
                         {
@@ -126,11 +122,7 @@ namespace hyper.Helper.Extension
                     floatVal = -1;
                     eventType = Enums.EventKey.UNKNOWN;
                     return false;
-
-
             }
-
-
         }
 
         //public static bool GetKeyValue(this COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT notificationReport, out Enums.EventKey eventType, out float floatVal)

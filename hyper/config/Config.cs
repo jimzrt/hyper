@@ -15,7 +15,6 @@ namespace hyper.config
         public Dictionary<byte, byte> groups = new Dictionary<byte, byte>();
         public Dictionary<string, int> config = new Dictionary<string, int>();
         public int wakeup;
-
     }
 
     public class GroupConfig
@@ -29,5 +28,4 @@ namespace hyper.config
         public int parameter;
         public int value;
     }
-
 }

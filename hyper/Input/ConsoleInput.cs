@@ -1,24 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using NLog;
-using NLog.Config;
+﻿using NLog;
 using NLog.Targets;
-using System.Threading.Tasks;
+using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace hyper.Inputs
 {
     [Target("ConsoleInput")]
     public sealed class ConsoleInput : TargetWithLayout, IInput
     {
-
-
         public bool CanRead { get; set; } = false;
 
-        string currentMessage = "";
+        private string currentMessage = "";
 
-        Task backgroundTask = null;
+        private Task backgroundTask = null;
         private ManualResetEvent resetEvent;
 
         public event ConsoleCancelEventHandler CancelKeyPress;
@@ -44,12 +39,9 @@ namespace hyper.Inputs
                     }
                     resetEvent.Set();
                 }
-
-
             });
             backgroundTask.Start();
         }
-
 
         public bool Available()
         {
@@ -61,7 +53,6 @@ namespace hyper.Inputs
             var message = currentMessage;
             Flush();
             return message;
-
         }
 
         public void Flush()
@@ -69,16 +60,11 @@ namespace hyper.Inputs
             currentMessage = "";
         }
 
-
-
         protected override void Write(LogEventInfo logEvent)
         {
             string logMessage = this.Layout.Render(logEvent);
 
-            
-               Console.WriteLine(logMessage);
-
-            
+            Console.WriteLine(logMessage);
         }
 
         public void SetResetEvent(ManualResetEvent resetEvent)

@@ -3,23 +3,13 @@ using hyper.Database.DAO;
 using hyper.Helper;
 using hyper.Helper.Extension;
 using hyper.Models;
-using System;
-using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
-using System.IO.Compression;
-using System.Text;
-using ZWave.CommandClasses;
 
 namespace hyper.Output
 {
-    class DatabaseOutput : IOutput
+    internal class DatabaseOutput : IOutput
     {
-
-
-
-
-
         private EventDAO eventDAO;
 
         public DatabaseOutput(string fileName)
@@ -28,9 +18,9 @@ namespace hyper.Output
             {
                 //  using (File.Create("events.db")) ;
 
-                using SQLiteConnection connection = new SQLiteConnection("Data Source="+ fileName + ";");
+                using SQLiteConnection connection = new SQLiteConnection("Data Source=" + fileName + ";");
                 using SQLiteCommand command = new SQLiteCommand(
-@"CREATE TABLE 'Events' ( 
+@"CREATE TABLE 'Events' (
             `Id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             `NodeId` INTEGER NOT NULL,
             `EventType` TEXT NOT NULL,
@@ -41,14 +31,12 @@ namespace hyper.Output
 connection);
                 connection.Open();
                 command.ExecuteNonQuery();
-
             }
 
             LinqToDB.Data.DataConnection.DefaultSettings = new DatabaseSettings(fileName);
             eventDAO = new EventDAO();
 
-
-           // Common.logger.Info(Util.ObjToJson(eventDAO.GetAll()));
+            // Common.logger.Info(Util.ObjToJson(eventDAO.GetAll()));
         }
 
         public void HandleCommand(object command, byte srcNodeId, byte destNodeId)
@@ -77,7 +65,6 @@ connection);
                 evt.Value = floatVal;
             }
 
-
             //switch (command)
             //{
             //    //case COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT alarmReport:
@@ -100,7 +87,7 @@ connection);
             //    //    break;
 
             //    case COMMAND_CLASS_SENSOR_MULTILEVEL_V11.SENSOR_MULTILEVEL_REPORT multilevelReport:
-            //        { 
+            //        {
             //        multilevelReport.GetKeyValue(out Enums.EventKey eventKey, out float floatVal);
             //        evt.EventTypeKeyR = eventKey;
             //        evt.Value = floatVal;
@@ -108,8 +95,6 @@ connection);
             //        }
             //    case COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT notificationReport:
             //        {
-
-                    
             //        notificationReport.GetKeyValue(out Enums.EventKey eventKey, out float floatVal);
             //            evt.EventTypeKeyR = eventKey;
             //            evt.Value = floatVal;
@@ -130,7 +115,6 @@ connection);
             //}
 
             eventDAO.InsertEventAsync(evt);
-
         }
     }
 }

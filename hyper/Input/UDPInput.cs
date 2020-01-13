@@ -1,20 +1,18 @@
 ﻿using hyper.Inputs;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace hyper.Input
 {
-    class UDPInput : IInput
+    internal class UDPInput : IInput
     {
         public bool CanRead { get; set; } = false;
 
-        string currentMessage = "";
+        private string currentMessage = "";
         private ManualResetEvent resetEvent;
 
         public event ConsoleCancelEventHandler CancelKeyPress;
@@ -23,16 +21,13 @@ namespace hyper.Input
         {
             try
             {
-
                 UdpClient listener = new UdpClient(listenPort);
                 IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
-
 
                 Task.Run(async () =>
                 {
                     while (true)
                     {
-
                         var received = await listener.ReceiveAsync();
 
                         byte[] bytes = received.Buffer;
@@ -47,20 +42,13 @@ namespace hyper.Input
                         }
 
                         resetEvent.Set();
-
                     }
-
                 });
             }
             catch (Exception e)
             {
-
-                Common.logger.Error(this.GetType().Name + ": "+ e.Message);
+                Common.logger.Error(this.GetType().Name + ": " + e.Message);
             }
-
-
-
-
         }
 
         public bool Available()

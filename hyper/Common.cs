@@ -75,7 +75,6 @@ namespace hyper
                     _controller.MemoryGetId();
                     //      Common.logger.Info("Initialization done!");
                     //  Common.logger.Info("Included Nodes: " + string.Join(", ", controller.IncludedNodes));
-
                 }
                 else
                 {
@@ -86,7 +85,6 @@ namespace hyper
                     controller = null;
                     return false;
                 }
-
             }
             else
             {
@@ -143,15 +141,12 @@ namespace hyper
             }
         }
 
-
-
         public static bool SetConfiguration(Controller controller, byte nodeId, ConfigItem config)
         {
-
             int retryCount = 15;
             if (config.groups != null && config.groups.Count != 0)
             {
-                if(config.groups.Count != 0)
+                if (config.groups.Count != 0)
                 {
                     Common.logger.Info("Setting " + config.groups.Count + " associtions");
                     bool associationCleared = ClearAssociations(controller, nodeId);
@@ -168,7 +163,7 @@ namespace hyper
                         Thread.Sleep(200);
                     }
                 }
-              
+
                 foreach (var group in config.groups)
                 {
                     var groupIdentifier = group.Key;
@@ -190,7 +185,6 @@ namespace hyper
                         if (associationAdded)
                         {
                             associationValidated = AssociationContains(controller, nodeId, groupIdentifier, member);
-
                         }
                         retryCount--;
                         if (retryCount <= 0)
@@ -211,7 +205,6 @@ namespace hyper
                 {
                     var configParameter = configurationEntry.Key;
                     var configValue = configurationEntry.Value;
-
 
                     var parameterSet = SetParameter(controller, nodeId, configParameter, configValue);
                     var parameterValidated = false;
@@ -235,8 +228,6 @@ namespace hyper
                         }
                     }
                     Thread.Sleep(200);
-
-
                 }
             }
             if (config.wakeup != 0)
@@ -250,7 +241,6 @@ namespace hyper
 
             return true;
         }
-
 
         public static bool SetWakeup(Controller controller, byte nodeId, int configValue)
         {
@@ -266,8 +256,6 @@ namespace hyper
             return setWakeup.TransmitStatus == TransmitStatuses.CompleteOk;
         }
 
-
-
         public static bool GetWakeUp(Controller controller, byte nodeId)
         {
             var cmd = new COMMAND_CLASS_WAKE_UP.WAKE_UP_INTERVAL_GET();
@@ -276,7 +264,6 @@ namespace hyper
             {
                 var rpt = (COMMAND_CLASS_WAKE_UP.WAKE_UP_INTERVAL_REPORT)result.Command;
                 logger.Info("wake up interval: " + Tools.GetInt32(rpt.seconds));
-
             }
             else
             {
@@ -287,7 +274,6 @@ namespace hyper
 
         public static bool SetParameter(Controller controller, byte nodeId, string configParameterLong, int configValue)
         {
-
             var configParameter = byte.Parse(configParameterLong.Split("_")[0]);
             var configWordSize = byte.Parse(configParameterLong.Split("_")[1]);
 
@@ -308,7 +294,6 @@ namespace hyper
             }
             cmd.properties1.mdefault = 0;
             cmd.properties1.size = configWordSize;
-
 
             var setAssociation = controller.SendData(nodeId, cmd, Common.txOptions);
             return setAssociation.TransmitStatus == TransmitStatuses.CompleteOk;
@@ -335,7 +320,6 @@ namespace hyper
                     Common.logger.Info("parametr has value {0} instead of {1}", value, configValue);
                     return false;
                 }
-
             }
             else
             {
@@ -365,17 +349,13 @@ namespace hyper
                     Common.logger.Info(member + " is not a member of association group " + groupIdentifier);
                     return true;
                 }
-
-
             }
             else
             {
                 Common.logger.Info("could not get association for group " + groupIdentifier);
                 return false;
             }
-
         }
-
 
         public static bool AddAssociation(Controller controller, byte nodeId, byte groupIdentifier, byte member)
         {
@@ -434,7 +414,7 @@ namespace hyper
             return setBasic.TransmitStatus == TransmitStatuses.CompleteOk;
         }
 
-        public static bool GetBasic(Controller controller, byte nodeId, out bool value )
+        public static bool GetBasic(Controller controller, byte nodeId, out bool value)
         {
             Common.logger.Info("Basic_Get for node {0}", nodeId);
             var cmd = new COMMAND_CLASS_BASIC_V2.BASIC_GET();
@@ -449,10 +429,9 @@ namespace hyper
             return false;
         }
 
-
         public static bool WriteNVRam(Controller controller, byte[] eeprom)
         {
-            if(eeprom.Length != 65536)
+            if (eeprom.Length != 65536)
             {
                 Common.logger.Warn("Wrong file size!");
                 return false;
@@ -468,8 +447,7 @@ namespace hyper
                 var result = controller.WriteNVRam((ushort)counter, 128, eeprom.Skip(counter).Take(128).ToArray());
                 if (result.State == ZWave.ActionStates.Completed)
                 {
-
-                  //  Buffer.BlockCopy(result.RetValue, 0, eeprom, counter, 128);
+                    //  Buffer.BlockCopy(result.RetValue, 0, eeprom, counter, 128);
                 }
                 else
                 {
@@ -497,21 +475,19 @@ namespace hyper
                 var result = controller.ReadNVRam((ushort)counter, 128);
                 if (result.State == ZWave.ActionStates.Completed)
                 {
-
                     Buffer.BlockCopy(result.RetValue, 0, eeprom, counter, 128);
-                } else
+                }
+                else
                 {
                     Common.logger.Error("error reading NVRam");
                     return false;
                 }
                 counter += 128;
-
             }
             Common.logger.Info("Progress: {0}", (65536f / 65536f).ToString("0.00%"));
 
-            return true;        
+            return true;
         }
-
 
         //public static void DrawTextProgressBar(string stepDescription, int progress, int total)
         //{
@@ -543,7 +519,6 @@ namespace hyper
         //    Console.Write(output.PadRight(15) + stepDescription); //pad the output so when changing from 3 to 4 digits we avoid text shifting
         //}
 
-
         public static bool RequestBatteryReport(Controller controller, byte nodeId)
         {
             //var cmd = new COMMAND_CLASS_BATTERY.BATTERY_GET();
@@ -560,14 +535,11 @@ namespace hyper
             //}
             //return result;
 
-
-
             Common.logger.Info("Request battery value for node {0}", nodeId);
             var cmd = new COMMAND_CLASS_BATTERY.BATTERY_GET();
             var getBattery = controller.SendData(nodeId, cmd, txOptions);
             return getBattery.TransmitStatus == TransmitStatuses.CompleteOk;
         }
-
 
         public static bool ReplaceNode(Controller controller, byte nodeId)
         {
@@ -575,7 +547,6 @@ namespace hyper
             replacedNode.WaitCompletedSignal();
             var result = (InclusionResult)replacedNode.Result;
             return result.AddRemoveNode.AddRemoveNodeStatus == ZWave.BasicApplication.Enums.AddRemoveNodeStatuses.Replaced;
-
         }
 
         public static bool IncludeNode(Controller controller, out byte nodeId)
@@ -608,7 +579,6 @@ namespace hyper
             return sendData.TransmitStatus == TransmitStatuses.CompleteOk;
         }
 
-
         public static Type GetNestedType(Type baseType, byte id)
         {
             var nestedTypes = baseType.GetNestedTypes(BindingFlags.Public);
@@ -621,7 +591,6 @@ namespace hyper
                 }
 
                 return (byte)value == id;
-
             }).FirstOrDefault();
             return matchedType;
         }
@@ -664,13 +633,10 @@ namespace hyper
             return nestedTypeDict;
         }
 
-
         public static List<ConfigItem> ParseConfig(string configFile)
         {
-
             var yamlText = File.ReadAllText(configFile);
             //  var input = new StringReader(yamlText);
-
 
             var deserializer = new DeserializerBuilder()
                 .WithNamingConvention(CamelCaseNamingConvention.Instance)
@@ -682,15 +648,10 @@ namespace hyper
             }
             catch
             {
-
             }
 
             return configList;
-
-
         }
-
-
     }
 
     //public static int GetValueWithBitmask(int value, int bitmask)
@@ -703,10 +664,8 @@ namespace hyper
     //        bits = bits >> 1;
     //    }
 
-
     //    return value;
     //}
-
 
     //public static void GetAssociation(Controller controller, byte nodeId)
     //{
@@ -733,7 +692,6 @@ namespace hyper
 
     //}
 
-
     //public static void GetConfig(Controller controller, byte nodeId)
     //{
     //    for (byte parameterNumber = 1; parameterNumber < 100; parameterNumber++)
@@ -753,7 +711,6 @@ namespace hyper
     //            }
     //            var value = Tools.GetInt32(rpt.configurationValue.ToArray());
 
-
     //            Common.logger.Info("ParameterNumber: {0} - {1}", _parameterNumber, value);
     //        }
     //        else
@@ -763,6 +720,4 @@ namespace hyper
     //    }
 
     //}
-
 }
-

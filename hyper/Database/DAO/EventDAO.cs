@@ -10,7 +10,6 @@ namespace hyper.Database.DAO
 {
     internal class EventDAO
     {
-
         private DataConnection db;
 
         public EventDAO()
@@ -38,21 +37,16 @@ namespace hyper.Database.DAO
 
         public async Task InsertEventsAsync(IEnumerable<Event> _events)
         {
-
             await Task.Run(() =>
             {
-
                 foreach (var evt in _events)
                 {
                     db.Insert(evt);
                 }
-
             });
-
-
         }
 
-        public  Event GetFirst()
+        public Event GetFirst()
         {
             return db.Event.First();
         }
@@ -64,7 +58,7 @@ namespace hyper.Database.DAO
 
             string type = typeof(COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT).Name;
             var events = from e in db.Event
-                         where e.EventType == type 
+                         where e.EventType == type
                          select e;
             return events.ToList();
         }
@@ -75,11 +69,11 @@ namespace hyper.Database.DAO
                                     select e;*/
 
             var lastEvent = (from e in db.Event
-                              where e.EventType == type && e.NodeId == nodeId
-                              orderby e.Added descending
-                              select e).FirstOrDefault();
+                             where e.EventType == type && e.NodeId == nodeId
+                             orderby e.Added descending
+                             select e).FirstOrDefault();
 
-           return lastEvent?.Added ?? new DateTime();
+            return lastEvent?.Added ?? new DateTime();
         }
     }
 }

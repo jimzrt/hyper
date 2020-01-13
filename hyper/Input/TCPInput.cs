@@ -1,35 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using hyper.Input;
 using NLog;
-using NLog.Config;
 using NLog.Targets;
-using System.Collections.Concurrent;
-using System.Net.Sockets;
+using System;
 using System.Net;
-using System.Threading.Tasks;
-using System.IO;
-using NetCoreServer;
-using hyper.Input;
 using System.Threading;
 
 namespace hyper.Inputs
 {
-
-
     [Target("TCPInput")]
     public sealed class TCPInput : TargetWithLayout, IInput
     {
-
-
         public bool CanRead { get; set; } = false;
 
-        string currentMessage = "";
+        private string currentMessage = "";
 
         public event ConsoleCancelEventHandler CancelKeyPress;
-
-
-
 
         private TCPServer server;
         private ManualResetEvent resetEvent;
@@ -40,7 +25,6 @@ namespace hyper.Inputs
             server = new TCPServer(IPAddress.Any, port);
             server.OnMessage += OnMessage;
             server.Start();
-
         }
 
         //private void OnConnected(TcpSession client)
@@ -66,8 +50,6 @@ namespace hyper.Inputs
             resetEvent.Set();
         }
 
-
-
         public bool Available()
         {
             return currentMessage.Length > 0;
@@ -78,7 +60,6 @@ namespace hyper.Inputs
             var message = currentMessage;
             Flush();
             return message;
-
         }
 
         public void Flush()
@@ -86,32 +67,25 @@ namespace hyper.Inputs
             currentMessage = "";
         }
 
-
-
         protected override void Write(LogEventInfo logEvent)
         {
             string logMessage = this.Layout.Render(logEvent);
-
-
 
             server.Multicast(logMessage + Environment.NewLine);
 
             //Console.WriteLine("wrrite to clieont: {0}", logMessage);
 
-                //foreach (var client in clients)
-                //{
-                //client.Send(logMessage);
-                ////    server.streamWriter.WriteLineAsync(logMessage);
+            //foreach (var client in clients)
+            //{
+            //client.Send(logMessage);
+            ////    server.streamWriter.WriteLineAsync(logMessage);
 
-                //}
-            
-
+            //}
         }
 
         public void SetResetEvent(ManualResetEvent resetEvent)
         {
             this.resetEvent = resetEvent;
         }
-
     }
 }

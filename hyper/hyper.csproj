@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
 
@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="linq2db" Version="3.0.0-preview.1" />
-    <PackageReference Include="NetCoreServer" Version="3.0.2" />
+    <PackageReference Include="NetCoreServer" Version="3.0.4" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NLog" Version="4.6.8" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.112" />
@@ -28,7 +28,7 @@
     <ProjectReference Include="..\ZWave\ZWave_netcore.csproj" />
     <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
   </ItemGroup>
-  
+
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-arm'">
     <Content Include="..\lib\linux-arm\libSQLite.Interop.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
@@ -41,5 +41,4 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
 </Project>

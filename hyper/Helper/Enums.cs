@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace hyper.Helper
+﻿namespace hyper.Helper
 {
-
     public static class Enums
     {
         public enum EventKey

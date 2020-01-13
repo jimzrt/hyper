@@ -2,9 +2,9 @@
 {
     internal interface ICommand
     {
-       // bool Active { get; }
+        // bool Active { get; }
         bool Start();
-        void Stop();
 
+        void Stop();
     }
 }

@@ -2,14 +2,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>ZWaveBasicApplication</AssemblyName>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RuntimeIdentifiers>win-x64;win-arm;ubuntu-x64;debian-arm;linux-arm</RuntimeIdentifiers>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <Target Name="ClearObjFolderTarget" BeforeTargets="Restore">
     <ItemGroup>
       <FilesToDelete Include="obj\**\*" />
-    </ItemGroup> 
+    </ItemGroup>
     <Delete Files="@(FilesToDelete)" />
   </Target>
   <ItemGroup>
@@ -19,5 +19,5 @@
     <ProjectReference Include="..\ZWave\ZWave_netcore.csproj">
       <Name>ZWave</Name>
     </ProjectReference>
-  </ItemGroup>  
+  </ItemGroup>
 </Project>

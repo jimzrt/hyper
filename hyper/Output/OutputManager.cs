@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace hyper.Output
 {
-    class OutputManager
+    internal class OutputManager
     {
         public static List<IOutput> Outputs = new List<IOutput>();
 
@@ -12,7 +10,6 @@ namespace hyper.Output
         {
             Outputs.Add(output);
         }
-
 
         public static void HandleCommand(object command, byte srcNodeId, byte destNodeId)
         {

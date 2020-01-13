@@ -10,10 +10,12 @@ namespace ZWave.BasicApplication.CommandClasses
     public class AssociationSupport : ApiAchOperation
     {
         #region Enums
+
         public TransmitOptions TxOptions { get; set; }
         public TransmitOptions2 TxOptions2 { get; set; }
         public TransmitSecurityOptions TxSecOptions { get; set; }
-        #endregion
+
+        #endregion Enums
 
         private readonly NetworkViewPoint _network;
         public byte GroupId { get; set; }

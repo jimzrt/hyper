@@ -1,12 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace hyper.Helper
 {
-    class ByteArrayHexConverter : JsonConverter
+    internal class ByteArrayHexConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType) => objectType == typeof(byte[]);
 

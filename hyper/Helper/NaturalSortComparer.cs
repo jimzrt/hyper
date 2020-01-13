@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace hyper.Helper
@@ -22,7 +20,7 @@ namespace hyper.Helper
             throw new NotImplementedException();
         }
 
-        #endregion
+        #endregion IComparer<string> Members
 
         #region IComparer<string> Members
 
@@ -84,7 +82,7 @@ namespace hyper.Helper
             return x.CompareTo(y);
         }
 
-        #endregion
+        #endregion IComparer<string> Members
 
         private Dictionary<string, string[]> table = new Dictionary<string, string[]>();
 

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace hyper.Helper
+﻿namespace hyper.Helper
 {
-    class MultiSensorType
+    internal class MultiSensorType
     {
         public enum SensorType
         {
