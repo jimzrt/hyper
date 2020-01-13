@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.IO;
 using NetCoreServer;
 using hyper.Input;
+using System.Threading;
 
 namespace hyper.Inputs
 {
@@ -27,28 +28,18 @@ namespace hyper.Inputs
 
         public event ConsoleCancelEventHandler CancelKeyPress;
 
-     //   public List<TcpSession> clients = new List<TcpSession>();
 
 
 
         private TCPServer server;
+        private ManualResetEvent resetEvent;
 
         public TCPInput(int port)
         {
             Name = "TCPInput";
             server = new TCPServer(IPAddress.Any, port);
             server.OnMessage += OnMessage;
-            //    server.OnConnectedE += OnConnected;
-           // server.OptionNoDelay = true;
-
             server.Start();
-            //this.port = port;
-            //string hostName = Dns.GetHostName();
-            //Console.WriteLine("hostname: " + hostName);
-            //IPHostEntry ipHostInfo = Dns.GetHostEntry(hostName);
-            //this.ipAddress = IPAddress.Any;
-
-            
 
         }
 
@@ -72,6 +63,7 @@ namespace hyper.Inputs
                     CancelKeyPress?.Invoke(null, null);
                 }
             }
+            resetEvent.Set();
         }
 
 
@@ -114,6 +106,11 @@ namespace hyper.Inputs
                 //}
             
 
+        }
+
+        public void SetResetEvent(ManualResetEvent resetEvent)
+        {
+            this.resetEvent = resetEvent;
         }
 
     }

@@ -1,8 +1,10 @@
 ﻿using hyper.Models;
 using LinqToDB;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ZWave.CommandClasses;
 
 namespace hyper.Database.DAO
 {
@@ -60,7 +62,24 @@ namespace hyper.Database.DAO
             //var events =  from e in db.Event
             //              select e;
 
-            return db.Event.ToList();
+            string type = typeof(COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT).Name;
+            var events = from e in db.Event
+                         where e.EventType == type 
+                         select e;
+            return events.ToList();
+        }
+
+        public DateTime GetLastEvent(string type, int nodeId)
+        {
+            /*            var event = from e in db.Event
+                                    select e;*/
+
+            var lastEvent = (from e in db.Event
+                              where e.EventType == type && e.NodeId == nodeId
+                              orderby e.Added descending
+                              select e).FirstOrDefault();
+
+           return lastEvent?.Added ?? new DateTime();
         }
     }
 }

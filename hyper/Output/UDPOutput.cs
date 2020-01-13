@@ -1,4 +1,6 @@
-﻿using System;
+﻿using hyper.Helper;
+using hyper.Helper.Extension;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -50,7 +52,7 @@ namespace hyper.Output
                     }
                     break;
                 case COMMAND_CLASS_BASIC_V2.BASIC_SET basicSet:
-                    commandClass = BitConverter.GetBytes((short)COMMAND_CLASS_METER_V5.ID);
+                    commandClass = BitConverter.GetBytes((short)COMMAND_CLASS_BASIC_V2.ID);
                     if (basicSet.value == 255)
                     {
                         values = BitConverter.GetBytes((short)1);
@@ -84,11 +86,11 @@ namespace hyper.Output
                     break;
                 case COMMAND_CLASS_SENSOR_MULTILEVEL_V11.SENSOR_MULTILEVEL_REPORT multiReport:
                     commandClass = BitConverter.GetBytes((short)COMMAND_CLASS_SENSOR_MULTILEVEL_V11.ID);
-                    //values = multiReport.sensorValue.ToArray();
-                    var shortVal = BitConverter.ToInt16(multiReport.sensorValue.Reverse().ToArray(),0);
-                    Console.WriteLine("SHORT: {0}", shortVal);
-                    var floatVal = (float)shortVal;
-                    values = BitConverter.GetBytes(floatVal / 10.0f);
+                    index = new byte[] { 0, multiReport.sensorType };
+
+                    multiReport.GetKeyValue(out Enums.EventKey eventType, out float floatVal);
+                    //Console.WriteLine("FLOAT: {0}", floatVal);
+                    values = BitConverter.GetBytes(floatVal);
                     break;
                 case COMMAND_CLASS_SWITCH_BINARY_V2.SWITCH_BINARY_REPORT binaryReport:
                     commandClass = BitConverter.GetBytes((short)COMMAND_CLASS_SWITCH_BINARY_V2.ID);
@@ -101,11 +103,21 @@ namespace hyper.Output
                         values = BitConverter.GetBytes((short)binaryReport.currentValue);
                     }
                     break;
+                case COMMAND_CLASS_BASIC_V2.BASIC_REPORT basicReport:
+                    commandClass = BitConverter.GetBytes((short)COMMAND_CLASS_BASIC_V2.ID);
+                    if(basicReport.currentValue == 255)
+                    {
+                        values = BitConverter.GetBytes((short)1);
+                    }else
+                    {
+                        values = BitConverter.GetBytes((short)basicReport.currentValue);
+                    }
+                    break;
                 default:
                     return;
             }
             buffer = nodeId.Reverse().Concat(commandClass.Reverse()).Concat(instance).Concat(index).Concat(values.Reverse()).ToArray();
-            Console.WriteLine(ByteArrayToString(buffer));
+           // Console.WriteLine(ByteArrayToString(buffer));
             socket.SendTo(buffer, ep);
         }
 

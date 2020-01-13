@@ -1,35 +1,43 @@
-﻿using LinqToDB.Mapping;
+﻿using hyper.Helper;
+using LinqToDB.Mapping;
 using System;
+using System.IO;
+using System.IO.Compression;
+using System.Text;
 
 namespace hyper.Models
 {
-    public enum EventType
-    {
-        [LinqToDB.Mapping.MapValue(Value = "BATTERY")]
-        BATTERY,
-        [LinqToDB.Mapping.MapValue(Value = "WAKEUP")]
-        WAKEUP,
-        [LinqToDB.Mapping.MapValue(Value = "NOTIFICATION")]
-        NOTIFICATION,
-        [LinqToDB.Mapping.MapValue(Value = "SENSOR_BINARY")]
-        SENSOR_BINARY,
-        [LinqToDB.Mapping.MapValue(Value = "BASIC_SET")]
-        BASIC_SET,
-        [LinqToDB.Mapping.MapValue(Value = "UNHANDLED")]
-        UNHANDLED,
-        [LinqToDB.Mapping.MapValue(Value = "SWITCH_BINARY_REPORT")]
-        SWITCH_BINARY_REPORT,
-        [LinqToDB.Mapping.MapValue(Value = "SENSOR_MULTILEVEL_REPORT")]
-        SENSOR_MULTILEVEL_REPORT
-    }
+    //public enum EventType
+    //{
+    //    [LinqToDB.Mapping.MapValue(Value = "BATTERY")]
+    //    BATTERY,
+    //    [LinqToDB.Mapping.MapValue(Value = "WAKEUP")]
+    //    WAKEUP,
+    //    [LinqToDB.Mapping.MapValue(Value = "NOTIFICATION")]
+    //    NOTIFICATION,
+    //    [LinqToDB.Mapping.MapValue(Value = "SENSOR_BINARY")]
+    //    SENSOR_BINARY,
+    //    [LinqToDB.Mapping.MapValue(Value = "BASIC_SET")]
+    //    BASIC_SET,
+    //    [LinqToDB.Mapping.MapValue(Value = "UNHANDLED")]
+    //    UNHANDLED,
+    //    [LinqToDB.Mapping.MapValue(Value = "SWITCH_BINARY_REPORT")]
+    //    SWITCH_BINARY_REPORT,
+    //    [LinqToDB.Mapping.MapValue(Value = "SENSOR_MULTILEVEL_REPORT")]
+    //    SENSOR_MULTILEVEL_REPORT
+   // }
+
+
 
 
     [Table(Name = "Events")]
     public class Event
     {
+
         public Event()
         {
-            Added = DateTime.Now;
+            if(Added == default)
+                Added = DateTime.Now;
         }
 
         [PrimaryKey, Identity]
@@ -39,13 +47,28 @@ namespace hyper.Models
         public int NodeId { get; set; }
 
         [Column(Name = "eventType"), NotNull]
-        public EventType EventType { get; set; }
+        public string EventType { get; set; }
+
+        //[Column(Name = "key")]
+        //public Enums.EventType EventTypeKey { get; set; }
+
+        [Column(Name = "key")]
+        public string EventTypeKey { get; private set; }
+
+        public Enums.EventKey EventTypeKeyR
+        {
+            get { return (Enums.EventKey)Enum.Parse(typeof(Enums.EventKey), EventTypeKey); }
+            set { EventTypeKey = value.ToString(); }
+        }
 
         [Column(Name = "value")]
-        public int? Value { get; set; }
+        public float? Value { get; set; }
+
+        [Column(Name = "raw")]
+        public string Raw { get; set; }
 
         [Column(Name = "added"), NotNull]
-        public DateTime Added { get; }
+        public DateTime Added { get; set; }
 
     }
 }

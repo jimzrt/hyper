@@ -2,18 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace hyper.Inputs
 {
     class InputManager
     {
+
+        static ManualResetEvent resetEvent = new ManualResetEvent(false);
         static List<IInput> Inputs = new List<IInput>();
 
         public static event ConsoleCancelEventHandler CancelKeyPress;
 
         public static void AddInput(IInput Input)
         {
+            Input.SetResetEvent(resetEvent);
             Inputs.Add(Input);
+
             // Input.RegisterEventHandler(CancelKeyPress);
             Input.CancelKeyPress += (sender, args) => CancelKeyPress?.Invoke(sender,args);
         }
@@ -21,27 +26,22 @@ namespace hyper.Inputs
         public static string ReadAny()
         {
             var message = "";
-            while (true)
+            Inputs.ForEach(Input => Input.CanRead = true);
+            resetEvent.WaitOne();
+            foreach (var Input in Inputs)
             {
-                var found = false;
-                // activate
-                Inputs.ForEach(Input => Input.CanRead = true);
-
-                foreach (var Input in Inputs)
+                if (Input.Available())
                 {
-                    if (Input.Available())
-                    {
-                        found = true;
-                        message = Input.Read();
-                        break;
-                    }
-                }
-                if (found)
-                {
-                    Inputs.ForEach(Input => Input.CanRead = false);
-                    return message;
+                    message = Input.Read();
+                    break;
                 }
             }
+
+                Inputs.ForEach(Input => Input.CanRead = false);
+                resetEvent.Reset();
+                return message;
+            
+
         }
 
     }

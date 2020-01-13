@@ -13,7 +13,7 @@ namespace hyper.config
         public int manufacturerId;
         public int productTypeId;
         public Dictionary<byte, byte> groups = new Dictionary<byte, byte>();
-        public Dictionary<string, ushort> config = new Dictionary<string, ushort>();
+        public Dictionary<string, int> config = new Dictionary<string, int>();
         public int wakeup;
 
     }

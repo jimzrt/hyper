@@ -5,6 +5,7 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace hyper.Inputs
 {
@@ -18,6 +19,7 @@ namespace hyper.Inputs
         string currentMessage = "";
 
         Task backgroundTask = null;
+        private ManualResetEvent resetEvent;
 
         public event ConsoleCancelEventHandler CancelKeyPress;
 
@@ -40,6 +42,7 @@ namespace hyper.Inputs
                             CancelKeyPress?.Invoke(null, null);
                         }
                     }
+                    resetEvent.Set();
                 }
 
 
@@ -78,5 +81,9 @@ namespace hyper.Inputs
             
         }
 
+        public void SetResetEvent(ManualResetEvent resetEvent)
+        {
+            this.resetEvent = resetEvent;
+        }
     }
 }

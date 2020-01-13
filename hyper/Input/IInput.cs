@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace hyper.Inputs
 {
@@ -11,5 +12,6 @@ namespace hyper.Inputs
         public bool Available();
         public void Flush();
         public string Read();
+        void SetResetEvent(ManualResetEvent resetEvent);
     }
 }

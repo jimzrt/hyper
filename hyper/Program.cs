@@ -1,25 +1,30 @@
 ﻿using hyper.commands;
 using hyper.config;
+using hyper.Database.DAO;
+using hyper.Helper;
+using hyper.Input;
 using hyper.Inputs;
 using hyper.Output;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Config;
+using NLog.Targets;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Utils;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 using ZWave;
 using ZWave.BasicApplication.Devices;
 using ZWave.CommandClasses;
+using ZWave.Enums;
 
 namespace hyper
 {
@@ -29,36 +34,49 @@ namespace hyper
         private static void SetupInputs()
         {
             var configuration = new LoggingConfiguration();
-            //LogManager.Configuration;
-            //var pipeTarget = new hyper.Inputs.PipeInput()
-            //{
-            //    Layout = @"${longdate} ${uppercase:${level}} ${message}"
-            //};
 
-            var tcpTarget = new hyper.Inputs.TCPInput(5432)
+            var tcpTarget = new TCPInput(5432)
             {
                 Layout = @"${longdate} ${uppercase:${level}} ${message}"
             };
-            var consoleTarget = new hyper.Inputs.ConsoleInput()
+            var consoleTarget = new ConsoleInput()
             {
                 Layout = @"${longdate} ${uppercase:${level}} ${message}"
             };
 
+            var fileTarget = new FileTarget()
+            {
+                Name = "FileTarget",
+                Layout = @"${longdate} ${uppercase:${level}} ${message}",
+                AutoFlush = true,
+                FileName = "${basedir}/logs/log.${shortdate}.txt",
+                ArchiveFileName = "${basedir}/logs/archives/log.{#####}.zip",
+                ArchiveNumbering = ArchiveNumberingMode.DateAndSequence,
+                ConcurrentWrites = true,
+                ArchiveEvery = FileArchivePeriod.Day,
+                EnableArchiveFileCompression = true,
+                MaxArchiveFiles = 14,
+                OptimizeBufferReuse = true,
+                CreateDirs = true
+            };
 
 
-            // configuration.AddTarget(pipeTarget);
-            configuration.AddTarget(tcpTarget);
+
+            configuration.AddTarget(fileTarget);
             configuration.AddTarget(consoleTarget);
+            configuration.AddTarget(tcpTarget);
 
-            //   configuration.AddRuleForAllLevels(pipeTarget);
-            configuration.AddRuleForAllLevels(tcpTarget);
+            configuration.AddRuleForAllLevels(fileTarget);
             configuration.AddRuleForAllLevels(consoleTarget);
+            configuration.AddRuleForAllLevels(tcpTarget);
 
             LogManager.Configuration = configuration;
 
-            //  InputManager.AddInput(pipeTarget);
-            InputManager.AddInput(tcpTarget);
+
             InputManager.AddInput(consoleTarget);
+            InputManager.AddInput(tcpTarget);
+            var udpInput = new UDPInput(54322);
+            InputManager.AddInput(udpInput);
         }
 
         private static void SetupOutputs()
@@ -74,6 +92,8 @@ namespace hyper
 
         private static void Main(string[] args)
         {
+
+
             SetupInputs();
             SetupOutputs();
 
@@ -97,22 +117,22 @@ namespace hyper
 
 
 
-            Common.logger.Info("==== ZWave Command Center 5000 ====");
-            Common.logger.Info("-----------------------------------");
-            Common.logger.Info("Loading device configuration database...");
+            Common.logger.Debug("==== ZWave Hyper Hyper 5000 ====");
+            Common.logger.Debug("-----------------------------------");
+            Common.logger.Debug("Loading device configuration database...");
             if (!File.Exists("config.yaml"))
             {
-                Common.logger.Info("configuration file config.yaml does not exist!");
+                Common.logger.Error("configuration file config.yaml does not exist!");
                 return;
             }
             var config = Common.ParseConfig("config.yaml");
             if (config == null)
             {
-                Common.logger.Info("Could not parse configuration file config.yaml!");
+                Common.logger.Error("Could not parse configuration file config.yaml!");
                 return;
             }
             Common.logger.Info("Got configuration for " + config.Count + " devices.");
-            Common.logger.Info("-----------------------------------");
+            Common.logger.Debug("-----------------------------------");
 
             if (args.Length < 2)
             {
@@ -128,8 +148,8 @@ namespace hyper
             var initController = Common.InitController(port, out Controller controller, out string errorMessage);
             if (!initController)
             {
-                Common.logger.Info("Error connecting with port {0}! Error Mesage:", port);
-                Common.logger.Info(errorMessage);
+                Common.logger.Error("Error connecting with port {0}! Error Mesage:", port);
+                Common.logger.Error(errorMessage);
                 return;
 
             }
@@ -401,7 +421,7 @@ namespace hyper
                 }
                 if (blockExit)
                 {
-                    Common.logger.Info("\nCannot abort application now!\nPlease wait for operation to finish.\n");
+                    Common.logger.Info("Cannot abort application now!\nPlease wait for operation to finish.");
                     return;
                 }
 
@@ -434,11 +454,15 @@ namespace hyper
 
                 var oneTo255Regex = @"((?<!\d)(?:1\d{2}|2[0-4]\d|[1-9]?\d|25[0-5])(?!\d))";
 
-                var pingRegex = new Regex(@"^ping\s*" + oneTo255Regex);
+                 
+                var pingRegex = new Regex(@$"^ping\s*{oneTo255Regex}");
                 var configRegex = new Regex(@"^config\s*" + oneTo255Regex);
                 var replaceRegex = new Regex(@"^replace\s*" + oneTo255Regex);
                 var basicRegex = new Regex(@"^basic\s*" + oneTo255Regex + @"\s*(false|true)");
-                var listenRegex = new Regex(@"^listen\s*(stop|start)");
+                var listenRegex = new Regex(@"^listen\s*(stop|start|filter\s*"+ oneTo255Regex + ")");
+                //var testRegex = new Regex(@"^firmware\s*" + oneTo255Regex);
+                var forceRemoveRegex = new Regex(@"^remove\s*" + oneTo255Regex);
+                var debugRegex = new Regex(@"^debug\s*(false|true)");
 
 
                 Active = true;
@@ -470,6 +494,7 @@ namespace hyper
                     Common.logger.Info("Command: {0}", input);
                     switch (input.Trim().ToLower())
                     {
+                       
                         case "reset!":
                             {
                                 blockExit = true;
@@ -481,12 +506,7 @@ namespace hyper
                                 blockExit = false;
                                 break;
                             }
-                        case var listenVal when listenRegex.IsMatch(listenVal):
-                            {
-                                var val = listenRegex.Match(listenVal).Groups[1].Value;
-                                listenComand.Active = val == "start";
-                                break;
-                            }
+                       
                         case "include":
                             {
                                 currentCommand = new IncludeCommand(controller, configList);
@@ -497,43 +517,6 @@ namespace hyper
                                 currentCommand = new ExcludeCommand(controller);
                                 break;
                             }
-                        case var pingVal when pingRegex.IsMatch(pingVal):
-                            {
-
-
-                                var val = pingRegex.Match(pingVal).Groups[1].Value;
-                                var nodeId = byte.Parse(val);
-                                currentCommand = new PingCommand(controller, nodeId);
-                                break;
-                            }
-                        case var basicSetVal when basicRegex.IsMatch(basicSetVal):
-                            {
-
-                                blockExit = true;
-                                var val = basicRegex.Match(basicSetVal).Groups[1].Value;
-                                var nodeId = byte.Parse(val);
-                                val = basicRegex.Match(basicSetVal).Groups[2].Value;
-                                var value = bool.Parse(val);
-
-                                Common.SetBasic(controller, nodeId, value);
-                                blockExit = false;
-                                break;
-                            }
-                        case var configVal when configRegex.IsMatch(configVal):
-                            {
-                                var val = configRegex.Match(configVal).Groups[1].Value;
-                                var nodeId = byte.Parse(val);
-                                currentCommand = new ConfigCommand(controller, nodeId, configList);
-                                break;
-                            }
-                        case var replaceVal when replaceRegex.IsMatch(replaceVal):
-                            {
-                                var val = replaceRegex.Match(replaceVal).Groups[1].Value;
-                                var nodeId = byte.Parse(val);
-                                currentCommand = new ReplaceCommand(controller, nodeId, configList);
-                                break;
-                            }
-
                         case "backup":
                             {
                                 blockExit = true;
@@ -565,7 +548,110 @@ namespace hyper
                                 listenComand.UpdateConfig(configList);
                                 break;
                             }
+                        case var listenVal when listenRegex.IsMatch(listenVal):
+                            {
+                                var val = listenRegex.Match(listenVal).Groups[1].Value;
+                                if (val == "start" || val == "stop")
+                                {
+                                    listenComand.Active = val == "start";
+
+                                }
+                                else if (val.StartsWith("filter"))
+                                {
+
+                                    var nodeId = Byte.Parse(listenRegex.Match(listenVal).Groups[2].Value);
+                                    listenComand.Filter = nodeId;
+                                    //   Console.WriteLine("FILTER {0}", nodeId);
+                                }
+                                break;
+                            }
+                        case var debugVal when debugRegex.IsMatch(debugVal):
+                            {
+                                var val = debugRegex.Match(debugVal).Groups[1].Value;
+                                var debug = bool.Parse(val);
+                                listenComand.Debug = debug;
+                                break;
+                            }
+                        case var removeVal when forceRemoveRegex.IsMatch(removeVal):
+                            {
+                                var val = forceRemoveRegex.Match(removeVal).Groups[1].Value;
+                                var nodeId = byte.Parse(val);
+                                currentCommand = new ForceRemoveCommand(controller, nodeId);
+                                break;
+                            }
+/*                        case var testVal when testRegex.IsMatch(testVal):
+                            {
+
+                                var val = testRegex.Match(testVal).Groups[1].Value;
+                                var nodeId = Byte.Parse(val);
+
+                                byte[] bytes = new byte[256];
+                                byte[] numArray = File.ReadAllBytes(@"C:\Users\james\Desktop\tmp\MultiSensor 6_OTA_EU_A_V1_13.exe");
+                                int length = (int)numArray[numArray.Length - 4] << 24 | (int)numArray[numArray.Length - 3] << 16 | (int)numArray[numArray.Length - 2] << 8 | (int)numArray[numArray.Length - 1];
+                                byte[] flashData = new byte[length];
+                                Array.Copy((Array)numArray, numArray.Length - length - 4 - 4 - 256, (Array)flashData, 0, length);
+                                Array.Copy((Array)numArray, numArray.Length - 256 - 4 - 4, (Array)bytes, 0, 256);
+
+
+
+                                var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REQUEST_GET();
+                                cmd.manufacturerId = new byte[] { 0, 0x86 };
+                                cmd.firmwareId = new byte[] { 0, 0 };
+                                cmd.checksum = Tools.CalculateCrc16Array(flashData);
+                                controller.SendData(nodeId, cmd, Common.txOptions);
+
+
+
+                                break;
+                            }*/
+                        case var pingVal when pingRegex.IsMatch(pingVal):
+                            {
+
+
+                                var val = pingRegex.Match(pingVal).Groups[1].Value;
+                                var nodeId = byte.Parse(val);
+                                currentCommand = new PingCommand(controller, nodeId);
+                                break;
+                            }
+                        case var basicSetVal when basicRegex.IsMatch(basicSetVal):
+                            {
+
+                                blockExit = true;
+                                var val = basicRegex.Match(basicSetVal).Groups[1].Value;
+                                var nodeId = byte.Parse(val);
+                                val = basicRegex.Match(basicSetVal).Groups[2].Value;
+                                var value = bool.Parse(val);
+                                var trys = 5;
+                                Common.SetBinary(controller, nodeId, value);
+                               /* Thread.Sleep(500);
+                                while(trys >= 0 && (!Common.GetBinary(controller, nodeId, out bool retValue) || retValue != value))
+                                {
+                                    Common.SetBinary(controller, nodeId, value);
+                                    Thread.Sleep(500);
+                                    trys--;
+                                }*/
+                                blockExit = false;
+                                break;
+                            }
+                        case var configVal when configRegex.IsMatch(configVal):
+                            {
+                                var val = configRegex.Match(configVal).Groups[1].Value;
+                                var nodeId = byte.Parse(val);
+                                currentCommand = new ConfigCommand(controller, nodeId, configList);
+                                break;
+                            }
+                        case var replaceVal when replaceRegex.IsMatch(replaceVal):
+                            {
+                                var val = replaceRegex.Match(replaceVal).Groups[1].Value;
+                                var nodeId = byte.Parse(val);
+                                currentCommand = new ReplaceCommand(controller, nodeId, configList);
+                                break;
+                            }
+
+                       
+
                         default:
+                            Common.logger.Warn("unknown command");
                             break;
                     }
                     if (currentCommand == null)
@@ -653,7 +739,7 @@ namespace hyper
             }
         }
 
-        internal class IncludeCommand : ICommand
+        public class IncludeCommand : ICommand
         {
 
 
@@ -805,14 +891,14 @@ namespace hyper
                 Active = true;
                 Common.logger.Info("-----------");
                 Common.logger.Info("Force Remove mode");
-                Common.logger.Info("node to replace: " + nodeId);
+                Common.logger.Info("node to remove: " + nodeId);
                 Common.logger.Info("-----------");
                 Common.logger.Info("Check if node is reachable...");
                 var reachable = Common.CheckReachable(controller, nodeId);
                 if (reachable)
                 {
                     Common.logger.Info("Node is reachable!");
-                    Common.logger.Info("If node is reachable, we cannot replace it!");
+                    Common.logger.Info("If node is reachable, you should exclude it!");
                     return false;
                 }
                 else
@@ -986,6 +1072,8 @@ namespace hyper
             private readonly Controller controller;
             private List<ConfigItem> configList;
 
+            private EventDAO eventDao = new EventDAO();
+
             public ListenCommand(Controller controller, List<ConfigItem> configList)
             {
                 this.controller = controller;
@@ -993,53 +1081,36 @@ namespace hyper
 
             }
 
-
-            //public NetworkStream ConnectToServer()
-            //{
-            //    var client = new TcpClient("", 54321);
-            //    var stream = client.GetStream();
-            //    return stream;
-            //}
-
-            //public void SendBytes(UdpClient udpClient, byte[] bytes)
-            //{
-            //    lock (syncObject)
-            //    {
-
-
-            //        try
-            //        {
-            //            udpClient.Send(bytes, bytes.Length);
-            //            messageCounter++;
-            //            Common.logger.Info("Number of packets send: {0}", messageCounter);
-            //        }
-            //        catch (Exception e)
-            //        {
-            //            Common.logger.Info(e.ToString());
-            //        }
-            //    }
-            //}
-
-
-            //List<byte> byteBuffer = new List<byte>();
-            //readonly object syncObject = new object();
-            //readonly object syncObjectServer = new object();
-
-
-            //  public bool Active { get; set; } = true;
-
             private bool _active = true;
             public bool Active
             {
                 get { return _active; }
                 set
                 {
-                    Common.logger.Info("listening {0}", value == true ? "active" : "inactive");
-                    _active = value;
+                   // Common.logger.Info("listening {0}", value == true ? "active" : "inactive");
+                  //  _active = value;
                 }
             }
 
-
+            private byte _filterNodeId = 0;
+            public byte Filter {
+                get { return _filterNodeId; } 
+                set
+                {
+                    Common.logger.Info("Setting filter {0}", value == 0 ? "inactive" : $"active to node id {value}");
+                    _filterNodeId = value;
+                }
+            }
+            private bool _debug = false;
+            public bool Debug
+            {
+                get { return _debug; }
+                set
+                {
+                    Common.logger.Info("Setting debug mode {0}", value ? "on" : "off");
+                    _debug = value;
+                }
+            }
 
 
             private readonly BlockingCollection<Action> queueItems = new BlockingCollection<Action>();
@@ -1052,27 +1123,12 @@ namespace hyper
             }
 
 
-            //public void Handle(object type, byte srcNodeId, byte[] command)
-            //{
-            //    switch(type)
-            //    {
-            //        case COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION _:
-            //            var wakeUp = (COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION)command;
-            //            Common.logger.Info("WAKEUPPPP!!! from {0}", srcNodeId);
-            //            break;
-            //        default:
-            //            Console.WriteLine("cannot handle this shit!");
-            //            break;
-            //    }
-            //}
-
-
 
 
 
             public bool Start()
             {
-
+                
 
                 Common.logger.Info("-----------");
                 Common.logger.Info("Listening mode");
@@ -1087,12 +1143,30 @@ namespace hyper
                 Common.logger.Info("Listening...");
 
 
+
+            //    byte[] bytes = new byte[256];
+            //    byte[] numArray = File.ReadAllBytes(@"C:\Users\james\Desktop\tmp\MultiSensor 6_OTA_EU_A_V1_13.exe");
+            //    int length = (int)numArray[numArray.Length - 4] << 24 | (int)numArray[numArray.Length - 3] << 16 | (int)numArray[numArray.Length - 2] << 8 | (int)numArray[numArray.Length - 1];
+            //    byte[] flashDataB = new byte[length];
+            //    Array.Copy((Array)numArray, numArray.Length - length - 4 - 4 - 256, (Array)flashDataB, 0, length);
+            //    //Array.Copy((Array)numArray, numArray.Length - 256 - 4 - 4, (Array)bytes, 0, 256);
+            //    List<byte> flashData = new List<byte>(flashDataB);
+            ////   var filename = Encoding.UTF8.GetString(bytes);
+            // //   flashData = flashData.Take(5146).ToArray();
+            //   // Console.WriteLine(filename);
+            //  //  Console.WriteLine(flashData.Length);
+
+
                 dataListener = controller.ListenData((x) =>
                 {
                     if (!Active)
                     {
                         return;
                     }
+
+                    var filterActive = Filter != 0 && Filter != x.SrcNodeId;
+
+
                     var _commandClass = commandClasses.TryGetValue(x.Command[0], out var commandClass);
                     if (!_commandClass)
                     {
@@ -1112,7 +1186,9 @@ namespace hyper
                         return;
                     }
 
-                    Common.logger.Info("{0}: {2}:{3} from node {1}", x.TimeStamp, x.SrcNodeId, _commandClass ? commandClass.Name : string.Format("unknown(id:{0})", x.Command[0]), _nestedType ? nestedType.Name : string.Format("unknown(id:{0})", x.Command[1]));
+
+                    if(!filterActive)
+                        Common.logger.Info("{0}: {2}:{3} from node {1}", x.TimeStamp, x.SrcNodeId, _commandClass ? commandClass.Name : string.Format("unknown(id:{0})", x.Command[0]), _nestedType ? nestedType.Name : string.Format("unknown(id:{0})", x.Command[1]));
 
                     if (commandClass == null)
                     {
@@ -1125,11 +1201,11 @@ namespace hyper
                         return;
                     }
 
-                //     var dummyInstance = Activator.CreateInstance(nestedType);
+                    //     var dummyInstance = Activator.CreateInstance(nestedType);
 
-                var implicitCastMethod =
-              nestedType.GetMethod("op_Implicit",
-                                   new[] { x.Command.GetType() });
+                    var implicitCastMethod =
+                  nestedType.GetMethod("op_Implicit",
+                                       new[] { x.Command.GetType() });
 
                     if (implicitCastMethod == null)
                     {
@@ -1138,88 +1214,78 @@ namespace hyper
                     }
                     var report = implicitCastMethod.Invoke(null, new[] { x.Command });
 
-                    Common.logger.Info(JObject.FromObject(report).ToString());
+                    if (!filterActive && Debug)
+                        Common.logger.Info(Util.ObjToJson(report));
 
-                    OutputManager.HandleCommand(report, x.SrcNodeId, x.DestNodeId);
+                   
+                    if(!(report is COMMAND_CLASS_FIRMWARE_UPDATE_MD_V5.FIRMWARE_UPDATE_MD_GET))
+                    {
+                        OutputManager.HandleCommand(report, x.SrcNodeId, x.DestNodeId);
 
-                //    Handle(dummyInstance, x.SrcNodeId, x.Command);
+                    }
 
-                switch (report)
+                    //    Handle(dummyInstance, x.SrcNodeId, x.Command);
+
+                    switch (report)
                     {
                         case COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION _:
-                            queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
+                            // TODO EVENT, last Battery
+                            var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, x.SrcNodeId);
+                            Console.WriteLine("difference in hours: {0}", (DateTime.Now - lastDate).Hours);
+                            Console.WriteLine("difference in minutes: {0}", (DateTime.Now - lastDate).Minutes);
+                            if ((DateTime.Now - lastDate).Hours >= 6)
+                            {
+                                queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
+                            }
+                            
+                            break;
+                        case COMMAND_CLASS_FIRMWARE_UPDATE_MD_V5.FIRMWARE_UPDATE_MD_GET fupdateReport:
+
+                            //var rep1 = fupdateReport.properties1.reportNumber1;
+                            //var rep2 = fupdateReport.reportNumber2;
+                            //var count = fupdateReport.numberOfReports;
+
+                            //queueItems.Add(() => {
+
+                            //    var take = 40;
+                            //    var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT();
+                            //    cmd.properties1.last = 0;
+                            //    cmd.properties1.reportNumber1 = rep1;
+                            //    cmd.reportNumber2 = rep2;
+                            //    short repNumber = BitConverter.ToInt16(new byte[] { rep2, rep1 });
+                            //    //Console.WriteLine($"Repnumber: {repNumber}");
+                            //    var offset = (repNumber - 1) * 40;
+                            //    Common.logger.Info("Progress: {0}", (offset / (float)flashData.Count).ToString("0.00%"));
+
+                            //    if ((flashData.Count - offset) < 40)
+                            //    {
+                            //       // Console.WriteLine("ima full!");
+                            //        Console.WriteLine(offset);
+                            //        Console.WriteLine(flashData.Count);
+                            //        take = flashData.Count - offset;
+                            //        Console.WriteLine(take);
+                            //        cmd.properties1.last = 1;
+                            //        Common.logger.Info("Progress: {0}", (1).ToString("0.00%"));
+                            //    }
+                            //    var data = flashData.Skip(offset).Take(take).ToArray();
+                            //    cmd.data = data;
+                            //    //7A 97
+                            //   // Common.logger.Info(Util.ObjToJson((byte[])cmd));
+                            //   // Common.logger.Info(Util.ObjToJson(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT.ID }.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data).ToArray()));
+                            //    cmd.checksum = Tools.CalculateCrc16Array((byte[])cmd,0,((byte[])cmd).Length -2);
+                            //        //cmd.checksum =  Tools.CalculateCrc16Array(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT .ID}.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data));
+                            //    controller.SendData(x.SrcNodeId, cmd, Common.txOptions);
+                                
+                            //});
+                           
                             break;
                         default:
                             break;
                     }
 
 
-                //switch (dummyInstance)
-                //{
-                //    case COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT _:
-                //        var alarmReport = (COMMAND_CLASS_NOTIFICATION_V8.NOTIFICATION_REPORT)x.Command;
-                //        Common.logger.Info("notificationStatus: {0}", alarmReport.notificationStatus);
-                //        Common.logger.Info("notificationType: {0}", alarmReport.notificationType);
-                //        Common.logger.Info("mevent: {0}", alarmReport.mevent);
-                //        Common.logger.Info("v1AlarmLevel: {0}", alarmReport.v1AlarmLevel);
-                //        Common.logger.Info("v1AlarmType: {0}", alarmReport.v1AlarmType);
-                //        evt.EventType = EventType.NOTIFICATION;
 
-
-                //        // buffer = new byte[] { x.SrcNodeId, x.Command[0], alarmReport.zwaveAlarmEvent };
-                //        break;
-                //    case COMMAND_CLASS_BASIC_V2.BASIC_SET _:
-                //        var basicSet = (COMMAND_CLASS_BASIC_V2.BASIC_SET)x.Command;
-                //        Common.logger.Info("value: {0}", basicSet.value);
-                //        evt.EventType = EventType.BASIC_SET;
-                //        evt.Value = basicSet.value;
-                //        //      buffer = new byte[] { x.SrcNodeId, x.Command[0], basicSet.value };
-                //        break;
-                //    case COMMAND_CLASS_SWITCH_BINARY_V2.SWITCH_BINARY_REPORT _:
-                //        var binaryReport = (COMMAND_CLASS_SWITCH_BINARY_V2.SWITCH_BINARY_REPORT)x.Command;
-                //        evt.EventType = EventType.SWITCH_BINARY_REPORT;
-                //        evt.Value = binaryReport.targetValue;
-                //        //     buffer = new byte[] { x.SrcNodeId, x.Command[0], binaryReport.value };
-                //        break;
-                //    case COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION _:
-                //        evt.EventType = EventType.WAKEUP;
-
-                //        queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
-                //        break;
-                //    case COMMAND_CLASS_BATTERY.BATTERY_REPORT _:
-                //        var batteryReport = (COMMAND_CLASS_BATTERY.BATTERY_REPORT)x.Command;
-
-                //        Common.logger.Info("battery value: {0}", batteryReport.batteryLevel);
-                //        evt.EventType = EventType.BATTERY;
-                //        evt.Value = batteryReport.batteryLevel;
-
-                //        //      buffer = new byte[] { x.SrcNodeId, x.Command[0], batteryReport.batteryLevel };
-                //        break;
-                //    case COMMAND_CLASS_SENSOR_MULTILEVEL_V11.SENSOR_MULTILEVEL_REPORT _:
-                //        var multilevelReport = (COMMAND_CLASS_SENSOR_MULTILEVEL.SENSOR_MULTILEVEL_REPORT)x.Command;
-                //        Common.logger.Info("properties: {0}, type: {1}, value: {2}", multilevelReport.properties1.ToString(), multilevelReport.sensorType, multilevelReport.sensorValue);
-                //        evt.EventType = EventType.SENSOR_MULTILEVEL_REPORT;
-                //        evt.Value = multilevelReport.sensorValue[0];
-                //        break;
-                //    case COMMAND_CLASS_SENSOR_BINARY_V2.SENSOR_BINARY_REPORT _:
-                //        var sensorBinaryReport = (COMMAND_CLASS_SENSOR_BINARY_V2.SENSOR_BINARY_REPORT)x.Command;
-                //        Common.logger.Info("values: {0} - {1}", sensorBinaryReport.sensorType, sensorBinaryReport.sensorValue);
-                //        evt.EventType = EventType.SENSOR_BINARY;
-                //        evt.Value = sensorBinaryReport.sensorValue;
-
-                //        break;
-
-                //    default:
-                //        Common.logger.Info("Unhandled command class: {0}", nestedType.Name);
-                //        evt.EventType = EventType.UNHANDLED;
-                //        break;
-
-                //}
-
-                //    SendBytes(udpClient, buffer);
-
-
-            });
+                });
 
                 controllerListener = controller.HandleControllerUpdate((r) =>
                 {
@@ -1228,7 +1294,16 @@ namespace hyper
                         return;
                     }
                     Common.logger.Info("{0}: Got {2} for node {1}", DateTime.Now, r.NodeId, r.Status);
-                    queueItems.Add(() => Common.RequestBatteryReport(controller, r.NodeId));
+                    var lastDate = default(DateTime);// eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, r.NodeId);
+                    Console.WriteLine("difference in hours: {0}", (DateTime.Now - lastDate).TotalHours);
+                    Console.WriteLine("difference in minutes: {0}", (DateTime.Now - lastDate).TotalMinutes);
+                    if ((DateTime.Now - lastDate).TotalHours >= 6)
+                    {
+                        queueItems.Add(() => Common.RequestBatteryReport(controller, r.NodeId));
+                    }
+                    //   Common.logger.Info(JObject.FromObject(r).ToString());
+
+                    //  queueItems.Add(() => Common.RequestBatteryReport(controller, r.NodeId));
 
                 });
 
@@ -1426,9 +1501,9 @@ namespace hyper
                         nodesToCheck.Remove(x.SrcNodeId);
 
                     }
-                //  new ConfigCommand(controller, x.SrcNodeId, configList).Start();
+                    //  new ConfigCommand(controller, x.SrcNodeId, configList).Start();
 
-                queueItems.Add(x.SrcNodeId);
+                    queueItems.Add(x.SrcNodeId);
 
                 });
 

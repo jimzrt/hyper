@@ -151,17 +151,14 @@ namespace hyper
             int retryCount = 15;
             if (config.groups != null && config.groups.Count != 0)
             {
-                Common.logger.Info("Setting " + config.groups.Count + " associtions");
-                foreach (var group in config.groups)
+                if(config.groups.Count != 0)
                 {
-                    var groupIdentifier = group.Key;
-                    var member = group.Value;
-
-                    bool associationCleared = ClearAssiciation(controller, nodeId, groupIdentifier);
+                    Common.logger.Info("Setting " + config.groups.Count + " associtions");
+                    bool associationCleared = ClearAssociations(controller, nodeId);
                     while (!associationCleared)
                     {
                         Common.logger.Info("Not successful! Trying again, please wake up device.");
-                        associationCleared = ClearAssiciation(controller, nodeId, groupIdentifier);
+                        associationCleared = ClearAssociations(controller, nodeId);
                         retryCount--;
                         if (retryCount <= 0)
                         {
@@ -170,6 +167,13 @@ namespace hyper
                         }
                         Thread.Sleep(200);
                     }
+                }
+              
+                foreach (var group in config.groups)
+                {
+                    var groupIdentifier = group.Key;
+                    var member = group.Value;
+
                     retryCount = 15;
 
                     var associationAdded = AddAssociation(controller, nodeId, groupIdentifier, member);
@@ -281,7 +285,7 @@ namespace hyper
             return result;
         }
 
-        public static bool SetParameter(Controller controller, byte nodeId, string configParameterLong, ushort configValue)
+        public static bool SetParameter(Controller controller, byte nodeId, string configParameterLong, int configValue)
         {
 
             var configParameter = byte.Parse(configParameterLong.Split("_")[0]);
@@ -296,18 +300,12 @@ namespace hyper
             }
             else if (configWordSize == 2)
             {
-                cmd.configurationValue = Tools.GetBytes(configValue);
+                cmd.configurationValue = Tools.GetBytes((ushort)configValue);
             }
             else
             {
-                cmd.configurationValue = Tools.GetBytes((int)configValue);
+                cmd.configurationValue = Tools.GetBytes(configValue);
             }
-            //else
-            //{
-            //    Common.logger.Info("configuration parameter {0}: wordSize {1} not implemented!");
-            //    return false;
-            //}
-            // Tools.GetBytes(((byte)configValue));
             cmd.properties1.mdefault = 0;
             cmd.properties1.size = configWordSize;
 
@@ -316,7 +314,7 @@ namespace hyper
             return setAssociation.TransmitStatus == TransmitStatuses.CompleteOk;
         }
 
-        public static bool ValidateParameter(Controller controller, byte nodeId, string configParameterLong, ushort configValue)
+        public static bool ValidateParameter(Controller controller, byte nodeId, string configParameterLong, int configValue)
         {
             var configParameter = byte.Parse(configParameterLong.Split("_")[0]);
             Common.logger.Info("Validate configuration - parameter " + configParameter + " - value " + configValue);
@@ -356,6 +354,7 @@ namespace hyper
             if (result)
             {
                 var rpt = (COMMAND_CLASS_ASSOCIATION.ASSOCIATION_REPORT)result.Command;
+                Common.logger.Info("members: {0}", String.Join(", ", rpt.nodeid));
                 if (rpt.nodeid.Contains(member))
                 {
                     Common.logger.Info(member + " is a member of association group " + groupIdentifier);
@@ -364,7 +363,7 @@ namespace hyper
                 else
                 {
                     Common.logger.Info(member + " is not a member of association group " + groupIdentifier);
-                    return false;
+                    return true;
                 }
 
 
@@ -377,6 +376,7 @@ namespace hyper
 
         }
 
+
         public static bool AddAssociation(Controller controller, byte nodeId, byte groupIdentifier, byte member)
         {
             Common.logger.Info("Add associtation - group " + groupIdentifier + " - node " + member);
@@ -387,13 +387,40 @@ namespace hyper
             return setAssociation.TransmitStatus == TransmitStatuses.CompleteOk;
         }
 
-        private static bool ClearAssiciation(Controller controller, byte nodeId, byte groupIdentifier)
+        private static bool ClearAssociations(Controller controller, byte nodeId)
         {
-            Common.logger.Info("Clear associtation - group " + groupIdentifier + " for node " + nodeId);
+            Common.logger.Info("Clear associtations - group  for node " + nodeId);
             var cmd = new COMMAND_CLASS_ASSOCIATION.ASSOCIATION_REMOVE();
-            cmd.groupingIdentifier = groupIdentifier;
+            cmd.groupingIdentifier = 0;
+            cmd.nodeId = new byte[] { 0 };
             var clearAssociation = controller.SendData(nodeId, cmd, Common.txOptions);
             return clearAssociation.TransmitStatus == TransmitStatuses.CompleteOk;
+        }
+
+        public static bool SetBinary(Controller controller, byte nodeId, bool value)
+        {
+            Common.logger.Info("Basic_Set for node {0}: {1}", nodeId, value);
+            var cmd = new COMMAND_CLASS_SWITCH_BINARY_V2.SWITCH_BINARY_SET()
+            {
+                targetValue = Convert.ToByte(value)
+            };
+            var setBasic = controller.SendData(nodeId, cmd, txOptions);
+            return setBasic.TransmitStatus == TransmitStatuses.CompleteOk;
+        }
+
+        public static bool GetBinary(Controller controller, byte nodeId, out bool value)
+        {
+            Common.logger.Info("Basic_Get for node {0}", nodeId);
+            var cmd = new COMMAND_CLASS_SWITCH_BINARY_V2.SWITCH_BINARY_GET();
+            var result = controller.RequestData(nodeId, cmd, txOptions, new COMMAND_CLASS_SWITCH_BINARY_V2.SWITCH_BINARY_REPORT(), 10000);
+            if (result)
+            {
+                var rpt = (COMMAND_CLASS_SWITCH_BINARY_V2.SWITCH_BINARY_REPORT)result.Command;
+                value = Convert.ToBoolean(rpt.currentValue);
+                return true;
+            }
+            value = false;
+            return false;
         }
 
         public static bool SetBasic(Controller controller, byte nodeId, bool value)
@@ -407,6 +434,21 @@ namespace hyper
             return setBasic.TransmitStatus == TransmitStatuses.CompleteOk;
         }
 
+        public static bool GetBasic(Controller controller, byte nodeId, out bool value )
+        {
+            Common.logger.Info("Basic_Get for node {0}", nodeId);
+            var cmd = new COMMAND_CLASS_BASIC_V2.BASIC_GET();
+            var result = controller.RequestData(nodeId, cmd, txOptions, new COMMAND_CLASS_BASIC_V2.BASIC_REPORT(), 10000);
+            if (result)
+            {
+                var rpt = (COMMAND_CLASS_BASIC_V2.BASIC_REPORT)result.Command;
+                value = Convert.ToBoolean(rpt.currentValue);
+                return true;
+            }
+            value = false;
+            return false;
+        }
+
 
         public static bool WriteNVRam(Controller controller, byte[] eeprom)
         {
@@ -418,6 +460,11 @@ namespace hyper
             int counter = 0;
             while (counter < 65536)
             {
+                if (counter % 4096 == 0)
+                {
+                    Common.logger.Info("Progress: {0}", (counter / 65536f).ToString("0.00%"));
+                }
+
                 var result = controller.WriteNVRam((ushort)counter, 128, eeprom.Skip(counter).Take(128).ToArray());
                 if (result.State == ZWave.ActionStates.Completed)
                 {
@@ -430,13 +477,8 @@ namespace hyper
                     return false;
                 }
                 counter += 128;
-                if (counter % 1024 == 0)
-                {
-                    DrawTextProgressBar("Writing", counter, 65536);
-
-                }
             }
-            Console.WriteLine();
+            Common.logger.Info("Progress: {0}", (65536f / 65536f).ToString("0.00%"));
 
             return true;
         }
@@ -447,6 +489,11 @@ namespace hyper
             int counter = 0;
             while (counter < 65536)
             {
+                if (counter % 4096 == 0)
+                {
+                    Common.logger.Info("Progress: {0}", (counter / 65536f).ToString("0.00%"));
+                }
+
                 var result = controller.ReadNVRam((ushort)counter, 128);
                 if (result.State == ZWave.ActionStates.Completed)
                 {
@@ -458,47 +505,43 @@ namespace hyper
                     return false;
                 }
                 counter += 128;
-                if(counter % 1024 == 0)
-                {
-                    DrawTextProgressBar("Reading", counter, 65536);
 
-                }
             }
-            Console.WriteLine();
+            Common.logger.Info("Progress: {0}", (65536f / 65536f).ToString("0.00%"));
 
             return true;        
         }
 
 
-        public static void DrawTextProgressBar(string stepDescription, int progress, int total)
-        {
-            int totalChunks = 50;
+        //public static void DrawTextProgressBar(string stepDescription, int progress, int total)
+        //{
+        //    int totalChunks = 50;
 
-            //draw empty progress bar
-            Console.CursorLeft = 0;
-            Console.Write("["); //start
-            Console.CursorLeft = totalChunks + 1;
-            Console.Write("]"); //end
-            Console.CursorLeft = 1;
+        //    //draw empty progress bar
+        //    Console.CursorLeft = 0;
+        //    Console.Write("["); //start
+        //    Console.CursorLeft = totalChunks + 1;
+        //    Console.Write("]"); //end
+        //    Console.CursorLeft = 1;
 
-            double pctComplete = Convert.ToDouble(progress) / total;
-            int numChunksComplete = Convert.ToInt16(totalChunks * pctComplete);
+        //    double pctComplete = Convert.ToDouble(progress) / total;
+        //    int numChunksComplete = Convert.ToInt16(totalChunks * pctComplete);
 
-            //draw completed chunks
-            Console.BackgroundColor = ConsoleColor.Green;
-            Console.Write("".PadRight(numChunksComplete));
+        //    //draw completed chunks
+        //    Console.BackgroundColor = ConsoleColor.Green;
+        //    Console.Write("".PadRight(numChunksComplete));
 
-            //draw incomplete chunks
-            Console.BackgroundColor = ConsoleColor.Gray;
-            Console.Write("".PadRight(totalChunks - numChunksComplete));
+        //    //draw incomplete chunks
+        //    Console.BackgroundColor = ConsoleColor.Gray;
+        //    Console.Write("".PadRight(totalChunks - numChunksComplete));
 
-            //draw totals
-            Console.CursorLeft = totalChunks + 5;
-            Console.BackgroundColor = ConsoleColor.Black;
+        //    //draw totals
+        //    Console.CursorLeft = totalChunks + 5;
+        //    Console.BackgroundColor = ConsoleColor.Black;
 
-            string output = String.Format("{0}% of 100%", numChunksComplete * (100d / totalChunks));
-            Console.Write(output.PadRight(15) + stepDescription); //pad the output so when changing from 3 to 4 digits we avoid text shifting
-        }
+        //    string output = String.Format("{0}% of 100%", numChunksComplete * (100d / totalChunks));
+        //    Console.Write(output.PadRight(15) + stepDescription); //pad the output so when changing from 3 to 4 digits we avoid text shifting
+        //}
 
 
         public static bool RequestBatteryReport(Controller controller, byte nodeId)

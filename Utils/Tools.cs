@@ -583,24 +583,24 @@ namespace Utils
 
         internal static void _writeDebugDiagnosticMessage(string msg, bool showTime, bool showCallingPoint, int skipInCallStack, int takeFromCallStack)
         {
-            //#if DEBUG
-            string methodName = string.Empty;
-            string timestr = string.Empty;
-            if (showCallingPoint)
-            {
-                methodName = GetMethodName(skipInCallStack, takeFromCallStack);
-            }
-            if (showTime)
-            {
-                timestr = CurrentDateTime.ToString("HH:mm:ss.fff");
-            }
-            _writeDebugDiagnosticMessage(
-                FormatStr("{0} [{1}]:{2:000} {3}",
-                timestr,
-                string.IsNullOrEmpty(methodName) ? string.Empty : FormatStr("{0}", methodName),
-                Thread.CurrentThread.ManagedThreadId,
-                msg));
-            //#endif
+            ////#if DEBUG
+            //string methodName = string.Empty;
+            //string timestr = string.Empty;
+            //if (showCallingPoint)
+            //{
+            //    methodName = GetMethodName(skipInCallStack, takeFromCallStack);
+            //}
+            //if (showTime)
+            //{
+            //    timestr = CurrentDateTime.ToString("HH:mm:ss.fff");
+            //}
+            //_writeDebugDiagnosticMessage(
+            //    FormatStr("{0} [{1}]:{2:000} {3}",
+            //    timestr,
+            //    string.IsNullOrEmpty(methodName) ? string.Empty : FormatStr("{0}", methodName),
+            //    Thread.CurrentThread.ManagedThreadId,
+            //    msg));
+            ////#endif
         }
 
         public static string GetMethodName(int skipInCallStack)
