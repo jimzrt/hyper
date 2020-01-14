@@ -42,7 +42,7 @@ namespace hyper
 
             Common.logger.Info("configuration found for {0}!", config.deviceName);
             Common.logger.Info("Setting values.");
-            if (Common.SetConfiguration(controller, nodeId, config))
+            if (Common.SetConfiguration(controller, nodeId, config, ref abort))
             {
                 Common.logger.Info("Configuration successful!");
                 Common.logger.Info("-------------------");

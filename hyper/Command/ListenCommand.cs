@@ -83,17 +83,11 @@ namespace hyper
             Common.logger.Info("Got all inner command classes for {0} command classes", commandClasses.Count);
             Common.logger.Info("Listening...");
 
-            //    byte[] bytes = new byte[256];
-            byte[] numArray = File.ReadAllBytes(@"C:\Users\james\Desktop\tmp\MultiSensor 6_OTA_EU_A_V1_13.exe");
-            int length = (int)numArray[numArray.Length - 4] << 24 | (int)numArray[numArray.Length - 3] << 16 | (int)numArray[numArray.Length - 2] << 8 | (int)numArray[numArray.Length - 1];
-            byte[] flashDataB = new byte[length];
-            Array.Copy((Array)numArray, numArray.Length - length - 4 - 4 - 256, (Array)flashDataB, 0, length);
-            //    //Array.Copy((Array)numArray, numArray.Length - 256 - 4 - 4, (Array)bytes, 0, 256);
-            List<byte> flashData = new List<byte>(flashDataB);
-            ////   var filename = Encoding.UTF8.GetString(bytes);
-            // flashData = flashData.Take(5146).ToArray();
-            //   // Console.WriteLine(filename);
-            //  //  Console.WriteLine(flashData.Length);
+            //byte[] numArray = File.ReadAllBytes(@"C:\Users\james\Desktop\tmp\MultiSensor 6_OTA_EU_A_V1_13.exe");
+            //int length = (int)numArray[numArray.Length - 4] << 24 | (int)numArray[numArray.Length - 3] << 16 | (int)numArray[numArray.Length - 2] << 8 | (int)numArray[numArray.Length - 1];
+            //byte[] flashDataB = new byte[length];
+            //Array.Copy((Array)numArray, numArray.Length - length - 4 - 4 - 256, (Array)flashDataB, 0, length);
+            //List<byte> flashData = new List<byte>(flashDataB);
 
             dataListener = controller.ListenData((x) =>
             {
@@ -107,19 +101,19 @@ namespace hyper
                 var _commandClass = commandClasses.TryGetValue(x.Command[0], out var commandClass);
                 if (!_commandClass)
                 {
-                    Common.logger.Error("command class {0} not found!", x.Command[0]);
+                    Common.logger.Error("node id: {1} - command class {0} not found!", x.Command[0], x.SrcNodeId);
                     return;
                 }
                 var _nestedDict = nestedCommandClasses.TryGetValue(commandClass, out var nestedDict);
                 if (!_nestedDict)
                 {
-                    Common.logger.Error("nested command classes for command class {0} not found!", commandClass.Name);
+                    Common.logger.Error("node id: {1} - nested command classes for command class {0} not found!", commandClass.Name, x.SrcNodeId);
                     return;
                 }
                 var _nestedType = nestedDict.TryGetValue(x.Command[1], out Type nestedType);
                 if (!_nestedType)
                 {
-                    Common.logger.Error("nested command class {0} for command class {1} not found!", x.Command[1], commandClass.Name);
+                    Common.logger.Error("node id: {2} - nested command class {0} for command class {1} not found!", x.Command[1], commandClass.Name, x.SrcNodeId);
                     return;
                 }
 
@@ -172,45 +166,45 @@ namespace hyper
 
                         break;
 
-                    case COMMAND_CLASS_FIRMWARE_UPDATE_MD_V5.FIRMWARE_UPDATE_MD_GET fupdateReport:
+                    //case COMMAND_CLASS_FIRMWARE_UPDATE_MD_V5.FIRMWARE_UPDATE_MD_GET fupdateReport:
 
-                        var rep1 = fupdateReport.properties1.reportNumber1;
-                        var rep2 = fupdateReport.reportNumber2;
-                        var count = fupdateReport.numberOfReports;
+                    //    var rep1 = fupdateReport.properties1.reportNumber1;
+                    //    var rep2 = fupdateReport.reportNumber2;
+                    //    var count = fupdateReport.numberOfReports;
 
-                        queueItems.Add(() =>
-                        {
-                            var take = 40;
-                            var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT();
-                            cmd.properties1.last = 0;
-                            cmd.properties1.reportNumber1 = rep1;
-                            cmd.reportNumber2 = rep2;
-                            short repNumber = BitConverter.ToInt16(new byte[] { rep2, rep1 });
-                            //Console.WriteLine($"Repnumber: {repNumber}");
-                            var offset = (repNumber - 1) * 40;
-                            Common.logger.Info("Progress: {0}", (offset / (float)flashData.Count).ToString("0.00%"));
+                    //    queueItems.Add(() =>
+                    //    {
+                    //        var take = 40;
+                    //        var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT();
+                    //        cmd.properties1.last = 0;
+                    //        cmd.properties1.reportNumber1 = rep1;
+                    //        cmd.reportNumber2 = rep2;
+                    //        short repNumber = BitConverter.ToInt16(new byte[] { rep2, rep1 });
+                    //        //Console.WriteLine($"Repnumber: {repNumber}");
+                    //        var offset = (repNumber - 1) * 40;
+                    //        Common.logger.Info("Progress: {0}", (offset / (float)flashData.Count).ToString("0.00%"));
 
-                            if ((flashData.Count - offset) < 40)
-                            {
-                                // Console.WriteLine("ima full!");
-                                Console.WriteLine(offset);
-                                Console.WriteLine(flashData.Count);
-                                take = flashData.Count - offset;
-                                Console.WriteLine(take);
-                                cmd.properties1.last = 1;
-                                Common.logger.Info("Progress: {0}", (1).ToString("0.00%"));
-                            }
-                            var data = flashData.Skip(offset).Take(take).ToArray();
-                            cmd.data = data;
-                            //7A 97
-                            // Common.logger.Info(Util.ObjToJson((byte[])cmd));
-                            // Common.logger.Info(Util.ObjToJson(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT.ID }.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data).ToArray()));
-                            cmd.checksum = Tools.CalculateCrc16Array((byte[])cmd, 0, ((byte[])cmd).Length - 2);
-                            //cmd.checksum =  Tools.CalculateCrc16Array(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT .ID}.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data));
-                            controller.SendData(x.SrcNodeId, cmd, Common.txOptions);
-                        });
+                    //        if ((flashData.Count - offset) < 40)
+                    //        {
+                    //            // Console.WriteLine("ima full!");
+                    //            Console.WriteLine(offset);
+                    //            Console.WriteLine(flashData.Count);
+                    //            take = flashData.Count - offset;
+                    //            Console.WriteLine(take);
+                    //            cmd.properties1.last = 1;
+                    //            Common.logger.Info("Progress: {0}", (1).ToString("0.00%"));
+                    //        }
+                    //        var data = flashData.Skip(offset).Take(take).ToArray();
+                    //        cmd.data = data;
+                    //        //7A 97
+                    //        // Common.logger.Info(Util.ObjToJson((byte[])cmd));
+                    //        // Common.logger.Info(Util.ObjToJson(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT.ID }.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data).ToArray()));
+                    //        cmd.checksum = Tools.CalculateCrc16Array((byte[])cmd, 0, ((byte[])cmd).Length - 2);
+                    //        //cmd.checksum =  Tools.CalculateCrc16Array(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT .ID}.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data));
+                    //        controller.SendData(x.SrcNodeId, cmd, Common.txOptions);
+                    //    });
 
-                        break;
+                    //    break;
 
                     default:
                         break;

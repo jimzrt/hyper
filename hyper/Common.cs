@@ -141,27 +141,44 @@ namespace hyper
             }
         }
 
-        public static bool SetConfiguration(Controller controller, byte nodeId, ConfigItem config)
+        public static bool SetConfiguration(Controller controller, byte nodeId, ConfigItem config, ref bool abort)
         {
-            int retryCount = 15;
+            int retryCount = 10;
             if (config.groups != null && config.groups.Count != 0)
             {
                 if (config.groups.Count != 0)
                 {
                     Common.logger.Info("Setting " + config.groups.Count + " associtions");
-                    bool associationCleared = ClearAssociations(controller, nodeId);
-                    while (!associationCleared)
+                    var associationCleared = false;
+                    do
                     {
-                        Common.logger.Info("Not successful! Trying again, please wake up device.");
                         associationCleared = ClearAssociations(controller, nodeId);
-                        retryCount--;
-                        if (retryCount <= 0)
+                        if (!associationCleared)
                         {
-                            Common.logger.Info("Too many retrys, aborting!");
-                            return false;
+                            Common.logger.Info("Not successful! Trying again, please wake up device.");
+                            Thread.Sleep(200);
+                            retryCount--;
                         }
-                        Thread.Sleep(200);
+                    } while (!associationCleared && !abort && retryCount > 0);
+
+                    if (retryCount <= 0 || abort)
+                    {
+                        Common.logger.Info("Too many retrys or aborted!");
+                        return false;
                     }
+                    // bool associationCleared = ClearAssociations(controller, nodeId);
+                    //while (!associationCleared)
+                    //{
+                    //    Common.logger.Info("Not successful! Trying again, please wake up device.");
+                    //    associationCleared = ClearAssociations(controller, nodeId);
+                    //    retryCount--;
+                    //    if (retryCount <= 0 || abort)
+                    //    {
+                    //        Common.logger.Info("Too many retrys or aborted!");
+                    //        return false;
+                    //    }
+                    //    Thread.Sleep(200);
+                    //}
                 }
 
                 foreach (var group in config.groups)
@@ -169,32 +186,53 @@ namespace hyper
                     var groupIdentifier = group.Key;
                     var member = group.Value;
 
-                    retryCount = 15;
-
-                    var associationAdded = AddAssociation(controller, nodeId, groupIdentifier, member);
+                    retryCount = 10;
                     var associationValidated = false;
-                    if (associationAdded)
+                    do
                     {
-                        associationValidated = AssociationContains(controller, nodeId, groupIdentifier, member);
-                    }
-
-                    while (!associationAdded || !associationValidated)
-                    {
-                        Common.logger.Info("Not successful! Trying again, please wake up device.");
-                        associationAdded = AddAssociation(controller, nodeId, groupIdentifier, member);
+                        var associationAdded = AddAssociation(controller, nodeId, groupIdentifier, member);
                         if (associationAdded)
                         {
                             associationValidated = AssociationContains(controller, nodeId, groupIdentifier, member);
                         }
-                        retryCount--;
-                        if (retryCount <= 0)
+                        if (!associationValidated)
                         {
-                            Common.logger.Info("Too many retrys, aborting!");
-                            return false;
+                            Common.logger.Info("Not successful! Trying again, please wake up device.");
+                            Thread.Sleep(200);
+                            retryCount--;
                         }
-                        Thread.Sleep(200);
+                    } while (!associationValidated && !abort && retryCount > 0);
+
+                    if (retryCount <= 0 || abort)
+                    {
+                        Common.logger.Info("Too many retrys or aborted!");
+                        return false;
                     }
-                    retryCount = 15;
+
+                    //var associationAdded = AddAssociation(controller, nodeId, groupIdentifier, member);
+                    //var associationValidated = false;
+                    //if (associationAdded)
+                    //{
+                    //    associationValidated = AssociationContains(controller, nodeId, groupIdentifier, member);
+                    //}
+
+                    //while (!associationAdded || !associationValidated)
+                    //{
+                    //    Common.logger.Info("Not successful! Trying again, please wake up device.");
+                    //    associationAdded = AddAssociation(controller, nodeId, groupIdentifier, member);
+                    //    if (associationAdded)
+                    //    {
+                    //        associationValidated = AssociationContains(controller, nodeId, groupIdentifier, member);
+                    //    }
+                    //    retryCount--;
+                    //    if (retryCount <= 0 || abort)
+                    //    {
+                    //        Common.logger.Info("Too many retrys or aborted!");
+                    //        return false;
+                    //    }
+                    //    Thread.Sleep(200);
+                    //}
+                    retryCount = 10;
                 }
             }
 
@@ -206,27 +244,49 @@ namespace hyper
                     var configParameter = configurationEntry.Key;
                     var configValue = configurationEntry.Value;
 
-                    var parameterSet = SetParameter(controller, nodeId, configParameter, configValue);
-                    var parameterValidated = false;
-                    if (parameterSet)
+                    bool parameterValidated = false;
+                    do
                     {
-                        parameterValidated = ValidateParameter(controller, nodeId, configParameter, configValue);
-                    }
-                    while (!parameterSet || !parameterValidated)
-                    {
-                        Common.logger.Info("Not successful! Trying again, please wake up device.");
-                        parameterSet = SetParameter(controller, nodeId, configParameter, configValue);
+                        var parameterSet = SetParameter(controller, nodeId, configParameter, configValue);
                         if (parameterSet)
                         {
                             parameterValidated = ValidateParameter(controller, nodeId, configParameter, configValue);
                         }
-                        retryCount--;
-                        if (retryCount <= 0)
+                        if (!parameterValidated)
                         {
-                            Common.logger.Info("Too many retrys, aborting!");
-                            return false;
+                            Common.logger.Info("Not successful! Trying again, please wake up device.");
+                            Thread.Sleep(200);
+                            retryCount--;
                         }
+                    } while (!parameterValidated && !abort && retryCount > 0);
+
+                    if (retryCount <= 0 || abort)
+                    {
+                        Common.logger.Info("Too many retrys or aborted!");
+                        return false;
                     }
+
+                    //var parameterSet = SetParameter(controller, nodeId, configParameter, configValue);
+                    //var parameterValidated = false;
+                    //if (parameterSet)
+                    //{
+                    //    parameterValidated = ValidateParameter(controller, nodeId, configParameter, configValue);
+                    //}
+                    //while (!parameterSet || !parameterValidated)
+                    //{
+                    //    Common.logger.Info("Not successful! Trying again, please wake up device.");
+                    //    parameterSet = SetParameter(controller, nodeId, configParameter, configValue);
+                    //    if (parameterSet)
+                    //    {
+                    //        parameterValidated = ValidateParameter(controller, nodeId, configParameter, configValue);
+                    //    }
+                    //    retryCount--;
+                    //    if (retryCount <= 0 || abort)
+                    //    {
+                    //        Common.logger.Info("Too many retrys or aborted!");
+                    //        return false;
+                    //    }
+                    //}
                     Thread.Sleep(200);
                 }
             }
@@ -235,7 +295,7 @@ namespace hyper
                 // var wakeupSet = SetWakeup(controller, nodeId, config.wakeup);
                 //  if (wakeupSet)
                 //  {
-                GetWakeUp(controller, nodeId);
+                //GetWakeUp(controller, nodeId);
                 //   }
             }
 

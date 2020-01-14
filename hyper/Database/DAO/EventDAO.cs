@@ -93,7 +93,7 @@ namespace hyper.Database.DAO
                 events = events.Take(filter.Count);
             }
 
-            return events.Reverse().ToList();
+            return events.AsEnumerable().Reverse().ToList();
         }
     }
 }

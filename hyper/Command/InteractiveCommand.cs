@@ -73,7 +73,7 @@ namespace hyper
             var replaceRegex = new Regex(@"^replace\s*" + oneTo255Regex);
             var basicRegex = new Regex(@"^basic\s*" + oneTo255Regex + @"\s*(false|true)");
             var listenRegex = new Regex(@"^listen\s*(stop|start|filter\s*" + oneTo255Regex + ")");
-            var testRegex = new Regex(@"^firmware\s*" + oneTo255Regex);
+            //var testRegex = new Regex(@"^firmware\s*" + oneTo255Regex);
             var forceRemoveRegex = new Regex(@"^remove\s*" + oneTo255Regex);
             var debugRegex = new Regex(@"^debug\s*(false|true)");
             var lastEventsRegex = new Regex(@$"^show\s*{zeroTo255Regex}\s*{zeroTo255Regex}\s*([a-zA-Z_]+)");
@@ -222,26 +222,26 @@ namespace hyper
                             currentCommand = new ForceRemoveCommand(Program.controller, nodeId);
                             break;
                         }
-                    case var testVal when testRegex.IsMatch(testVal):
-                        {
-                            var val = testRegex.Match(testVal).Groups[1].Value;
-                            var nodeId = Byte.Parse(val);
+                    //case var testVal when testRegex.IsMatch(testVal):
+                    //    {
+                    //        var val = testRegex.Match(testVal).Groups[1].Value;
+                    //        var nodeId = Byte.Parse(val);
 
-                            byte[] bytes = new byte[256];
-                            byte[] numArray = File.ReadAllBytes(@"C:\Users\james\Desktop\tmp\MultiSensor 6_OTA_EU_A_V1_13.exe");
-                            int length = (int)numArray[numArray.Length - 4] << 24 | (int)numArray[numArray.Length - 3] << 16 | (int)numArray[numArray.Length - 2] << 8 | (int)numArray[numArray.Length - 1];
-                            byte[] flashData = new byte[length];
-                            Array.Copy((Array)numArray, numArray.Length - length - 4 - 4 - 256, (Array)flashData, 0, length);
-                            Array.Copy((Array)numArray, numArray.Length - 256 - 4 - 4, (Array)bytes, 0, 256);
+                    //        byte[] bytes = new byte[256];
+                    //        byte[] numArray = File.ReadAllBytes(@"C:\Users\james\Desktop\tmp\MultiSensor 6_OTA_EU_A_V1_13.exe");
+                    //        int length = (int)numArray[numArray.Length - 4] << 24 | (int)numArray[numArray.Length - 3] << 16 | (int)numArray[numArray.Length - 2] << 8 | (int)numArray[numArray.Length - 1];
+                    //        byte[] flashData = new byte[length];
+                    //        Array.Copy((Array)numArray, numArray.Length - length - 4 - 4 - 256, (Array)flashData, 0, length);
+                    //        Array.Copy((Array)numArray, numArray.Length - 256 - 4 - 4, (Array)bytes, 0, 256);
 
-                            var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REQUEST_GET();
-                            cmd.manufacturerId = new byte[] { 0, 0x86 };
-                            cmd.firmwareId = new byte[] { 0, 0 };
-                            cmd.checksum = Tools.CalculateCrc16Array(flashData);
-                            Program.controller.SendData(nodeId, cmd, Common.txOptions);
+                    //        var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REQUEST_GET();
+                    //        cmd.manufacturerId = new byte[] { 0, 0x86 };
+                    //        cmd.firmwareId = new byte[] { 0, 0 };
+                    //        cmd.checksum = Tools.CalculateCrc16Array(flashData);
+                    //        Program.controller.SendData(nodeId, cmd, Common.txOptions);
 
-                            break;
-                        }
+                    //        break;
+                    //    }
                     case var pingVal when pingRegex.IsMatch(pingVal):
                         {
                             var val = pingRegex.Match(pingVal).Groups[1].Value;

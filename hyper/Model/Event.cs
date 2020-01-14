@@ -65,7 +65,7 @@ namespace hyper.Models
 
         public override string ToString()
         {
-            return $"Event: nodeId: {NodeId} - type: {EventType} - value: {Value}";
+            return $"Event: nId: {NodeId} - date: {Added} - type: {EventType} - value: {Value}";
         }
     }
 }
