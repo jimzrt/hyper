@@ -158,11 +158,11 @@ namespace hyper
                 {
                     case COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION _:
                         // TODO EVENT, last Battery
-                        var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, x.SrcNodeId);
-                        if ((DateTime.Now - lastDate).TotalHours >= 6)
-                        {
-                            queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
-                        }
+                        //    var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, x.SrcNodeId);
+                        //    if ((DateTime.Now - lastDate).TotalHours >= 0)
+                        //    {
+                        queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
+                        //      }
 
                         break;
 
@@ -218,11 +218,11 @@ namespace hyper
                     return;
                 }
                 Common.logger.Info("{0}: Got {2} for node {1}", DateTime.Now, r.NodeId, r.Status);
-                var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, r.NodeId);
-                if ((DateTime.Now - lastDate).TotalHours >= 6)
-                {
-                    queueItems.Add(() => Common.RequestBatteryReport(controller, r.NodeId));
-                }
+                //  var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, r.NodeId);
+                // if ((DateTime.Now - lastDate).TotalHours >= 0)
+                // {
+                queueItems.Add(() => Common.RequestBatteryReport(controller, r.NodeId));
+                // }
             });
 
             Active = true;

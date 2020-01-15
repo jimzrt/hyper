@@ -613,11 +613,12 @@ namespace hyper
         {
             var includeNode = controller.IncludeNode(Modes.NodeOptionHighPower | Modes.NodeOptionNetworkWide, 20000);
             nodeId = includeNode.AddRemoveNode.Id;
-            if (nodeId == 0)
-            {
-                return false;
-            }
-            return true;
+            return includeNode.AddRemoveNode.AddRemoveNodeStatus == ZWave.BasicApplication.Enums.AddRemoveNodeStatuses.Added;
+            //if (nodeId == 0)
+            //{
+            //    return false;
+            //}
+            //return true;
         }
 
         public static bool ExcludeNode(Controller controller, out byte nodeId)

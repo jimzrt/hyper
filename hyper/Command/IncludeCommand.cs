@@ -1,6 +1,7 @@
 ﻿using hyper.commands;
 using hyper.config;
 using System.Collections.Generic;
+using System.Threading;
 using ZWave.BasicApplication.Devices;
 
 namespace hyper
@@ -31,12 +32,17 @@ namespace hyper
 
             Common.logger.Info("Starting inclusion, please wake up device...");
 
-            var nodeIncluded = Common.IncludeNode(controller, out byte nodeId);
-            while (!nodeIncluded && !abort)
+            var nodeIncluded = false;
+            byte nodeId = 0;
+            do
             {
-                Common.logger.Info("Could not include any node, trying again...");
                 nodeIncluded = Common.IncludeNode(controller, out nodeId);
-            }
+                if (!nodeIncluded)
+                {
+                    Common.logger.Warn("Could not include any node, trying again...");
+                    Thread.Sleep(200);
+                }
+            } while (!nodeIncluded && !abort);
 
             if (abort)
             {

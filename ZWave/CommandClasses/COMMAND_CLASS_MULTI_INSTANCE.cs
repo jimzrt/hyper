@@ -4,8 +4,9 @@ namespace ZWave.CommandClasses
 {
     public class COMMAND_CLASS_MULTI_INSTANCE
     {
-        public const byte ID = 0x60;
+        public const byte ID = 0x00;//0x60;
         public const byte VERSION = 1;
+
         public class MULTI_INSTANCE_CMD_ENCAP
         {
             public const byte ID = 0x06;
@@ -13,6 +14,7 @@ namespace ZWave.CommandClasses
             public byte commandClass;
             public byte command;
             public IList<byte> parameter = new List<byte>();
+
             public static implicit operator MULTI_INSTANCE_CMD_ENCAP(byte[] data)
             {
                 MULTI_INSTANCE_CMD_ENCAP ret = new MULTI_INSTANCE_CMD_ENCAP();
@@ -30,6 +32,7 @@ namespace ZWave.CommandClasses
                 }
                 return ret;
             }
+
             public static implicit operator byte[](MULTI_INSTANCE_CMD_ENCAP command)
             {
                 List<byte> ret = new List<byte>();
@@ -48,10 +51,12 @@ namespace ZWave.CommandClasses
                 return ret.ToArray();
             }
         }
+
         public class MULTI_INSTANCE_GET
         {
             public const byte ID = 0x04;
             public byte commandClass;
+
             public static implicit operator MULTI_INSTANCE_GET(byte[] data)
             {
                 MULTI_INSTANCE_GET ret = new MULTI_INSTANCE_GET();
@@ -62,6 +67,7 @@ namespace ZWave.CommandClasses
                 }
                 return ret;
             }
+
             public static implicit operator byte[](MULTI_INSTANCE_GET command)
             {
                 List<byte> ret = new List<byte>();
@@ -71,11 +77,13 @@ namespace ZWave.CommandClasses
                 return ret.ToArray();
             }
         }
+
         public class MULTI_INSTANCE_REPORT
         {
             public const byte ID = 0x05;
             public byte commandClass;
             public byte instances;
+
             public static implicit operator MULTI_INSTANCE_REPORT(byte[] data)
             {
                 MULTI_INSTANCE_REPORT ret = new MULTI_INSTANCE_REPORT();
@@ -87,6 +95,7 @@ namespace ZWave.CommandClasses
                 }
                 return ret;
             }
+
             public static implicit operator byte[](MULTI_INSTANCE_REPORT command)
             {
                 List<byte> ret = new List<byte>();
@@ -99,4 +108,3 @@ namespace ZWave.CommandClasses
         }
     }
 }
-

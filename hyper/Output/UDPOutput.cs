@@ -21,6 +21,10 @@ namespace hyper.Output
             IPAddress broadcast = IPAddress.Parse(ipAdress);
 
             ep = new IPEndPoint(broadcast, port);
+
+            //string test = "{\"properties1\":{\"sourceEndPoint\":2,\"res\":0},\"properties2\":{\"destinationEndPoint\":1,\"bitAddress\":0},\"commandClass\":32,\"command\":1,\"parameter\":[0]}";
+            //var testObj = (COMMAND_CLASS_MULTI_CHANNEL_V4.MULTI_CHANNEL_CMD_ENCAP)Util.JsonToObj(test, typeof(COMMAND_CLASS_MULTI_CHANNEL_V4.MULTI_CHANNEL_CMD_ENCAP));
+            //HandleCommand(testObj, 80, 80);
         }
 
         public void HandleCommand(object command, byte srcNodeId, byte destNodeId)
@@ -113,6 +117,21 @@ namespace hyper.Output
                     {
                         values = BitConverter.GetBytes((short)basicReport.currentValue);
                     }
+                    break;
+
+                case COMMAND_CLASS_MULTI_CHANNEL_V4.MULTI_CHANNEL_CMD_ENCAP multiChannelReport:
+                    //alfred shit!
+                    instance[1] = (byte)(multiChannelReport.properties2.destinationEndPoint + 1);
+                    commandClass = BitConverter.GetBytes((short)COMMAND_CLASS_BASIC_V2.ID);
+                    if (multiChannelReport.parameter[0] == 255)
+                    {
+                        values = BitConverter.GetBytes((short)1);
+                    }
+                    else
+                    {
+                        values = BitConverter.GetBytes((short)multiChannelReport.parameter[0]);
+                    }
+
                     break;
 
                 default:

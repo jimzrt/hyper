@@ -193,9 +193,20 @@ namespace hyper
                         }
                     case var eventsVal when lastEventsRegex.IsMatch(eventsVal):
                         {
-                            var nodeId = byte.Parse(lastEventsRegex.Match(eventsVal).Groups[1].Value);
-                            var count = int.Parse(lastEventsRegex.Match(eventsVal).Groups[2].Value);
-                            var command = lastEventsRegex.Match(eventsVal).Groups[3].Value;
+                            var match = lastEventsRegex.Match(eventsVal);
+                            var nodeId = byte.Parse(match.Groups[1].Value);
+                            var count = 0;
+                            var command = "";
+                            if (match.Groups.Count == 4)
+                            {
+                                count = int.Parse(match.Groups[2].Value);
+                                command = match.Groups[3].Value;
+                            }
+                            else
+                            {
+                                command = match.Groups[2].Value;
+                            }
+
                             Console.WriteLine($"node: {nodeId} - count: {count} - command: {command}");
                             EventFilter filter = new EventFilter();
                             filter.NodeId = nodeId;
