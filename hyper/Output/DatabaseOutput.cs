@@ -3,8 +3,10 @@ using hyper.Database.DAO;
 using hyper.Helper;
 using hyper.Helper.Extension;
 using hyper.Models;
+using LinqToDB;
 using System.Data.SQLite;
 using System.IO;
+using System.Linq;
 
 namespace hyper.Output
 {
@@ -14,26 +16,8 @@ namespace hyper.Output
 
         public DatabaseOutput(string fileName)
         {
-            if (!File.Exists(fileName))
-            {
-                //  using (File.Create("events.db")) ;
+            LinqToDB.Data.DataConnection.DefaultSettings = new DatabaseSettingsMYSQL();
 
-                using SQLiteConnection connection = new SQLiteConnection("Data Source=" + fileName + ";");
-                using SQLiteCommand command = new SQLiteCommand(
-@"CREATE TABLE 'Events' (
-            `Id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-            `NodeId` INTEGER NOT NULL,
-            `EventType` TEXT NOT NULL,
-            `key` TEXT,
-            `Value` FLOAT,
-            `raw` Text NOT NULL,
-            `Added` DATETIME NOT NULL)",
-connection);
-                connection.Open();
-                command.ExecuteNonQuery();
-            }
-
-            LinqToDB.Data.DataConnection.DefaultSettings = new DatabaseSettings(fileName);
             eventDAO = new EventDAO();
 
             // Common.logger.Info(Util.ObjToJson(eventDAO.GetAll()));

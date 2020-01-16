@@ -65,18 +65,18 @@ namespace hyper
             InputManager.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
             // InputManager.AddCancelEventHandler(CancelHandler);
 
-            var oneTo255Regex = @"\b([1-9]|[1-8][0-9]|9[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\b";
-            var zeroTo255Regex = @"\b([0-9]|[1-8][0-9]|9[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\b";
+            var oneTo255Regex = @"\b(?:[1-9]|[1-8][0-9]|9[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\b";
+            var zeroTo255Regex = @"\b(?:[0-9]|[1-8][0-9]|9[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\b";
 
-            var pingRegex = new Regex(@$"^ping\s*{oneTo255Regex}");
-            var configRegex = new Regex(@"^config\s*" + oneTo255Regex);
-            var replaceRegex = new Regex(@"^replace\s*" + oneTo255Regex);
-            var basicRegex = new Regex(@"^basic\s*" + oneTo255Regex + @"\s*(false|true)");
-            var listenRegex = new Regex(@"^listen\s*(stop|start|filter\s*" + oneTo255Regex + ")");
+            var pingRegex = new Regex(@$"^ping\s*({oneTo255Regex})");
+            var configRegex = new Regex(@$"^config\s*({oneTo255Regex})");
+            var replaceRegex = new Regex(@$"^replace\s*({oneTo255Regex})");
+            var basicRegex = new Regex(@$"^basic\s*({oneTo255Regex})\s*(false|true)");
+            var listenRegex = new Regex(@$"^listen\s*(stop|start|filter\s*({oneTo255Regex}))");
             //var testRegex = new Regex(@"^firmware\s*" + oneTo255Regex);
-            var forceRemoveRegex = new Regex(@"^remove\s*" + oneTo255Regex);
+            var forceRemoveRegex = new Regex(@$"^remove\s*({oneTo255Regex})");
             var debugRegex = new Regex(@"^debug\s*(false|true)");
-            var lastEventsRegex = new Regex(@$"^show\s*{zeroTo255Regex}\s*{zeroTo255Regex}\s*([a-zA-Z_]+)");
+            var lastEventsRegex = new Regex(@$"^show\s*({zeroTo255Regex})\s*({zeroTo255Regex})?\s*([a-zA-Z_]+)?");
 
             Active = true;
             bool oneShot = args.Length > 0;
@@ -195,27 +195,27 @@ namespace hyper
                         {
                             var match = lastEventsRegex.Match(eventsVal);
                             var nodeId = byte.Parse(match.Groups[1].Value);
-                            var count = 0;
-                            var command = "";
-                            if (match.Groups.Count == 4)
-                            {
-                                count = int.Parse(match.Groups[2].Value);
-                                command = match.Groups[3].Value;
-                            }
-                            else
-                            {
-                                command = match.Groups[2].Value;
-                            }
 
-                            Console.WriteLine($"node: {nodeId} - count: {count} - command: {command}");
-                            EventFilter filter = new EventFilter();
-                            filter.NodeId = nodeId;
-                            filter.Count = count;
-                            filter.Command = command;
+                            var count = match.Groups[2].Value;
+                            var command = match.Groups[3].Value;
+
+                            Common.logger.Info($"node: {nodeId} - count: {(count.IsNullOrEmpty() ? "all" : count)} - command: {(command.IsNullOrEmpty() ? "all" : command)}");
+                            EventFilter filter = new EventFilter
+                            {
+                                NodeId = nodeId
+                            };
+                            if (!count.IsNullOrEmpty())
+                            {
+                                filter.Count = int.Parse(count);
+                            }
+                            if (!command.IsNullOrEmpty())
+                            {
+                                filter.Command = command;
+                            }
                             List<Event> events = eventDao.GetByFilter(filter);
                             foreach (var evt in events)
                             {
-                                Common.logger.Info(evt);
+                                Common.logger.Debug(evt);
                             }
                             break;
                         }

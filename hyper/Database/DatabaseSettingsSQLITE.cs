@@ -4,11 +4,11 @@ using System.Linq;
 
 namespace hyper.Database
 {
-    public class DatabaseSettings : ILinqToDBSettings
+    public class DatabaseSettingsSQLITE : ILinqToDBSettings
     {
         private string fileName;
 
-        public DatabaseSettings(string fileName)
+        public DatabaseSettingsSQLITE(string fileName)
         {
             this.fileName = fileName;
         }

@@ -4,8 +4,8 @@ namespace hyper
 {
     internal class EventFilter
     {
-        public byte NodeId { get; set; } = 0;
-        public int Count { get; set; } = 0;
-        public string Command { get; set; } = "all";
+        public byte? NodeId { get; set; }
+        public int? Count { get; set; }
+        public string Command { get; set; }
     }
 }

@@ -15,6 +15,13 @@ namespace hyper.Database.DAO
         public EventDAO()
         {
             db = new DataConnection();
+            var sp = db.DataProvider.GetSchemaProvider();
+            var dbSchema = sp.GetSchema(db);
+            if (!dbSchema.Tables.Any(t => t.TableName == "hyper_events"))
+            {
+                //no required table-create it
+                db.CreateTable<Event>();
+            }
         }
 
         public void InsertEvent(Event _event)
@@ -78,19 +85,20 @@ namespace hyper.Database.DAO
 
         internal List<Event> GetByFilter(EventFilter filter)
         {
-            var events = db.Event.Where(t => true);
-            if (filter.NodeId != 0)
+            var events = db.Event as IQueryable<Event>;
+
+            if (filter.NodeId.HasValue)
             {
-                events = events.Where(e => e.NodeId == filter.NodeId);
+                events = events.Where(e => e.NodeId == filter.NodeId.Value);
             }
-            if (filter.Command.ToUpper() != "ALL")
+            if (filter.Command != null)
             {
                 events = events.Where(e => e.EventType == filter.Command.ToUpper());
             }
             events = events.OrderByDescending(e => e.Added);
-            if (filter.Count != 0)
+            if (filter.Count.HasValue)
             {
-                events = events.Take(filter.Count);
+                events = events.Take(filter.Count.Value);
             }
 
             return events.AsEnumerable().Reverse().ToList();

@@ -24,7 +24,7 @@ namespace hyper.Input
             try
             {
                 listener = new UdpClient(listenPort);
-                IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
+                // IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
 
                 Task.Run(async () =>
                 {
@@ -33,7 +33,7 @@ namespace hyper.Input
                         var received = await listener.ReceiveAsync();
 
                         byte[] bytes = received.Buffer;
-                        Common.logger.Info($"Received broadcast from {groupEP}:");
+                        Common.logger.Info($"Received broadcast from {received.RemoteEndPoint.Address}:");
                         if (bytes.Length >= 10)
                         {
                             var nodeId = BitConverter.ToInt16(bytes.Skip(0).Take(2).Reverse().ToArray());
