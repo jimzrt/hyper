@@ -200,10 +200,11 @@ namespace hyper
                             var command = match.Groups[3].Value;
 
                             Common.logger.Info($"node: {nodeId} - count: {(count.IsNullOrEmpty() ? "all" : count)} - command: {(command.IsNullOrEmpty() ? "all" : command)}");
-                            EventFilter filter = new EventFilter
+                            EventFilter filter = new EventFilter();
+                            if (nodeId != 0)
                             {
-                                NodeId = nodeId
-                            };
+                                filter.NodeId = nodeId;
+                            }
                             if (!count.IsNullOrEmpty())
                             {
                                 filter.Count = int.Parse(count);

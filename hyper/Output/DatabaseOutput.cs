@@ -16,7 +16,7 @@ namespace hyper.Output
 
         public DatabaseOutput(string fileName)
         {
-            LinqToDB.Data.DataConnection.DefaultSettings = new DatabaseSettingsMYSQL();
+            LinqToDB.Data.DataConnection.DefaultSettings = new DatabaseSettingsSQLITE(fileName);
 
             eventDAO = new EventDAO();
 
