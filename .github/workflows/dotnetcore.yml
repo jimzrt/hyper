@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: Build and Release
+    name: Build
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -37,6 +37,14 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
+      - name: Save URL
+        run: |
+          echo ${{ steps.create_release.outputs.upload_url }} >> url.txt
+      - name: Upload URL
+        uses: actions/upload-artifact@v1
+        with:
+          name: url
+          path: url.txt
   upload:
     runs-on: ubuntu-latest
     needs: release
@@ -44,12 +52,20 @@ jobs:
       matrix:
         os: [linux-arm, win-x64]
     steps:
+      - name: Download url
+        uses: actions/download-artifact@v1
+        with:
+          name: url
+      - name: set url
+        shell: bash
+        run: |
+          echo "::set-env name=UPLOAD_URL::$(cat url/url.txt)"
       - name: ${{ matrix.os }} - Upload Release Asset
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ jobs.release.steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          upload_url: ${UPLOAD_URL} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: ./publish${{ matrix.os }}.tar.xz
           asset_name: publish${{ matrix.os }}.tar.xz
           asset_content_type: application/x-tar
