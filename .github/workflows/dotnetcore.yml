@@ -4,14 +4,24 @@ on: [push]
 
 jobs:
   build:
-
+    name: Build
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v1
+    - name: Checkout
+      uses: actions/checkout@v1
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.101
     - name: Build with dotnet
-      run: dotnet build --configuration Release
+      run: dotnet publish -c Release --self-contained -r linux-arm -o ./publish /p:PublishTrimmed=true
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release
+        uses: fnkr/github-action-ghr@v1
+        env:
+          GHR_COMPRESS: xz
+          GHR_PATH: publish/
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
