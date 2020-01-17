@@ -91,10 +91,10 @@ namespace hyper
 
             dataListener = controller.ListenData((x) =>
             {
-                if (!Active)
-                {
-                    return;
-                }
+                //if (!Active)
+                //{
+                //    return;
+                //}
 
                 var filterActive = Filter != 0 && Filter != x.SrcNodeId;
 
@@ -153,6 +153,10 @@ namespace hyper
                 }
 
                 //    Handle(dummyInstance, x.SrcNodeId, x.Command);
+                if (!Active)
+                {
+                    return;
+                }
 
                 switch (report)
                 {
