@@ -71,7 +71,8 @@ namespace hyper
             var pingRegex = new Regex(@$"^ping\s*({oneTo255Regex})");
             var configRegex = new Regex(@$"^config\s*({oneTo255Regex})");
             var replaceRegex = new Regex(@$"^replace\s*({oneTo255Regex})");
-            var basicRegex = new Regex(@$"^basic\s*({oneTo255Regex})\s*(false|true)");
+            var basicRegex = new Regex(@$"^(basic|binary)\s*({oneTo255Regex})\s*(false|true)");
+            var basicGetRegex = new Regex(@$"^(basic|binary)\s*({oneTo255Regex})");
             var listenRegex = new Regex(@$"^listen\s*(stop|start|filter\s*({oneTo255Regex}))");
             //var testRegex = new Regex(@"^firmware\s*" + oneTo255Regex);
             var forceRemoveRegex = new Regex(@$"^remove\s*({oneTo255Regex})");
@@ -269,19 +270,47 @@ namespace hyper
                     case var basicSetVal when basicRegex.IsMatch(basicSetVal):
                         {
                             blockExit = true;
-                            var val = basicRegex.Match(basicSetVal).Groups[1].Value;
+                            var match = basicRegex.Match(basicSetVal);
+                            var val = match.Groups[2].Value;
                             var nodeId = byte.Parse(val);
-                            val = basicRegex.Match(basicSetVal).Groups[2].Value;
+                            val = match.Groups[3].Value;
                             var value = bool.Parse(val);
-                            var trys = 5;
-                            Common.SetBinary(Program.controller, nodeId, value);
-                            /* Thread.Sleep(500);
-                             while(trys >= 0 && (!Common.GetBinary(controller, nodeId, out bool retValue) || retValue != value))
-                             {
-                                 Common.SetBinary(controller, nodeId, value);
-                                 Thread.Sleep(500);
-                                 trys--;
-                             }*/
+
+                            var success = false;
+                            if (match.Groups[1].Value == "basic")
+                            {
+                                success = Common.SetBasic(Program.controller, nodeId, value);
+                            }
+                            else if (match.Groups[1].Value == "binary")
+                            {
+                                success = Common.SetBinary(Program.controller, nodeId, value);
+                            }
+                            Common.logger.Info("{0}successful!", success ? "" : "not ");
+                            blockExit = false;
+                            break;
+                        }
+                    case var basicGetVal when basicGetRegex.IsMatch(basicGetVal):
+                        {
+                            blockExit = true;
+                            var match = basicGetRegex.Match(basicGetVal);
+                            var val = match.Groups[2].Value;
+                            var nodeId = byte.Parse(val);
+
+                            var success = false;
+                            bool ret;
+                            if (match.Groups[1].Value == "basic")
+                            {
+                                success = Common.GetBasic(Program.controller, nodeId, out ret);
+                            }
+                            else
+                            {
+                                success = Common.GetBinary(Program.controller, nodeId, out ret);
+                            }
+                            Common.logger.Info("{0}successful!", success ? "" : "not ");
+                            if (success)
+                            {
+                                Common.logger.Info("value is: {0}", ret);
+                            }
                             blockExit = false;
                             break;
                         }

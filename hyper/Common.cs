@@ -450,7 +450,7 @@ namespace hyper
 
         public static bool GetBinary(Controller controller, byte nodeId, out bool value)
         {
-            Common.logger.Info("Basic_Get for node {0}", nodeId);
+            Common.logger.Info("Binary_Get for node {0}", nodeId);
             var cmd = new COMMAND_CLASS_SWITCH_BINARY_V2.SWITCH_BINARY_GET();
             var result = controller.RequestData(nodeId, cmd, txOptions, new COMMAND_CLASS_SWITCH_BINARY_V2.SWITCH_BINARY_REPORT(), 10000);
             if (result)
