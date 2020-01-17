@@ -44,7 +44,7 @@ jobs:
       matrix:
         os: [linux-arm, win-x64]
     steps:
-      - name: {{ matrix.os }} - Upload Release Asset
+      - name: ${{ matrix.os }} - Upload Release Asset
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
