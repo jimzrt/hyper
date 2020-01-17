@@ -9,6 +9,9 @@ jobs:
   build:
     name: Build and Release
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux-arm, win-x64]
     steps:
     - name: Checkout
       uses: actions/checkout@v1
@@ -16,39 +19,46 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.101
-    - name: ARM - Build with dotnet
-      run: dotnet publish -c Release --self-contained -r linux-arm -o ./publishARM /p:PublishTrimmed=true
-    - name: WIN - Build with dotnet
-      run: dotnet publish -c Release --self-contained -r win-x64 -o ./publishWIN /p:PublishTrimmed=true      
-    - name: ARM - Compress output
-      run: tar cfJ publishARM.tar.xz publishARM
-    - name: WIN - Compress output
-      run: tar cfJ publishWIN.tar.xz publishWIN
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1.0.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-    - name: ARM - Upload Release Asset
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: ./publishARM.tar.xz
-        asset_name: publishARM.tar.xz
-        asset_content_type: application/x-tar
-    - name: WIN - Upload Release Asset
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: ./publishWIN.tar.xz
-        asset_name: publishWIN.tar.xz
-        asset_content_type: application/x-tar
+    - name: ${{ matrix.os }} - Build with dotnet
+      run: dotnet publish -c Release --self-contained -r ${{ matrix.os }} -o ./publish${{ matrix.os }} /p:PublishTrimmed=true   
+    - name: ${{ matrix.os }} - Compress output
+      run: tar cfJ publish${{ matrix.os }}.tar.xz publish${{ matrix.os }}
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+  upload:
+    runs-on: ubuntu-latest
+    needs: release
+    strategy:
+      matrix:
+        os: [linux-arm, win-x64]
+    steps:
+      - name: ARM - Upload Release Asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ jobs.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./publishARM.tar.xz
+          asset_name: publishARM.tar.xz
+          asset_content_type: application/x-tar
+      - name: WIN - Upload Release Asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ jobs.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./publish${{ matrix.os }}.tar.xz
+          asset_name: publish${{ matrix.os }}.tar.xz
+          asset_content_type: application/x-tar
