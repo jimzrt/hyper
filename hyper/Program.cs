@@ -76,6 +76,12 @@ namespace hyper
 
         private static void Main(string[] args)
         {
+            //Test Version
+            //Console.WriteLine("The version of the currently executing assembly is: {0}",
+            //typeof(Program).Assembly.GetName().Version);
+
+            //return;
+
             SetupInputs();
             SetupOutputs();
 
