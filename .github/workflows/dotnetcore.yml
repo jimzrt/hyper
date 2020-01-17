@@ -18,7 +18,8 @@ jobs:
         dotnet-version: 3.1.101
     - name: Build with dotnet
       run: dotnet publish -c Release --self-contained -r linux-arm -o ./publish /p:PublishTrimmed=true
-      run: zip --junk-paths ./publish
+    - name: Compress output
+      run: tar -cvf publish.tar.xz publish
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1.0.0
@@ -36,6 +37,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: ./publish.zip
-        asset_name: publish.zip
+        asset_path: ./publish.tar.xz
+        asset_name: publish.tar.xz
         asset_content_type: application/zip
