@@ -256,9 +256,14 @@ namespace hyper
                     //    }
                     case var pingVal when pingRegex.IsMatch(pingVal):
                         {
+                            blockExit = true;
                             var val = pingRegex.Match(pingVal).Groups[1].Value;
                             var nodeId = byte.Parse(val);
-                            currentCommand = new PingCommand(Program.controller, nodeId);
+                            Common.logger.Info("Pinging node {0}...", nodeId);
+                            var reachable = Common.CheckReachable(Program.controller, nodeId);
+                            Common.logger.Info("node {0} is{1}reachable!", nodeId, reachable ? " " : " NOT ");
+                            blockExit = false;
+                            // currentCommand = new PingCommand(Program.controller, nodeId);
                             break;
                         }
                     case var basicSetVal when basicRegex.IsMatch(basicSetVal):

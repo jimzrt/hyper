@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace hyper.Inputs
@@ -28,8 +29,19 @@ namespace hyper.Inputs
         public static string ReadAny()
         {
             var message = "";
-            Inputs.ForEach(Input => Input.CanRead = true);
-            resetEvent.WaitOne();
+
+            //foreach (var Input in Inputs)
+            //{
+            //    if (Input.Available())
+            //    {
+            //        message = Input.Read();
+            //        return message;
+            //    }
+            //}
+
+            while (!Inputs.Any(i => i.Available()))
+                resetEvent.WaitOne();
+
             foreach (var Input in Inputs)
             {
                 if (Input.Available())
@@ -39,7 +51,7 @@ namespace hyper.Inputs
                 }
             }
 
-            Inputs.ForEach(Input => Input.CanRead = false);
+            //   Inputs.ForEach(Input => Input.CanRead = false);
             resetEvent.Reset();
             return message;
         }

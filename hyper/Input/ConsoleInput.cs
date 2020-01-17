@@ -1,6 +1,7 @@
 ﻿using NLog;
 using NLog.Targets;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,9 +10,11 @@ namespace hyper.Inputs
     [Target("ConsoleInput")]
     public sealed class ConsoleInput : TargetWithLayout, IInput
     {
-        public bool CanRead { get; set; } = false;
+        // public bool CanRead { get; set; } = false;
 
-        private string currentMessage = "";
+        // private string currentMessage = "";
+
+        private Queue<string> messageQueue = new Queue<string>();
 
         private Task backgroundTask = null;
         private ManualResetEvent resetEvent;
@@ -26,18 +29,27 @@ namespace hyper.Inputs
                 while (true)
                 {
                     var message = Console.ReadLine();
-                    if (CanRead)
-                    {
-                        currentMessage = message;
-                    }
-                    else
+                    if (message?.Trim().Length > 0)
                     {
                         if (message == "stop")
                         {
                             CancelKeyPress?.Invoke(null, null);
+                            continue;
                         }
+                        messageQueue.Enqueue(message);
+                        resetEvent.Set();
                     }
-                    resetEvent.Set();
+                    //if (CanRead)
+                    //{
+                    //    currentMessage = message;
+                    //}
+                    //else
+                    //{
+                    //    if (message == "stop")
+                    //    {
+                    //        CancelKeyPress?.Invoke(null, null);
+                    //    }
+                    //}
                 }
             });
             backgroundTask.Start();
@@ -45,20 +57,18 @@ namespace hyper.Inputs
 
         public bool Available()
         {
-            return currentMessage?.Length > 0;
+            return messageQueue.Count > 0;
         }
 
         public string Read()
         {
-            var message = currentMessage;
-            Flush();
-            return message;
+            return messageQueue.Dequeue();
         }
 
-        public void Flush()
-        {
-            currentMessage = "";
-        }
+        //public void Flush()
+        //{
+        //    currentMessage = "";
+        //}
 
         protected override void Write(LogEventInfo logEvent)
         {

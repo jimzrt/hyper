@@ -1,5 +1,6 @@
 ﻿using hyper.Inputs;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -10,9 +11,11 @@ namespace hyper.Input
 {
     internal class UDPInput : IInput
     {
-        public bool CanRead { get; set; } = false;
+        //     public bool CanRead { get; set; } = false;
 
-        private string currentMessage = "";
+        private Queue<string> messageQueue = new Queue<string>();
+
+        //private string currentMessage = "";
         private ManualResetEvent resetEvent;
 
         public event ConsoleCancelEventHandler CancelKeyPress;
@@ -40,7 +43,8 @@ namespace hyper.Input
                             var commandClass = BitConverter.ToInt16(bytes.Skip(2).Take(2).Reverse().ToArray());
                             var value = BitConverter.ToBoolean(bytes.Skip(8).Take(1).ToArray());
                             Common.logger.Info($"node id: {nodeId} - command class: {commandClass} - value: {value}");
-                            currentMessage = "basic " + nodeId + " " + value;
+                            messageQueue.Enqueue($"basic {nodeId} {value}");
+                            //currentMessage = "basic " + nodeId + " " + value;
                         }
 
                         resetEvent.Set();
@@ -55,19 +59,17 @@ namespace hyper.Input
 
         public bool Available()
         {
-            return currentMessage.Length > 0;
+            return messageQueue.Count > 1;
         }
 
-        public void Flush()
-        {
-            currentMessage = "";
-        }
+        //public void Flush()
+        //{
+        //    currentMessage = "";
+        //}
 
         public string Read()
         {
-            var message = currentMessage;
-            Flush();
-            return message;
+            return messageQueue.Dequeue();
         }
 
         public void SetResetEvent(ManualResetEvent resetEvent)

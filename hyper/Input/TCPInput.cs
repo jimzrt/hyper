@@ -2,6 +2,7 @@
 using NLog;
 using NLog.Targets;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 
@@ -10,14 +11,16 @@ namespace hyper.Inputs
     [Target("TCPInput")]
     public sealed class TCPInput : TargetWithLayout, IInput
     {
-        public bool CanRead { get; set; } = false;
+        //  public bool CanRead { get; set; } = false;
 
-        private string currentMessage = "";
+        //  private string currentMessage = "";
 
         public event ConsoleCancelEventHandler CancelKeyPress;
 
         private TCPServer server;
         private ManualResetEvent resetEvent;
+
+        private Queue<string> messageQueue = new Queue<string>();
 
         public TCPInput(int port)
         {
@@ -35,37 +38,32 @@ namespace hyper.Inputs
 
         public void OnMessage(string message)
         {
-            //server.OnMessage?.Invoke(message);
-            if (CanRead)
-            {
-                currentMessage = message;
-            }
-            else
+            if (message?.Trim().Length > 0)
             {
                 if (message == "stop")
                 {
                     CancelKeyPress?.Invoke(null, null);
+                    return;
                 }
+                messageQueue.Enqueue(message);
+                resetEvent.Set();
             }
-            resetEvent.Set();
         }
 
         public bool Available()
         {
-            return currentMessage.Length > 0;
+            return messageQueue.Count > 0;
         }
 
         public string Read()
         {
-            var message = currentMessage;
-            Flush();
-            return message;
+            return messageQueue.Dequeue();
         }
 
-        public void Flush()
-        {
-            currentMessage = "";
-        }
+        //public void Flush()
+        //{
+        //    currentMessage = "";
+        //}
 
         protected override void Write(LogEventInfo logEvent)
         {

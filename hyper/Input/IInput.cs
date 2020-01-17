@@ -7,15 +7,16 @@ namespace hyper.Inputs
     {
         public event ConsoleCancelEventHandler CancelKeyPress;
 
-        public bool CanRead { get; set; }
+        //   public bool CanRead { get; set; }
 
         public bool Available();
 
-        public void Flush();
+        // public void Flush();
 
         public string Read();
 
         void SetResetEvent(ManualResetEvent resetEvent);
+
         void Interrupt();
     }
 }
