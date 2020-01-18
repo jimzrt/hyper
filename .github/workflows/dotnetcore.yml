@@ -21,7 +21,7 @@ jobs:
           prerelease: false
       - name: Save URL
         run: |
-          echo ${{ steps.create_release.outputs.upload_url }} >> url.txt
+          echo "${{ steps.create_release.outputs.upload_url }}" >> url.txt
       - name: Upload URL
         uses: actions/upload-artifact@v1
         with:
