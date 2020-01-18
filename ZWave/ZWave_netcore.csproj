@@ -12,7 +12,7 @@
     </ItemGroup>
     <Delete Files="@(FilesToDelete)" />
   </Target>
-  <ItemGroup Condition="$(RuntimeIdentifier.Contains('win'))">
+  <!-- <ItemGroup Condition="$(RuntimeIdentifier.Contains('win'))">
     <Content Include="..\lib\CryptoLibraryS2\s2crypto32.dll" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\lib\CryptoLibraryS2\s2crypto64.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
@@ -23,7 +23,7 @@
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
     <Content Include="..\lib\CryptoLibraryS2\libs2crypto64.so" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\lib\BasicTransport\libbasictrans64.so" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
+  </ItemGroup> -->
   <ItemGroup>
     <ProjectReference Include="..\Utils\Utils_netcore.csproj">
       <Name>Utils</Name>
