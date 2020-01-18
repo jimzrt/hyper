@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [linux-arm, win-x64]
+        os: [linux-arm, win-x64, linux-x64, win7-x64, win10-x64]
     steps:
     - name: Checkout
       uses: actions/checkout@v1
