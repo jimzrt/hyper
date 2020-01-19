@@ -16,10 +16,6 @@
     <Content Include="..\lib\CryptoLibraryS2\s2crypto32.dll" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\lib\CryptoLibraryS2\s2crypto64.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-  <!-- <ItemGroup Condition="'$(RuntimeIdentifier)' == 'debian-arms'">
-    <Content Include="..\lib\CryptoLibraryS2\arm\libs2crypto32.so" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\lib\BasicTransport\arm\libbasictrans32.so" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup> -->
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
     <Content Include="..\lib\CryptoLibraryS2\libs2crypto32.so" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\lib\CryptoLibraryS2\libs2crypto64.so" CopyToOutputDirectory="PreserveNewest" />
