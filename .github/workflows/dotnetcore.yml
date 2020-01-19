@@ -42,7 +42,7 @@ jobs:
       with:
         dotnet-version: 3.1.101
     - name: ${{ matrix.os }} - Build with dotnet
-      run: dotnet publish -c Release --self-contained -r ${{ matrix.os }} -o ./publish${{ matrix.os }} /p:PublishTrimmed=true   
+      run: dotnet publish -c Release --self-contained -r ${{ matrix.os }} -o ./publish${{ matrix.os }} /p:PublishTrimmed=true /p:DebugType=None
     - name: ${{ matrix.os }} - Compress output
       run: tar cfJ publish${{ matrix.os }}.tar.xz publish${{ matrix.os }}
     - name: Download url
