@@ -1,12 +1,12 @@
 #! /bin/bash
 ### BEGIN INIT INFO
-# Provides:          inHausUDPzwave
+# Provides:          hyper
 # Required-Start:    $all
 # Required-Stop:     $all
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Start and stop inHaus UDP Zwave Sender Thread
-# Description:       inHaus UDP Zwave Sender
+# Short-Description: Start and stop hyper
+# Description:       hyper
 ### END INIT INFO
 
 . /lib/lsb/init-functions
@@ -31,7 +31,7 @@ case "$1" in
     restart)
         log_daemon_msg "Restarting hyper..."
 		start-stop-daemon --stop --retry 5 --signal 2 --pidfile $PIDFILE
-        start-stop-daemon --start --pidfile $PIDFILE --make-pidfile --background --quiet -g $GROUP --chuid $USER --chdir $CWD --exec /usr/bin/screen -- -c /root/dev/screenrc.conf -DmSL 'inHausZwave' $CMD
+        start-stop-daemon --start --pidfile $PIDFILE --make-pidfile --background --quiet -g $GROUP --chuid $USER --chdir $CWD --exec /usr/bin/screen -- -c /root/dev/screenrc.conf -DmSL 'hyper' $CMD
         log_end_msg $?
         ;;
     *)

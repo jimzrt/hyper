@@ -85,6 +85,7 @@ if os.path.exists("/etc/init.d/hyper"):
     os.unlink("/etc/init.d/hyper")
 shutil.copyfile("./publishlinux-arm/hyperInitD", "/etc/init.d/hyper")
 make_executable("/etc/init.d/hyper")
+subprocess.call("update-rc.d hyper defaults".split(" "))
 print("done")
 
 print("update udev")
