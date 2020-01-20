@@ -23,9 +23,6 @@ def dlProgress(count, blockSize, totalSize):
     sys.stdout.write("\rdownloading...%d%%" % percent)
     sys.stdout.flush()
 
-def getpid(process_name):
-    return [int(item.split()[1]) for item in os.popen('ps -Af').read().splitlines() if process_name in item]
-
 def make_executable(path):
     mode = os.stat(path).st_mode
     mode |= (mode & 0o444) >> 2    # copy R bits to X
@@ -94,9 +91,6 @@ if os.path.exists("/etc/udev/rules.d/20_ZStickGen5.rules"):
 if os.path.exists("/etc/udev/rules.d/20_ZwaveUSBStick.rules"):
     os.unlink("/etc/udev/rules.d/20_ZwaveUSBStick.rules")
 shutil.copyfile("./publishlinux-arm/20_ZStickGen5.rules", "/etc/udev/rules.d/20_ZStickGen5.rules")
-print("reload udev")
-subprocess.call("udevadm control --reload-rules".split(" "))
-subprocess.call("udevadm trigger".split(" "))
 print("done")
 
 #backup logs and events
@@ -127,8 +121,11 @@ remove_temp()
 #make executable
 make_executable('/var/inhaus/hyper/hyper')
 
-print("starting hyper in background")
-subprocess.call("/etc/init.d/hyper start".split(" "))
+#print("starting hyper in background")
+#subprocess.call("/etc/init.d/hyper start".split(" "))
+print("reload udev")
+subprocess.call("udevadm control --reload-rules".split(" "))
+subprocess.call("udevadm trigger".split(" "))
 #subprocess.Popen(['nohup', './hyper', default_com], stdout=open('/dev/null', 'w'), stderr=open('logfile.log', 'a'), preexec_fn=os.setpgrp, cwd="/var/inhaus/hyper")
 print("done")
 
