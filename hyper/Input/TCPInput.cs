@@ -14,6 +14,7 @@ namespace hyper.Inputs
         //  public bool CanRead { get; set; } = false;
 
         //  private string currentMessage = "";
+        private readonly object _syncObj = new object();
 
         public event ConsoleCancelEventHandler CancelKeyPress;
 
@@ -45,19 +46,22 @@ namespace hyper.Inputs
                     CancelKeyPress?.Invoke(null, null);
                     return;
                 }
-                messageQueue.Enqueue(message);
+                lock (_syncObj)
+                    messageQueue.Enqueue(message);
                 resetEvent.Set();
             }
         }
 
         public bool Available()
         {
-            return messageQueue.Count > 0;
+            lock (_syncObj)
+                return messageQueue.Count > 0;
         }
 
         public string Read()
         {
-            return messageQueue.Dequeue();
+            lock (_syncObj)
+                return messageQueue.Dequeue();
         }
 
         //public void Flush()

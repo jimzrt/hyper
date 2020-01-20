@@ -7,6 +7,7 @@ using hyper.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -120,6 +121,38 @@ namespace hyper
                 Common.logger.Info("Command: {0}", input);
                 switch (input.Trim().ToLower())
                 {
+                    case "test":
+                        {
+                            ConfigurationItem items = new ConfigurationItem(Program.controller.Network);
+                            items.FillNodes(Program.controller.IncludedNodes);
+                            var addedNodes = items.Nodes.ToArray();
+                            foreach (var item in addedNodes)
+                            {
+                                var node = item.Item;
+                                if (Program.controller.Network.GetNodeInfo(node).IsEmpty)
+                                {
+                                    var infoRes = Program.controller.GetProtocolInfo(node);
+
+                                    Program.controller.Network.SetNodeInfo(node, infoRes.NodeInfo);
+                                    //if (Program.controller.Id == node)
+                                    //{
+                                    //    Program.controller.Network.SetCommandClasses(node, MainVM.SetNodeInformationVM.GetDefaultCommandClasses());
+                                    //}
+                                    items.AddOrUpdateNode(node);
+                                }
+                            }
+
+                            //Console.WriteLine(Program.controller.Network.GetCommandClasses(new ZWave.Devices.NodeTag(6)));
+                            //Console.WriteLine(Program.controller.Network.GetRoleType(new ZWave.Devices.NodeTag(6)));
+                            //Console.WriteLine(Program.controller.Network.GetCommandClasses(new ZWave.Devices.NodeTag(80)));
+                            //Console.WriteLine(Program.controller.Network.GetRoleType(new ZWave.Devices.NodeTag(80)));
+                            Console.WriteLine(Util.ObjToJson(Program.controller.Network.GetNodeInfo(new ZWave.Devices.NodeTag(6))));
+                            Console.WriteLine(Util.ObjToJson(Program.controller.Network.GetNodeInfo(new ZWave.Devices.NodeTag(80))));
+
+                            Console.WriteLine(Util.ObjToJson(items));
+
+                            break;
+                        }
                     case "reset!":
                         {
                             blockExit = true;

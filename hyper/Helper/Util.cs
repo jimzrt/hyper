@@ -5,7 +5,7 @@ namespace hyper.Helper
 {
     public class Util
     {
-        private static readonly JsonSerializerSettings settings = new JsonSerializerSettings { Converters = { new ByteArrayHexConverter() } };
+        private static readonly JsonSerializerSettings settings = new JsonSerializerSettings { Converters = { new ByteArrayHexConverter() }, ReferenceLoopHandling = ReferenceLoopHandling.Ignore };
 
         public static string ObjToJson(object obj, bool format = true)
         {

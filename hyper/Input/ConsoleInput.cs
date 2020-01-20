@@ -13,6 +13,7 @@ namespace hyper.Inputs
         // public bool CanRead { get; set; } = false;
 
         // private string currentMessage = "";
+        private readonly object _syncObj = new object();
 
         private Queue<string> messageQueue = new Queue<string>();
 
@@ -36,7 +37,8 @@ namespace hyper.Inputs
                             CancelKeyPress?.Invoke(null, null);
                             continue;
                         }
-                        messageQueue.Enqueue(message);
+                        lock (_syncObj)
+                            messageQueue.Enqueue(message);
                         resetEvent.Set();
                     }
                     //if (CanRead)
@@ -57,12 +59,14 @@ namespace hyper.Inputs
 
         public bool Available()
         {
-            return messageQueue.Count > 0;
+            lock (_syncObj)
+                return messageQueue.Count > 0;
         }
 
         public string Read()
         {
-            return messageQueue.Dequeue();
+            lock (_syncObj)
+                return messageQueue.Dequeue();
         }
 
         //public void Flush()

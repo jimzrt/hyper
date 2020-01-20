@@ -12,6 +12,7 @@ namespace hyper.Input
     internal class UDPInput : IInput
     {
         //     public bool CanRead { get; set; } = false;
+        private readonly object _syncObj = new object();
 
         private Queue<string> messageQueue = new Queue<string>();
 
@@ -43,7 +44,7 @@ namespace hyper.Input
                             var commandClass = BitConverter.ToInt16(bytes.Skip(2).Take(2).Reverse().ToArray());
                             var value = BitConverter.ToBoolean(bytes.Skip(8).Take(1).ToArray());
                             Common.logger.Info($"node id: {nodeId} - command class: {commandClass} - value: {value}");
-                            messageQueue.Enqueue($"basic {nodeId} {value}");
+                            lock (_syncObj) messageQueue.Enqueue($"basic {nodeId} {value}");
                             //currentMessage = "basic " + nodeId + " " + value;
                         }
 
@@ -59,7 +60,8 @@ namespace hyper.Input
 
         public bool Available()
         {
-            return messageQueue.Count > 1;
+            lock (_syncObj)
+                return messageQueue.Count > 1;
         }
 
         //public void Flush()
@@ -69,7 +71,8 @@ namespace hyper.Input
 
         public string Read()
         {
-            return messageQueue.Dequeue();
+            lock (_syncObj)
+                return messageQueue.Dequeue();
         }
 
         public void SetResetEvent(ManualResetEvent resetEvent)
