@@ -36,6 +36,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="20_ZStickGen5.rules">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="config.yaml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -71,33 +71,54 @@ print("extracting")
 subprocess.call('tar xf publishlinux-arm.tar.xz'.split(' '))
 print("done!")
 
+#stopping and removing inhHausZwave
+print("removing inHausUDPzwave")
+if os.path.exists("/etc/init.d/inHausUDPzwave"):
+    subprocess.call("/etc/init.d/inHausUDPzwave stop".split(" "))
+    os.unlink("/etc/init.d/inHausUDPzwave")
+print("done")
+
 #stop hyper
 print("stopping hyper")
-subprocess.call("/etc/init.d/hyper stop".split(" "))
-# hyper_pids = getpid('hyper')
-# if hyper_pids:
-#     hyper_pids.sort()
-#     os.kill(hyper_pids[0], signal.SIGKILL)
-# else:
-#     print("hyper not running")
+if os.path.exists("/etc/init.d/hyper"):
+    subprocess.call("/etc/init.d/hyper stop".split(" "))
+    os.unlink("/etc/init.d/hyper")
+shutil.copyfile("./publishlinux-arm/hyperInitD", "/etc/init.d/hyper")
+make_executable("/etc/init.d/hyper")
+print("done")
+
+print("update udev")
+if os.path.exists("/etc/udev/rules.d/20_ZStickGen5.rules"):
+    os.unlink("/etc/udev/rules.d/20_ZStickGen5.rules")
+if os.path.exists("/etc/udev/rules.d/20_ZwaveUSBStick.rules"):
+    os.unlink("/etc/udev/rules.d/20_ZwaveUSBStick.rules")
+shutil.copyfile("./publishlinux-arm/20_ZStickGen5.rules", "/etc/udev/rules.d/20_ZStickGen5.rules")
+print("reload udev")
+subprocess.call("udevadm control --reload-rules".split(" "))
+subprocess.call("udevadm trigger".split(" "))
 print("done")
 
 #backup logs and events
 print("backup")
-shutil.copytree('/var/inhaus/hyper/logs', './logs')
-shutil.copyfile('/var/inhaus/hyper/events.db', './events.db')
+if os.path.exists('/var/inhaus/hyper/logs'):
+    shutil.copytree('/var/inhaus/hyper/logs', './logs')
+if os.path.exists('/var/inhaus/hyper/events.db'):
+    shutil.copyfile('/var/inhaus/hyper/events.db', './events.db')
 print("done")
 
 #delete hyper folder
 print("delete old")
-shutil.rmtree('/var/inhaus/hyper', True)
+if os.path.exists('/var/inhaus/hyper'):
+    shutil.rmtree('/var/inhaus/hyper', True)
 print("done")
 
 #copy downloaded hyper folder and backups
 print("copy new")
 shutil.copytree('./publishlinux-arm', '/var/inhaus/hyper')
-shutil.copytree('./logs', '/var/inhaus/hyper/logs')
-shutil.copyfile('./events.db', '/var/inhaus/hyper/events.db')
+if os.path.exists('./logs'):
+    shutil.copytree('./logs', '/var/inhaus/hyper/logs')
+if os.path.exists('./events.db'):
+    shutil.copyfile('./events.db', '/var/inhaus/hyper/events.db')
 print("done")
 
 remove_temp()
