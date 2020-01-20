@@ -39,6 +39,12 @@
     <None Update="config.yaml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="hyperInitD">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="hyper_update.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="version.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
