@@ -28,6 +28,32 @@ def make_executable(path):
     mode |= (mode & 0o444) >> 2    # copy R bits to X
     os.chmod(path, mode)
 
+def remove_inhausUDP_cronjob():
+    if os.path.exists("current.cron"):
+        os.unlink("current.cron")
+    if os.path.exists("new.cron"):
+        os.unlink("new.cron")
+
+    with open("current.cron", "w") as cron:
+        subprocess.call("crontab -l".split(" "), stdout=cron)
+
+    with open("current.cron", "r") as org:
+        with open("new.cron", "w") as new:
+            for line in org:
+                if "watchdog_zwave.sh" in line and not line.startswith("#"):
+                    new.write("#" + line)
+                else:
+                    new.write(line)
+
+    subprocess.call("crontab ./new.cron".split(" "))
+
+
+    if os.path.exists("current.cron"):
+        os.unlink("current.cron")
+    if os.path.exists("new.cron"):
+        os.unlink("new.cron")
+
+
 hyper_version_path = "/var/inhaus/hyper/version.txt"
 hyper_version_remote_url = 'https://api.github.com/repos/jimzrt/hyper/releases/latest'
 hyper_latest_url = 'https://github.com/jimzrt/hyper/releases/latest/download/publishlinux-arm.tar.xz'
@@ -67,6 +93,9 @@ print("\ndone!")
 print("extracting")
 subprocess.call('tar xf publishlinux-arm.tar.xz'.split(' '))
 print("done!")
+
+# remove cronjob
+remove_inhausUDP_cronjob()
 
 #stopping and removing inhHausZwave
 print("removing inHausUDPzwave")
