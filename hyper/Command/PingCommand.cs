@@ -1,10 +1,11 @@
-﻿using hyper.commands;
+﻿using hyper.Command;
+using hyper.commands;
 using System.Threading.Tasks;
 using ZWave.BasicApplication.Devices;
 
 namespace hyper
 {
-    public class PingCommand : ICommand
+    public class PingCommand : BaseCommand
     {
         private readonly Controller controller;
         private readonly byte nodeId;
@@ -19,7 +20,7 @@ namespace hyper
 
         public bool Active { get; private set; } = false;
 
-        public bool Start()
+        public override bool Start()
         {
             Active = true;
             Common.logger.Info("-----------");
@@ -44,7 +45,7 @@ namespace hyper
             return true;
         }
 
-        public void Stop()
+        public override void Stop()
         {
             Common.logger.Info("aborting... Please wait.");
             running = false;

@@ -7,7 +7,7 @@ namespace ZWave.BasicApplication
     public abstract class CallbackApiOperation : ApiOperation
     {
         public static int RET_TIMEOUT = 7000;
-        public static int CALLBACK_TIMEOUT = 60000;
+        public static int CALLBACK_TIMEOUT = 7000;
 
         //internal Action<ActionUnit> OnHandledCallback { get; set; }
         public CallbackApiOperation(CommandTypes command)
@@ -52,6 +52,7 @@ namespace ZWave.BasicApplication
         }
 
         protected bool isHandled = false;
+
         private void OnHandled(DataReceivedUnit ou)
         {
             if (!isHandled)
@@ -82,7 +83,6 @@ namespace ZWave.BasicApplication
 
         protected virtual void OnCallbackInternal(DataReceivedUnit ou)
         {
-
         }
 
         protected override ActionResult CreateOperationResult()

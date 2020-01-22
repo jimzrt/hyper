@@ -13,6 +13,7 @@ namespace hyper.Inputs
         public static event ConsoleCancelEventHandler CancelKeyPress;
 
         private static Queue<string> ownQueue = new Queue<string>();
+        private static readonly object _syncObj = new object();
 
         public static void Interrupt()
         {
@@ -46,7 +47,10 @@ namespace hyper.Inputs
 
             if (ownQueue.Count > 0)
             {
-                message = ownQueue.Dequeue();
+                lock (_syncObj)
+                {
+                    message = ownQueue.Dequeue();
+                }
                 resetEvent.Reset();
                 return message;
             }
@@ -67,7 +71,8 @@ namespace hyper.Inputs
 
         internal static void InjectCommand(string command)
         {
-            ownQueue.Enqueue(command);
+            lock (_syncObj)
+                ownQueue.Enqueue(command);
             resetEvent.Set();
         }
     }

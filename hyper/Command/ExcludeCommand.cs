@@ -1,9 +1,10 @@
-﻿using hyper.commands;
+﻿using hyper.Command;
+using hyper.commands;
 using ZWave.BasicApplication.Devices;
 
 namespace hyper
 {
-    public class ExcludeCommand : ICommand
+    public class ExcludeCommand : BaseCommand
     {
         private readonly Controller controller;
 
@@ -14,7 +15,7 @@ namespace hyper
             this.controller = controller;
         }
 
-        public bool Start()
+        public override bool Start()
         {
             Common.logger.Info("-----------");
             Common.logger.Info("Exclusion mode");
@@ -41,7 +42,7 @@ namespace hyper
             return true;
         }
 
-        public void Stop()
+        public override void Stop()
         {
             Common.logger.Info("aborting... please wait.");
             abort = true;

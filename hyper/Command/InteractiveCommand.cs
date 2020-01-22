@@ -1,4 +1,5 @@
-﻿using hyper.commands;
+﻿using hyper.Command;
+using hyper.commands;
 using hyper.config;
 using hyper.Database.DAO;
 using hyper.Helper;
@@ -17,7 +18,7 @@ using ZWave.CommandClasses;
 
 namespace hyper
 {
-    public class InteractiveCommand : ICommand
+    public class InteractiveCommand : BaseCommand
     {
         private ICommand currentCommand = null;
 
@@ -60,7 +61,7 @@ namespace hyper
             currentCommand.Stop();
         }
 
-        public bool Start()
+        public override bool Start()
         {
             Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
             InputManager.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
@@ -70,7 +71,7 @@ namespace hyper
             var zeroTo255Regex = @"\b(?:[0-9]|[1-8][0-9]|9[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\b";
 
             var pingRegex = new Regex(@$"^ping\s*({oneTo255Regex})");
-            var configRegex = new Regex(@$"^config\s*({oneTo255Regex})");
+            var configRegex = new Regex(@$"^config\s*({oneTo255Regex})\s*(!)?");
             var replaceRegex = new Regex(@$"^replace\s*({oneTo255Regex})");
             var basicRegex = new Regex(@$"^(basic|binary)\s*({oneTo255Regex})\s*(false|true)");
             var basicGetRegex = new Regex(@$"^(basic|binary)\s*({oneTo255Regex})");
@@ -79,9 +80,8 @@ namespace hyper
             var forceRemoveRegex = new Regex(@$"^remove\s*({oneTo255Regex})");
             var debugRegex = new Regex(@"^debug\s*(false|true)");
             var lastEventsRegex = new Regex(@$"^show\s*({zeroTo255Regex})\s*({zeroTo255Regex})?\s*([a-zA-Z_]+)?");
-            //var queueRegex = new Regex(@$"^queue\s*({oneTo255Regex})\s*(config)");
+            var queueRegex = new Regex(@$"^queue\s*({oneTo255Regex}+(?:\s*,\s*{oneTo255Regex}+)*)\s*(config)");
             var multiRegex = new Regex(@$"^multi\s*({oneTo255Regex})\s*({zeroTo255Regex})\s*(false|true)");
-
             Active = true;
             bool oneShot = args.Length > 0;
 
@@ -92,17 +92,17 @@ namespace hyper
             Common.logger.Info("-----------");
 
             ListenCommand listenComand = new ListenCommand(Program.controller, Program.configList);
-            // QueueCommand queueCommand = new QueueCommand(Program.controller, Program.configList);
+            QueueCommand queueCommand = new QueueCommand(Program.controller, Program.configList);
 
             Thread InstanceCallerListen = new Thread(
                 new ThreadStart(() => listenComand.Start()));
 
             InstanceCallerListen.Start();
 
-            //Thread InstanceCallerQueue = new Thread(
-            //    new ThreadStart(() => queueCommand.Start()));
+            Thread InstanceCallerQueue = new Thread(
+                new ThreadStart(() => queueCommand.Start()));
 
-            //InstanceCallerQueue.Start();
+            InstanceCallerQueue.Start();
 
             do
             {
@@ -237,16 +237,22 @@ namespace hyper
                             Common.SetMulti(Program.controller, nodeId, endpoint, value);
                             break;
                         }
-                    //case var queueVal when queueRegex.IsMatch(queueVal):
-                    //    {
-                    //        var match = queueRegex.Match(queueVal);
-                    //        var nodeId = byte.Parse(match.Groups[1].Value);
-                    //        var command = match.Groups[2].Value;
-                    //        Common.logger.Info($"node: {nodeId} - command: {command}");
-                    //        queueCommand.AddToMap(nodeId, command);
+                    case var queueVal when queueRegex.IsMatch(queueVal):
+                        {
+                            var match = queueRegex.Match(queueVal);
+                            var nodeIds = match.Groups[1].Value.Split(",");
+                            var command = match.Groups[2].Value;
 
-                    //        break;
-                    //    }
+                            foreach (var nodeIdStr in nodeIds)
+                            {
+                                var nodeId = byte.Parse(nodeIdStr.Trim());
+                                Common.logger.Info($"node: {nodeId} - command: {command}");
+                                queueCommand.AddToMap(nodeId, command);
+                            }
+                            //var nodeId = byte.Parse(match.Groups[1].Value);
+
+                            break;
+                        }
                     case var eventsVal when lastEventsRegex.IsMatch(eventsVal):
                         {
                             var match = lastEventsRegex.Match(eventsVal);
@@ -373,7 +379,8 @@ namespace hyper
                         {
                             var val = configRegex.Match(configVal).Groups[1].Value;
                             var nodeId = byte.Parse(val);
-                            currentCommand = new ConfigCommand(Program.controller, nodeId, Program.configList);
+
+                            currentCommand = new ConfigCommand(Program.controller, nodeId, Program.configList, configRegex.Match(configVal).Groups[2].Value == "!");
                             break;
                         }
                     case var replaceVal when replaceRegex.IsMatch(replaceVal):
@@ -393,7 +400,12 @@ namespace hyper
                     continue;
                 }
                 listenComand.Active = false;
-                currentCommand.Start();
+                var commandSuccess = currentCommand.Start();
+                if (!commandSuccess && currentCommand.Retry)
+                {
+                    Common.logger.Info($"adding \"{input.Trim().ToLower()}\" for {currentCommand.NodeId} to queue");
+                    queueCommand.AddToMap(currentCommand.NodeId, input.Trim().ToLower());
+                }
                 currentCommand = null;
                 listenComand.Active = true;
             } while (Active && !oneShot);
@@ -408,7 +420,7 @@ namespace hyper
             return true;
         }
 
-        public void Stop()
+        public override void Stop()
         {
             if (currentCommand != null)
             {

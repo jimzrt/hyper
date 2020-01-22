@@ -2,7 +2,10 @@
 {
     internal interface ICommand
     {
-        // bool Active { get; }
+        byte NodeId { get; set; }
+
+        bool Retry { get; set; }
+
         bool Start();
 
         void Stop();

@@ -1,4 +1,5 @@
-﻿using hyper.commands;
+﻿using hyper.Command;
+using hyper.commands;
 using hyper.config;
 using hyper.Database.DAO;
 using hyper.Helper;
@@ -16,7 +17,7 @@ using ZWave.CommandClasses;
 
 namespace hyper
 {
-    public class ListenCommand : ICommand
+    public class ListenCommand : BaseCommand
     {
         private readonly Controller controller;
         private List<ConfigItem> configList;
@@ -70,7 +71,7 @@ namespace hyper
             queueItems.Add(action);
         }
 
-        public bool Start()
+        public override bool Start()
         {
             Common.logger.Info("-----------");
             Common.logger.Info("Listening mode");
@@ -228,7 +229,7 @@ namespace hyper
                 }
             });
 
-            Active = true;
+            //Active = true;
             while (!queueItems.IsCompleted)
             {
                 try
@@ -240,7 +241,7 @@ namespace hyper
                 catch (InvalidOperationException) { }
             }
 
-            Active = false;
+            //   Active = false;
             Common.logger.Info("Listening done!");
             return true;
         }
@@ -258,7 +259,7 @@ namespace hyper
         //    }
         //}
 
-        public void Stop()
+        public override void Stop()
         {
             Common.logger.Info("stop listening!");
             dataListener?.SetCancelled();

@@ -1,4 +1,5 @@
-﻿using hyper.commands;
+﻿using hyper.Command;
+using hyper.commands;
 using hyper.config;
 using hyper.Database.DAO;
 using hyper.Helper;
@@ -17,7 +18,7 @@ using ZWave.CommandClasses;
 
 namespace hyper
 {
-    public class QueueCommand : ICommand
+    public class QueueCommand : BaseCommand
     {
         private readonly Controller controller;
         private List<ConfigItem> configList;
@@ -54,7 +55,7 @@ namespace hyper
             queueItems.Add(action);
         }
 
-        public bool Start()
+        public override bool Start()
         {
             Common.logger.Info("-----------");
             Common.logger.Info("Listening mode");
@@ -97,7 +98,7 @@ namespace hyper
                         return;
                     }
 
-                    Common.logger.Info("{0}: {2}:{3} from node {1}", x.TimeStamp, x.SrcNodeId, _commandClass ? commandClass.Name : string.Format("unknown(id:{0})", x.Command[0]), _nestedType ? nestedType.Name : string.Format("unknown(id:{0})", x.Command[1]));
+                    //  Common.logger.Info("{0}: {2}:{3} from node {1}", x.TimeStamp, x.SrcNodeId, _commandClass ? commandClass.Name : string.Format("unknown(id:{0})", x.Command[0]), _nestedType ? nestedType.Name : string.Format("unknown(id:{0})", x.Command[1]));
 
                     if (commandClass == null)
                     {
@@ -129,11 +130,19 @@ namespace hyper
 
                             var commandsPresent = nodeToCommandMap.TryGetValue(x.SrcNodeId, out SortedSet<string> commands);
                             if (!commandsPresent)
-                                break;
+                            {
+                                Common.logger.Warn($"no commands for {x.SrcNodeId}");
+                                return;
+                            }
 
                             var command = commands.First();
+                            if (command == "config")
+                            {
+                                command = command + " " + x.SrcNodeId + "!";
+                            }
+                            Common.logger.Warn($"injecting {command}");
                             InputManager.InjectCommand(command);
-                            commands.Remove(command);
+                            commands.Remove(commands.First());
                             if (commands.Count == 0)
                             {
                                 nodeToCommandMap.Remove(x.SrcNodeId);
@@ -157,8 +166,12 @@ namespace hyper
                 }
 
                 var command = commands.First();
+                if (command == "config")
+                {
+                    command = command + " " + r.NodeId + "!";
+                }
                 Common.logger.Warn($"injecting {command}");
-                InputManager.InjectCommand(command + " " + r.NodeId);
+                InputManager.InjectCommand(command);
                 commands.Remove(command);
                 if (commands.Count == 0)
                 {
@@ -196,7 +209,7 @@ namespace hyper
         //    }
         //}
 
-        public void Stop()
+        public override void Stop()
         {
             Common.logger.Info("stop listening!");
             dataListener?.SetCancelled();

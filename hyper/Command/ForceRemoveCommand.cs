@@ -1,9 +1,10 @@
-﻿using hyper.commands;
+﻿using hyper.Command;
+using hyper.commands;
 using ZWave.BasicApplication.Devices;
 
 namespace hyper
 {
-    public class ForceRemoveCommand : ICommand
+    public class ForceRemoveCommand : BaseCommand
     {
         public bool Active { get; private set; } = false;
 
@@ -16,7 +17,7 @@ namespace hyper
             this.nodeId = nodeId;
         }
 
-        public bool Start()
+        public override bool Start()
         {
             Active = true;
             Common.logger.Info("-----------");
@@ -57,7 +58,7 @@ namespace hyper
             return true;
         }
 
-        public void Stop()
+        public override void Stop()
         {
             Common.logger.Info("Not stoppable");
         }

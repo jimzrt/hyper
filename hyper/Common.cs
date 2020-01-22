@@ -102,7 +102,7 @@ namespace hyper
 
         public static ConfigItem GetConfigurationForDevice(Controller controller, byte nodeId, List<ConfigItem> configList, ref bool abort)
         {
-            var retryCount = 10;
+            var retryCount = 3;
             var gotDeviceIds = GetManufactor(controller, nodeId, out int manufacturerId, out int productTypeId);
             while (!gotDeviceIds && retryCount >= 0 && !abort)
             {
@@ -143,7 +143,7 @@ namespace hyper
 
         public static bool SetConfiguration(Controller controller, byte nodeId, ConfigItem config, ref bool abort)
         {
-            int retryCount = 10;
+            int retryCount = 3;
             if (config.groups != null && config.groups.Count != 0)
             {
                 if (config.groups.Count != 0)
@@ -186,7 +186,7 @@ namespace hyper
                     var groupIdentifier = group.Key;
                     var member = group.Value;
 
-                    retryCount = 10;
+                    retryCount = 3;
                     var associationValidated = false;
                     do
                     {
@@ -232,7 +232,7 @@ namespace hyper
                     //    }
                     //    Thread.Sleep(200);
                     //}
-                    retryCount = 10;
+                    retryCount = 3;
                 }
             }
 
@@ -433,7 +433,7 @@ namespace hyper
             var cmd = new COMMAND_CLASS_ASSOCIATION.ASSOCIATION_REMOVE();
             cmd.groupingIdentifier = 0;
             cmd.nodeId = new byte[] { 0 };
-            var clearAssociation = controller.SendData(nodeId, cmd, Common.txOptions);
+            var clearAssociation = controller.SendDataEx(nodeId, cmd, Common.txOptions, SecuritySchemes.NONE);
             return clearAssociation.TransmitStatus == TransmitStatuses.CompleteOk;
         }
 

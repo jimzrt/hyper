@@ -1,11 +1,12 @@
-﻿using hyper.commands;
+﻿using hyper.Command;
+using hyper.commands;
 using hyper.config;
 using System.Collections.Generic;
 using ZWave.BasicApplication.Devices;
 
 namespace hyper
 {
-    public class ReplaceCommand : ICommand
+    public class ReplaceCommand : BaseCommand
     {
         private readonly Controller controller;
         private readonly byte nodeId;
@@ -24,7 +25,7 @@ namespace hyper
             this.configList = configList;
         }
 
-        public bool Start()
+        public override bool Start()
         {
             Active = true;
             Common.logger.Info("-----------");
@@ -91,7 +92,7 @@ namespace hyper
             return currentCommand.Start();
         }
 
-        public void Stop()
+        public override void Stop()
         {
             Common.logger.Info("aborting... Please wait.");
             abort = true;

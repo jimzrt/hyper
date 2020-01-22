@@ -1,4 +1,5 @@
-﻿using hyper.commands;
+﻿using hyper.Command;
+using hyper.commands;
 using hyper.config;
 using System;
 using System.Collections.Concurrent;
@@ -11,7 +12,7 @@ using ZWave.CommandClasses;
 
 namespace hyper
 {
-    public class ReconfigureCommand : ICommand
+    public class ReconfigureCommand : BaseCommand
     {
         private readonly Controller controller;
         private readonly List<ConfigItem> configList;
@@ -31,7 +32,7 @@ namespace hyper
 
         public bool Active { get; private set; } = false;
 
-        public bool Start()
+        public override bool Start()
         {
             Active = true;
             Common.logger.Info("-----------");
@@ -189,7 +190,7 @@ namespace hyper
             return true;
         }
 
-        public void Stop()
+        public override void Stop()
         {
             Common.logger.Info("Stopping Reconfiguration");
             abort = true;
