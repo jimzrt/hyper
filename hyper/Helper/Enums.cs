@@ -18,7 +18,8 @@
             BATTERY,
             IMPACT,
             STATE_ON,
-            STATE_CLOSED
+            STATE_CLOSED,
+            BASIC
         }
 
         //public static EventKey GetEventTypeByMultilevelType(byte eventValue)

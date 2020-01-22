@@ -118,6 +118,12 @@ namespace hyper.Helper.Extension
                         floatVal = binaryReport.currentValue == 255 ? 1.0f : 0.0f;
                         return true;
                     }
+                case COMMAND_CLASS_BASIC_V2.BASIC_SET basicSet:
+                    {
+                        eventType = Enums.EventKey.BASIC;
+                        floatVal = basicSet.value == 255 ? 1.0f : 0.0f;
+                        return true;
+                    }
                 default:
                     floatVal = -1;
                     eventType = Enums.EventKey.UNKNOWN;
