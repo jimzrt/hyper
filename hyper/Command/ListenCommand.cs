@@ -22,6 +22,7 @@ namespace hyper
         private List<ConfigItem> configList;
 
         private EventDAO eventDao = new EventDAO();
+        private readonly object lockObject = new object();
 
         public ListenCommand(Controller controller, List<ConfigItem> configList)
         {
@@ -91,127 +92,125 @@ namespace hyper
 
             dataListener = controller.ListenData((x) =>
             {
-                //if (!Active)
-                //{
-                //    return;
-                //}
-
-                var filterActive = Filter != 0 && Filter != x.SrcNodeId;
-
-                var _commandClass = commandClasses.TryGetValue(x.Command[0], out var commandClass);
-                if (!_commandClass)
+                lock (lockObject)
                 {
-                    Common.logger.Error("node id: {1} - command class {0} not found!", x.Command[0], x.SrcNodeId);
-                    return;
-                }
-                var _nestedDict = nestedCommandClasses.TryGetValue(commandClass, out var nestedDict);
-                if (!_nestedDict)
-                {
-                    Common.logger.Error("node id: {1} - nested command classes for command class {0} not found!", commandClass.Name, x.SrcNodeId);
-                    return;
-                }
-                var _nestedType = nestedDict.TryGetValue(x.Command[1], out Type nestedType);
-                if (!_nestedType)
-                {
-                    Common.logger.Error("node id: {2} - nested command class {0} for command class {1} not found!", x.Command[1], commandClass.Name, x.SrcNodeId);
-                    return;
-                }
+                    var filterActive = Filter != 0 && Filter != x.SrcNodeId;
 
-                if (!filterActive)
-                    Common.logger.Info("{0}: {2}:{3} from node {1}", x.TimeStamp, x.SrcNodeId, _commandClass ? commandClass.Name : string.Format("unknown(id:{0})", x.Command[0]), _nestedType ? nestedType.Name : string.Format("unknown(id:{0})", x.Command[1]));
+                    var _commandClass = commandClasses.TryGetValue(x.Command[0], out var commandClass);
+                    if (!_commandClass)
+                    {
+                        Common.logger.Error("node id: {1} - command class {0} not found!", x.Command[0], x.SrcNodeId);
+                        return;
+                    }
+                    var _nestedDict = nestedCommandClasses.TryGetValue(commandClass, out var nestedDict);
+                    if (!_nestedDict)
+                    {
+                        Common.logger.Error("node id: {1} - nested command classes for command class {0} not found!", commandClass.Name, x.SrcNodeId);
+                        return;
+                    }
+                    var _nestedType = nestedDict.TryGetValue(x.Command[1], out Type nestedType);
+                    if (!_nestedType)
+                    {
+                        Common.logger.Error("node id: {2} - nested command class {0} for command class {1} not found!", x.Command[1], commandClass.Name, x.SrcNodeId);
+                        return;
+                    }
 
-                if (commandClass == null)
-                {
-                    Common.logger.Error("command class is null!");
-                    return;
-                }
-                if (nestedType == null)
-                {
-                    Common.logger.Error("nested type is null!");
-                    return;
-                }
+                    if (!filterActive)
+                        Common.logger.Info("{0}: {2}:{3} from node {1}", x.TimeStamp, x.SrcNodeId, _commandClass ? commandClass.Name : string.Format("unknown(id:{0})", x.Command[0]), _nestedType ? nestedType.Name : string.Format("unknown(id:{0})", x.Command[1]));
 
-                //     var dummyInstance = Activator.CreateInstance(nestedType);
+                    if (commandClass == null)
+                    {
+                        Common.logger.Error("command class is null!");
+                        return;
+                    }
+                    if (nestedType == null)
+                    {
+                        Common.logger.Error("nested type is null!");
+                        return;
+                    }
 
-                var implicitCastMethod =
-          nestedType.GetMethod("op_Implicit",
-                               new[] { x.Command.GetType() });
+                    //     var dummyInstance = Activator.CreateInstance(nestedType);
 
-                if (implicitCastMethod == null)
-                {
-                    Common.logger.Warn("byteArray to {0} not possible!", nestedType.Name);
-                    return;
-                }
-                var report = implicitCastMethod.Invoke(null, new[] { x.Command });
+                    var implicitCastMethod =
+              nestedType.GetMethod("op_Implicit",
+                                   new[] { x.Command.GetType() });
 
-                if (!filterActive && Debug)
-                    Common.logger.Info(Util.ObjToJson(report));
+                    if (implicitCastMethod == null)
+                    {
+                        Common.logger.Warn("byteArray to {0} not possible!", nestedType.Name);
+                        return;
+                    }
+                    var report = implicitCastMethod.Invoke(null, new[] { x.Command });
 
-                if (!(report is COMMAND_CLASS_FIRMWARE_UPDATE_MD_V5.FIRMWARE_UPDATE_MD_GET))
-                {
-                    OutputManager.HandleCommand(report, x.SrcNodeId, x.DestNodeId);
-                }
+                    if (!filterActive && Debug)
+                        Common.logger.Info(Util.ObjToJson(report));
 
-                //    Handle(dummyInstance, x.SrcNodeId, x.Command);
-                if (!Active)
-                {
-                    return;
-                }
+                    if (!(report is COMMAND_CLASS_FIRMWARE_UPDATE_MD_V5.FIRMWARE_UPDATE_MD_GET))
+                    {
+                        OutputManager.HandleCommand(report, x.SrcNodeId, x.DestNodeId);
+                    }
 
-                switch (report)
-                {
-                    case COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION _:
-                        // TODO EVENT, last Battery
-                        var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, x.SrcNodeId);
-                        if ((DateTime.Now - lastDate).TotalHours >= 6)
-                        {
-                            queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
-                        }
+                    //    Handle(dummyInstance, x.SrcNodeId, x.Command);
+                    if (!Active)
+                    {
+                        return;
+                    }
 
-                        break;
+                    switch (report)
+                    {
+                        case COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION _:
+                            // TODO EVENT, last Battery
+                            var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, x.SrcNodeId);
+                            if ((DateTime.Now - lastDate).TotalHours >= 6)
+                            {
+                                queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
+                            }
 
-                    //case COMMAND_CLASS_FIRMWARE_UPDATE_MD_V5.FIRMWARE_UPDATE_MD_GET fupdateReport:
+                            break;
 
-                    //    var rep1 = fupdateReport.properties1.reportNumber1;
-                    //    var rep2 = fupdateReport.reportNumber2;
-                    //    var count = fupdateReport.numberOfReports;
+                        //case COMMAND_CLASS_FIRMWARE_UPDATE_MD_V5.FIRMWARE_UPDATE_MD_GET fupdateReport:
 
-                    //    queueItems.Add(() =>
-                    //    {
-                    //        var take = 40;
-                    //        var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT();
-                    //        cmd.properties1.last = 0;
-                    //        cmd.properties1.reportNumber1 = rep1;
-                    //        cmd.reportNumber2 = rep2;
-                    //        short repNumber = BitConverter.ToInt16(new byte[] { rep2, rep1 });
-                    //        //Console.WriteLine($"Repnumber: {repNumber}");
-                    //        var offset = (repNumber - 1) * 40;
-                    //        Common.logger.Info("Progress: {0}", (offset / (float)flashData.Count).ToString("0.00%"));
+                        //    var rep1 = fupdateReport.properties1.reportNumber1;
+                        //    var rep2 = fupdateReport.reportNumber2;
+                        //    var count = fupdateReport.numberOfReports;
 
-                    //        if ((flashData.Count - offset) < 40)
-                    //        {
-                    //            // Console.WriteLine("ima full!");
-                    //            Console.WriteLine(offset);
-                    //            Console.WriteLine(flashData.Count);
-                    //            take = flashData.Count - offset;
-                    //            Console.WriteLine(take);
-                    //            cmd.properties1.last = 1;
-                    //            Common.logger.Info("Progress: {0}", (1).ToString("0.00%"));
-                    //        }
-                    //        var data = flashData.Skip(offset).Take(take).ToArray();
-                    //        cmd.data = data;
-                    //        //7A 97
-                    //        // Common.logger.Info(Util.ObjToJson((byte[])cmd));
-                    //        // Common.logger.Info(Util.ObjToJson(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT.ID }.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data).ToArray()));
-                    //        cmd.checksum = Tools.CalculateCrc16Array((byte[])cmd, 0, ((byte[])cmd).Length - 2);
-                    //        //cmd.checksum =  Tools.CalculateCrc16Array(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT .ID}.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data));
-                    //        controller.SendData(x.SrcNodeId, cmd, Common.txOptions);
-                    //    });
+                        //    queueItems.Add(() =>
+                        //    {
+                        //        var take = 40;
+                        //        var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT();
+                        //        cmd.properties1.last = 0;
+                        //        cmd.properties1.reportNumber1 = rep1;
+                        //        cmd.reportNumber2 = rep2;
+                        //        short repNumber = BitConverter.ToInt16(new byte[] { rep2, rep1 });
+                        //        //Console.WriteLine($"Repnumber: {repNumber}");
+                        //        var offset = (repNumber - 1) * 40;
+                        //        Common.logger.Info("Progress: {0}", (offset / (float)flashData.Count).ToString("0.00%"));
 
-                    //    break;
+                        //        if ((flashData.Count - offset) < 40)
+                        //        {
+                        //            // Console.WriteLine("ima full!");
+                        //            Console.WriteLine(offset);
+                        //            Console.WriteLine(flashData.Count);
+                        //            take = flashData.Count - offset;
+                        //            Console.WriteLine(take);
+                        //            cmd.properties1.last = 1;
+                        //            Common.logger.Info("Progress: {0}", (1).ToString("0.00%"));
+                        //        }
+                        //        var data = flashData.Skip(offset).Take(take).ToArray();
+                        //        cmd.data = data;
+                        //        //7A 97
+                        //        // Common.logger.Info(Util.ObjToJson((byte[])cmd));
+                        //        // Common.logger.Info(Util.ObjToJson(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT.ID }.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data).ToArray()));
+                        //        cmd.checksum = Tools.CalculateCrc16Array((byte[])cmd, 0, ((byte[])cmd).Length - 2);
+                        //        //cmd.checksum =  Tools.CalculateCrc16Array(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT .ID}.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data));
+                        //        controller.SendData(x.SrcNodeId, cmd, Common.txOptions);
+                        //    });
 
-                    default:
-                        break;
+                        //    break;
+
+                        default:
+                            break;
+                    }
                 }
             });
 
