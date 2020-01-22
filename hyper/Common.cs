@@ -470,6 +470,21 @@ namespace hyper
             {
                 value = Convert.ToByte(value)
             };
+
+            var setBasic = controller.SendData(nodeId, cmd, txOptions);
+            return setBasic.TransmitStatus == TransmitStatuses.CompleteOk;
+        }
+
+        public static bool SetMulti(Controller controller, byte nodeId, byte endpoint, bool value)
+        {
+            Common.logger.Info("Multi for node {0}: {1} {2}", nodeId, endpoint, value);
+            var cmd = new COMMAND_CLASS_MULTI_CHANNEL_V4.MULTI_CHANNEL_CMD_ENCAP();
+            cmd.properties1.sourceEndPoint = endpoint;
+            cmd.properties2.destinationEndPoint = endpoint;
+            cmd.commandClass = 32;
+            cmd.command = 1;
+            cmd.parameter = value ? new byte[] { 255 } : new byte[] { 0 };
+
             var setBasic = controller.SendData(nodeId, cmd, txOptions);
             return setBasic.TransmitStatus == TransmitStatuses.CompleteOk;
         }

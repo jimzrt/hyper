@@ -12,6 +12,8 @@ namespace hyper.Inputs
 
         public static event ConsoleCancelEventHandler CancelKeyPress;
 
+        private static Queue<string> ownQueue = new Queue<string>();
+
         public static void Interrupt()
         {
             Inputs.ForEach(Input => Input.Interrupt());
@@ -39,8 +41,15 @@ namespace hyper.Inputs
             //    }
             //}
 
-            while (!Inputs.Any(i => i.Available()))
+            while (!Inputs.Any(i => i.Available()) && ownQueue.Count == 0)
                 resetEvent.WaitOne();
+
+            if (ownQueue.Count > 0)
+            {
+                message = ownQueue.Dequeue();
+                resetEvent.Reset();
+                return message;
+            }
 
             foreach (var Input in Inputs)
             {
@@ -54,6 +63,12 @@ namespace hyper.Inputs
             //   Inputs.ForEach(Input => Input.CanRead = false);
             resetEvent.Reset();
             return message;
+        }
+
+        internal static void InjectCommand(string command)
+        {
+            ownQueue.Enqueue(command);
+            resetEvent.Set();
         }
     }
 }

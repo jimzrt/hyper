@@ -42,10 +42,17 @@ namespace hyper.Input
                         {
                             var nodeId = BitConverter.ToInt16(bytes.Skip(0).Take(2).Reverse().ToArray());
                             var commandClass = BitConverter.ToInt16(bytes.Skip(2).Take(2).Reverse().ToArray());
+                            var endpoint = BitConverter.ToInt16(bytes.Skip(4).Take(2).Reverse().ToArray());
                             var value = BitConverter.ToBoolean(bytes.Skip(8).Take(1).ToArray());
-                            Common.logger.Info($"node id: {nodeId} - command class: {commandClass} - value: {value}");
-                            lock (_syncObj) messageQueue.Enqueue($"basic {nodeId} {value}");
-                            //currentMessage = "basic " + nodeId + " " + value;
+                            Common.logger.Info($"node id: {nodeId} - command class: {commandClass} - endpoint: {endpoint} - value: {value}");
+                            if (endpoint > 1)
+                            {
+                                lock (_syncObj) messageQueue.Enqueue($"multi {nodeId} {endpoint - 1} {value}");
+                            }
+                            else
+                            {
+                                lock (_syncObj) messageQueue.Enqueue($"basic {nodeId} {value}");
+                            }
                         }
 
                         resetEvent.Set();
@@ -61,7 +68,7 @@ namespace hyper.Input
         public bool Available()
         {
             lock (_syncObj)
-                return messageQueue.Count > 1;
+                return messageQueue.Count > 0;
         }
 
         //public void Flush()

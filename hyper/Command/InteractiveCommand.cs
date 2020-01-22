@@ -79,27 +79,30 @@ namespace hyper
             var forceRemoveRegex = new Regex(@$"^remove\s*({oneTo255Regex})");
             var debugRegex = new Regex(@"^debug\s*(false|true)");
             var lastEventsRegex = new Regex(@$"^show\s*({zeroTo255Regex})\s*({zeroTo255Regex})?\s*([a-zA-Z_]+)?");
+            //var queueRegex = new Regex(@$"^queue\s*({oneTo255Regex})\s*(config)");
+            var multiRegex = new Regex(@$"^multi\s*({oneTo255Regex})\s*({zeroTo255Regex})\s*(false|true)");
 
             Active = true;
             bool oneShot = args.Length > 0;
 
             Common.logger.Info("-----------");
-            if (oneShot)
-            {
-                Common.logger.Info("Oneshot mode");
-            }
-            else
-            {
-                Common.logger.Info("Interaction mode");
-            }
+
+            Common.logger.Info(oneShot ? "Oneshot mode" : "Interaction mode");
+
             Common.logger.Info("-----------");
 
             ListenCommand listenComand = new ListenCommand(Program.controller, Program.configList);
+            // QueueCommand queueCommand = new QueueCommand(Program.controller, Program.configList);
 
-            Thread InstanceCaller = new Thread(
-            new ThreadStart(() => listenComand.Start()));
+            Thread InstanceCallerListen = new Thread(
+                new ThreadStart(() => listenComand.Start()));
 
-            InstanceCaller.Start();
+            InstanceCallerListen.Start();
+
+            //Thread InstanceCallerQueue = new Thread(
+            //    new ThreadStart(() => queueCommand.Start()));
+
+            //InstanceCallerQueue.Start();
 
             do
             {
@@ -225,6 +228,25 @@ namespace hyper
                             }
                             break;
                         }
+                    case var multiVal when multiRegex.IsMatch(multiVal):
+                        {
+                            var match = multiRegex.Match(multiVal);
+                            var nodeId = byte.Parse(match.Groups[1].Value);
+                            var endpoint = byte.Parse(match.Groups[2].Value);
+                            var value = bool.Parse(match.Groups[3].Value);
+                            Common.SetMulti(Program.controller, nodeId, endpoint, value);
+                            break;
+                        }
+                    //case var queueVal when queueRegex.IsMatch(queueVal):
+                    //    {
+                    //        var match = queueRegex.Match(queueVal);
+                    //        var nodeId = byte.Parse(match.Groups[1].Value);
+                    //        var command = match.Groups[2].Value;
+                    //        Common.logger.Info($"node: {nodeId} - command: {command}");
+                    //        queueCommand.AddToMap(nodeId, command);
+
+                    //        break;
+                    //    }
                     case var eventsVal when lastEventsRegex.IsMatch(eventsVal):
                         {
                             var match = lastEventsRegex.Match(eventsVal);
