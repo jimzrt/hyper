@@ -69,7 +69,7 @@ namespace hyper
 
             var oneTo255Regex = @"\b(?:[1-9]|[1-8][0-9]|9[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\b";
             var zeroTo255Regex = @"\b(?:[0-9]|[1-8][0-9]|9[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\b";
-
+            var batteryRegex = new Regex(@$"^battery\s*({oneTo255Regex})");
             var pingRegex = new Regex(@$"^ping\s*({oneTo255Regex})");
             var configRegex = new Regex(@$"^config\s*({oneTo255Regex})\s*(!)?");
             var replaceRegex = new Regex(@$"^replace\s*({oneTo255Regex})");
@@ -211,6 +211,15 @@ namespace hyper
                             Common.logger.Info("Reloading conifg!");
                             Program.configList = Common.ParseConfig("config.yaml");
                             listenComand.UpdateConfig(Program.configList);
+                            break;
+                        }
+                    case var batteryVal when batteryRegex.IsMatch(batteryVal):
+                        {
+                            var match = batteryRegex.Match(batteryVal);
+                            var nodeId = byte.Parse(match.Groups[1].Value);
+                            blockExit = true;
+                            Common.RequestBatteryReport(Program.controller, nodeId);
+                            blockExit = false;
                             break;
                         }
                     case var listenVal when listenRegex.IsMatch(listenVal):

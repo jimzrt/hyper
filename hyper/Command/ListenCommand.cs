@@ -62,14 +62,15 @@ namespace hyper
             }
         }
 
-        private readonly BlockingCollection<Action> queueItems = new BlockingCollection<Action>();
+        //private readonly BlockingCollection<Action> queueItems = new BlockingCollection<Action>();
         private ActionToken dataListener;
-        private ActionToken controllerListener;
 
-        public void AddToQueue(Action action)
-        {
-            queueItems.Add(action);
-        }
+        //private ActionToken controllerListener;
+
+        //public void AddToQueue(Action action)
+        //{
+        //    queueItems.Add(action);
+        //}
 
         public override bool Start()
         {
@@ -157,89 +158,90 @@ namespace hyper
                         return;
                     }
 
-                    switch (report)
-                    {
-                        case COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION _:
-                            // TODO EVENT, last Battery
-                            var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, x.SrcNodeId);
-                            if ((DateTime.Now - lastDate).TotalHours >= 6)
-                            {
-                                queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
-                            }
+                    //switch (report)
+                    //{
+                    //    case COMMAND_CLASS_WAKE_UP_V2.WAKE_UP_NOTIFICATION _:
+                    //        // TODO EVENT, last Battery
+                    //        var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, x.SrcNodeId);
+                    //        if ((DateTime.Now - lastDate).TotalHours >= 6)
+                    //        {
+                    //            queueItems.Add(() => Common.RequestBatteryReport(controller, x.SrcNodeId));
+                    //        }
 
-                            break;
+                    //        break;
 
-                        //case COMMAND_CLASS_FIRMWARE_UPDATE_MD_V5.FIRMWARE_UPDATE_MD_GET fupdateReport:
+                    //    //case COMMAND_CLASS_FIRMWARE_UPDATE_MD_V5.FIRMWARE_UPDATE_MD_GET fupdateReport:
 
-                        //    var rep1 = fupdateReport.properties1.reportNumber1;
-                        //    var rep2 = fupdateReport.reportNumber2;
-                        //    var count = fupdateReport.numberOfReports;
+                    //    //    var rep1 = fupdateReport.properties1.reportNumber1;
+                    //    //    var rep2 = fupdateReport.reportNumber2;
+                    //    //    var count = fupdateReport.numberOfReports;
 
-                        //    queueItems.Add(() =>
-                        //    {
-                        //        var take = 40;
-                        //        var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT();
-                        //        cmd.properties1.last = 0;
-                        //        cmd.properties1.reportNumber1 = rep1;
-                        //        cmd.reportNumber2 = rep2;
-                        //        short repNumber = BitConverter.ToInt16(new byte[] { rep2, rep1 });
-                        //        //Console.WriteLine($"Repnumber: {repNumber}");
-                        //        var offset = (repNumber - 1) * 40;
-                        //        Common.logger.Info("Progress: {0}", (offset / (float)flashData.Count).ToString("0.00%"));
+                    //    //    queueItems.Add(() =>
+                    //    //    {
+                    //    //        var take = 40;
+                    //    //        var cmd = new COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT();
+                    //    //        cmd.properties1.last = 0;
+                    //    //        cmd.properties1.reportNumber1 = rep1;
+                    //    //        cmd.reportNumber2 = rep2;
+                    //    //        short repNumber = BitConverter.ToInt16(new byte[] { rep2, rep1 });
+                    //    //        //Console.WriteLine($"Repnumber: {repNumber}");
+                    //    //        var offset = (repNumber - 1) * 40;
+                    //    //        Common.logger.Info("Progress: {0}", (offset / (float)flashData.Count).ToString("0.00%"));
 
-                        //        if ((flashData.Count - offset) < 40)
-                        //        {
-                        //            // Console.WriteLine("ima full!");
-                        //            Console.WriteLine(offset);
-                        //            Console.WriteLine(flashData.Count);
-                        //            take = flashData.Count - offset;
-                        //            Console.WriteLine(take);
-                        //            cmd.properties1.last = 1;
-                        //            Common.logger.Info("Progress: {0}", (1).ToString("0.00%"));
-                        //        }
-                        //        var data = flashData.Skip(offset).Take(take).ToArray();
-                        //        cmd.data = data;
-                        //        //7A 97
-                        //        // Common.logger.Info(Util.ObjToJson((byte[])cmd));
-                        //        // Common.logger.Info(Util.ObjToJson(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT.ID }.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data).ToArray()));
-                        //        cmd.checksum = Tools.CalculateCrc16Array((byte[])cmd, 0, ((byte[])cmd).Length - 2);
-                        //        //cmd.checksum =  Tools.CalculateCrc16Array(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT .ID}.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data));
-                        //        controller.SendData(x.SrcNodeId, cmd, Common.txOptions);
-                        //    });
+                    //    //        if ((flashData.Count - offset) < 40)
+                    //    //        {
+                    //    //            // Console.WriteLine("ima full!");
+                    //    //            Console.WriteLine(offset);
+                    //    //            Console.WriteLine(flashData.Count);
+                    //    //            take = flashData.Count - offset;
+                    //    //            Console.WriteLine(take);
+                    //    //            cmd.properties1.last = 1;
+                    //    //            Common.logger.Info("Progress: {0}", (1).ToString("0.00%"));
+                    //    //        }
+                    //    //        var data = flashData.Skip(offset).Take(take).ToArray();
+                    //    //        cmd.data = data;
+                    //    //        //7A 97
+                    //    //        // Common.logger.Info(Util.ObjToJson((byte[])cmd));
+                    //    //        // Common.logger.Info(Util.ObjToJson(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT.ID }.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data).ToArray()));
+                    //    //        cmd.checksum = Tools.CalculateCrc16Array((byte[])cmd, 0, ((byte[])cmd).Length - 2);
+                    //    //        //cmd.checksum =  Tools.CalculateCrc16Array(new byte[] { COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.ID, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V2.FIRMWARE_UPDATE_MD_REPORT .ID}.Concat(new byte[] { cmd.properties1, cmd.reportNumber2 }).Concat(data));
+                    //    //        controller.SendData(x.SrcNodeId, cmd, Common.txOptions);
+                    //    //    });
 
-                        //    break;
+                    //    //    break;
 
-                        default:
-                            break;
-                    }
+                    //    default:
+                    //        break;
+                    //}
                 }
             });
 
-            controllerListener = controller.HandleControllerUpdate((r) =>
-            {
-                if (!Active)
-                {
-                    return;
-                }
-                Common.logger.Info("{0}: Got {2} for node {1}", DateTime.Now, r.NodeId, r.Status);
-                var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, r.NodeId);
-                if ((DateTime.Now - lastDate).TotalHours >= 6)
-                {
-                    queueItems.Add(() => Common.RequestBatteryReport(controller, r.NodeId));
-                }
-            });
+            //controllerListener = controller.HandleControllerUpdate((r) =>
+            //{
+            //    if (!Active)
+            //    {
+            //        return;
+            //    }
+            //    Common.logger.Info("{0}: Got {2} for node {1}", DateTime.Now, r.NodeId, r.Status);
+            //    var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, r.NodeId);
+            //    if ((DateTime.Now - lastDate).TotalHours >= 6)
+            //    {
+            //        queueItems.Add(() => Common.RequestBatteryReport(controller, r.NodeId));
+            //    }
+            //});
 
             //Active = true;
-            while (!queueItems.IsCompleted)
-            {
-                try
-                {
-                    var action = queueItems.Take();
-                    if (Active)
-                        action();
-                }
-                catch (InvalidOperationException) { }
-            }
+            //while (!queueItems.IsCompleted)
+            //{
+            //    try
+            //    {
+            //        var action = queueItems.Take();
+            //        if (Active)
+            //            action();
+            //    }
+            //    catch (InvalidOperationException) { }
+            //}
+            dataListener.WaitCompletedSignal();
 
             //   Active = false;
             Common.logger.Info("Listening done!");
@@ -264,9 +266,9 @@ namespace hyper
             Common.logger.Info("stop listening!");
             dataListener?.SetCancelled();
             //dataListener?.SetCompletedSignal();
-            controllerListener?.SetCancelled();
+            //  controllerListener?.SetCancelled();
             // controllerListener?.SetCompletedSignal();
-            queueItems?.CompleteAdding();
+            //  queueItems?.CompleteAdding();
         }
 
         internal void UpdateConfig(List<ConfigItem> configList)

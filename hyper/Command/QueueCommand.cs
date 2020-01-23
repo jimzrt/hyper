@@ -39,8 +39,9 @@ namespace hyper
 
         private Dictionary<byte, SortedSet<string>> nodeToCommandMap = new Dictionary<byte, SortedSet<string>>();
 
-        private readonly BlockingCollection<Action> queueItems = new BlockingCollection<Action>();
+        //private readonly BlockingCollection<Action> queueItems = new BlockingCollection<Action>();
         private ActionToken dataListener;
+
         private ActionToken controllerListener;
 
         public void AddToMap(byte nodeId, string command)
@@ -50,10 +51,10 @@ namespace hyper
             nodeToCommandMap[nodeId] = sortedSet;
         }
 
-        public void AddToQueue(Action action)
-        {
-            queueItems.Add(action);
-        }
+        //public void AddToQueue(Action action)
+        //{
+        //    queueItems.Add(action);
+        //}
 
         public override bool Start()
         {
@@ -131,7 +132,12 @@ namespace hyper
                             var commandsPresent = nodeToCommandMap.TryGetValue(x.SrcNodeId, out SortedSet<string> commands);
                             if (!commandsPresent)
                             {
-                                Common.logger.Warn($"no commands for {x.SrcNodeId}");
+                                Common.logger.Warn($"no commands for {x.SrcNodeId}; check battery if needed");
+                                var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, x.SrcNodeId);
+                                if ((DateTime.Now - lastDate).TotalHours >= 6)
+                                {
+                                    InputManager.InjectCommand($"battery {x.SrcNodeId}");
+                                }
                                 return;
                             }
 
@@ -161,7 +167,12 @@ namespace hyper
                 var commandsPresent = nodeToCommandMap.TryGetValue(r.NodeId, out SortedSet<string> commands);
                 if (!commandsPresent)
                 {
-                    Common.logger.Warn($"no commands for {r.NodeId}");
+                    Common.logger.Warn($"no commands for {r.NodeId}; check battery if needed");
+                    var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, r.NodeId);
+                    if ((DateTime.Now - lastDate).TotalHours >= 6)
+                    {
+                        InputManager.InjectCommand($"battery {r.NodeId}");
+                    }
                     return;
                 }
 
@@ -179,19 +190,20 @@ namespace hyper
                 }
             });
 
-            Active = true;
-            while (!queueItems.IsCompleted)
-            {
-                try
-                {
-                    var action = queueItems.Take();
-                    if (Active)
-                        action();
-                }
-                catch (InvalidOperationException) { }
-            }
-
-            Active = false;
+            //Active = true;
+            //while (!queueItems.IsCompleted)
+            //{
+            //    try
+            //    {
+            //        var action = queueItems.Take();
+            //        if (Active)
+            //            action();
+            //    }
+            //    catch (InvalidOperationException) { }
+            //}
+            dataListener.WaitCompletedSignal();
+            controllerListener.WaitCompletedSignal();
+            //Active = false;
             Common.logger.Info("Listening done!");
             return true;
         }
@@ -216,7 +228,7 @@ namespace hyper
             //dataListener?.SetCompletedSignal();
             controllerListener?.SetCancelled();
             // controllerListener?.SetCompletedSignal();
-            queueItems?.CompleteAdding();
+            // queueItems?.CompleteAdding();
         }
 
         internal void UpdateConfig(List<ConfigItem> configList)
