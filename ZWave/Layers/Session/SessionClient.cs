@@ -23,6 +23,7 @@ namespace ZWave.Layers.Session
         public ConcurrentQueue<ActionBase> PendingExclusiveActions { get; set; }
 
         private ITimeoutManager _timeoutManager;
+
         public ITimeoutManager TimeoutManager
         {
             get { return _timeoutManager; }
@@ -37,6 +38,7 @@ namespace ZWave.Layers.Session
         }
 
         private IConsumerQueue<IActionItem> _callbackBufferBlock;
+
         public IConsumerQueue<IActionItem> CallbackBufferBlock
         {
             get { return _callbackBufferBlock; }
@@ -51,6 +53,7 @@ namespace ZWave.Layers.Session
         }
 
         private IConsumerQueue<IActionCase> _actionCaseConsumer;
+
         public IConsumerQueue<IActionCase> ActionCaseConsumer
         {
             get { return _actionCaseConsumer; }
@@ -68,6 +71,7 @@ namespace ZWave.Layers.Session
         private readonly Dictionary<SubstituteIncomingFlags, ISubstituteManager> _substituteManagersDictionary = new Dictionary<SubstituteIncomingFlags, ISubstituteManager>();
         private readonly Action<ActionToken> _actionChangeCallback;
         internal ApiTypes ApiType { get; set; }
+
         public SessionClient(Action<ActionToken> actionChangeCallback)
         {
             _actionChangeCallback = actionChangeCallback;
@@ -121,6 +125,7 @@ namespace ZWave.Layers.Session
         }
 
         private readonly object _actionStateLock = new object();
+
         public void ProcessNext(ActionHandlerResult ahResult)
         {
             if (ahResult != null && ahResult.NextActions != null)
@@ -193,7 +198,8 @@ namespace ZWave.Layers.Session
                 _funcIdCounter++;
             return _funcIdCounter;
         }
-        #endregion
+
+        #endregion Private
 
         public void TokenExpired(ActionToken actionToken)
         {
@@ -281,7 +287,9 @@ namespace ZWave.Layers.Session
                 return dataFrame;
             }
         }
+
         private volatile bool _isExclusiveBusy = false;
+
         private void HandleActionCaseInner(IActionCase actionCase)
         {
             var customDataFrame = actionCase as CustomDataFrame;
@@ -449,6 +457,7 @@ namespace ZWave.Layers.Session
         }
 
         private readonly Stopwatch sw = new Stopwatch();
+
         public ActionToken ExecuteAsync(IActionItem actionCase)
         {
             var action = actionCase as ActionBase;
@@ -469,7 +478,7 @@ namespace ZWave.Layers.Session
                 ActionCaseConsumer.Add(action);
                 if (!isDisposing)
                 {
-                    _actionStartSignal.WaitOne();
+                    //_actionStartSignal.WaitOne(1000);
                     if (!SuppressDebugOutput)
                     {
                         "{0:X2} (R){1}"._DLOG(SessionId, action.GetName() + action.AboutMeSafe());
@@ -606,17 +615,16 @@ namespace ZWave.Layers.Session
 
         #region IDisposable Members
 
-
-
         public void DisposeAA()
         {
-
         }
 
         #region IDisposable Support
+
         private bool disposedValue = false; // To detect redundant calls
 
         private volatile bool isDisposing;
+
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -659,8 +667,9 @@ namespace ZWave.Layers.Session
             // TODO: uncomment the following line if the finalizer is overridden above.
             // GC.SuppressFinalize(this);
         }
-        #endregion
 
-        #endregion
+        #endregion IDisposable Support
+
+        #endregion IDisposable Members
     }
 }

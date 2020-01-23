@@ -172,7 +172,7 @@ namespace hyper
                 }
                 Common.logger.Warn($"injecting {command}");
                 InputManager.InjectCommand(command);
-                commands.Remove(command);
+                commands.Remove(commands.First());
                 if (commands.Count == 0)
                 {
                     nodeToCommandMap.Remove(r.NodeId);

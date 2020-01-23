@@ -433,7 +433,7 @@ namespace hyper
             var cmd = new COMMAND_CLASS_ASSOCIATION.ASSOCIATION_REMOVE();
             cmd.groupingIdentifier = 0;
             cmd.nodeId = new byte[] { 0 };
-            var clearAssociation = controller.SendDataEx(nodeId, cmd, Common.txOptions, SecuritySchemes.NONE);
+            var clearAssociation = controller.SendData(nodeId, cmd, Common.txOptions);
             return clearAssociation.TransmitStatus == TransmitStatuses.CompleteOk;
         }
 

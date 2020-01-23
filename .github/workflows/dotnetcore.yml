@@ -20,8 +20,7 @@ jobs:
           draft: false
           prerelease: false
       - name: Save URL
-        run: |
-          echo "${{ steps.create_release.outputs.upload_url }}" >> url.txt
+        run: echo "${{ steps.create_release.outputs.upload_url }}" >> url.txt
       - name: Upload URL
         uses: actions/upload-artifact@v1
         with:
@@ -43,6 +42,8 @@ jobs:
         dotnet-version: 3.1.101
     - name: ${{ matrix.os }} - Build with dotnet
       run: dotnet publish -c Release --self-contained -r ${{ matrix.os }} -o ./publish${{ matrix.os }} /p:PublishTrimmed=true /p:DebugType=None
+    - name: ${{ matrix.os }} - Write version to file
+      run: echo "${GITHUB_REF#refs/tags/}" >> publish${{ matrix.os }}/version.txt
     - name: ${{ matrix.os }} - Compress output
       run: tar cfJ publish${{ matrix.os }}.tar.xz publish${{ matrix.os }}
     - name: Download url
@@ -50,9 +51,7 @@ jobs:
       with:
         name: url
     - name: set url
-      shell: bash
-      run: |
-        echo "::set-env name=UPLOAD_URL::$(cat url/url.txt)"
+      run: echo "::set-env name=UPLOAD_URL::$(cat url/url.txt)"
     - name: ${{ matrix.os }} - Upload Release Asset
       uses: actions/upload-release-asset@v1.0.1
       env:
