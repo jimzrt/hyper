@@ -126,33 +126,15 @@ namespace hyper
                 {
                     case "test":
                         {
-                            ConfigurationItem items = new ConfigurationItem(Program.controller.Network);
-                            items.FillNodes(Program.controller.IncludedNodes);
-                            var addedNodes = items.Nodes.ToArray();
-                            foreach (var item in addedNodes)
+                            foreach (var n in Program.controller.IncludedNodes)
                             {
-                                var node = item.Item;
-                                if (Program.controller.Network.GetNodeInfo(node).IsEmpty)
-                                {
-                                    var infoRes = Program.controller.GetProtocolInfo(node);
+                                var node = new ZWave.Devices.NodeTag(n);
 
-                                    Program.controller.Network.SetNodeInfo(node, infoRes.NodeInfo);
-                                    //if (Program.controller.Id == node)
-                                    //{
-                                    //    Program.controller.Network.SetCommandClasses(node, MainVM.SetNodeInformationVM.GetDefaultCommandClasses());
-                                    //}
-                                    items.AddOrUpdateNode(node);
-                                }
+                                var infoRes = Program.controller.GetProtocolInfo(node);
+                                Program.controller.Network.SetNodeInfo(node, infoRes.NodeInfo);
+
+                                Console.WriteLine(n + " : " + Program.controller.Network.IsListening(node));
                             }
-
-                            //Console.WriteLine(Program.controller.Network.GetCommandClasses(new ZWave.Devices.NodeTag(6)));
-                            //Console.WriteLine(Program.controller.Network.GetRoleType(new ZWave.Devices.NodeTag(6)));
-                            //Console.WriteLine(Program.controller.Network.GetCommandClasses(new ZWave.Devices.NodeTag(80)));
-                            //Console.WriteLine(Program.controller.Network.GetRoleType(new ZWave.Devices.NodeTag(80)));
-                            Console.WriteLine(Util.ObjToJson(Program.controller.Network.GetNodeInfo(new ZWave.Devices.NodeTag(6))));
-                            Console.WriteLine(Util.ObjToJson(Program.controller.Network.GetNodeInfo(new ZWave.Devices.NodeTag(80))));
-
-                            Console.WriteLine(Util.ObjToJson(items));
 
                             break;
                         }
