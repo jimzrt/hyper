@@ -167,9 +167,9 @@ namespace hyper
                 var commandsPresent = nodeToCommandMap.TryGetValue(r.NodeId, out SortedSet<string> commands);
                 if (!commandsPresent)
                 {
-                    Common.logger.Warn($"no commands for {r.NodeId}; check battery if needed");
+                    //Common.logger.Warn($"no commands for {r.NodeId}; check battery if needed");
                     var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, r.NodeId);
-                    if ((DateTime.Now - lastDate).TotalHours >= 6)
+                    if ((DateTime.Now - lastDate).TotalHours >= 1)
                     {
                         InputManager.InjectCommand($"battery {r.NodeId}");
                     }
