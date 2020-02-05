@@ -132,9 +132,9 @@ namespace hyper
                             var commandsPresent = nodeToCommandMap.TryGetValue(x.SrcNodeId, out SortedSet<string> commands);
                             if (!commandsPresent)
                             {
-                                Common.logger.Warn($"no commands for {x.SrcNodeId}; check battery if needed");
-                                var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, x.SrcNodeId);
-                                if ((DateTime.Now - lastDate).TotalHours >= 6)
+                                //Common.logger.Warn($"no commands for {x.SrcNodeId}; check battery if needed");
+                                //var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, x.SrcNodeId);
+                                //if ((DateTime.Now - lastDate).TotalHours >= 1)
                                 {
                                     InputManager.InjectCommand($"battery {x.SrcNodeId}");
                                 }
