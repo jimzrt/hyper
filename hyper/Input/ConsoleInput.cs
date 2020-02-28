@@ -1,6 +1,7 @@
 ﻿using NLog;
 using NLog.Targets;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,10 +16,10 @@ namespace hyper.Inputs
         // private string currentMessage = "";
         private readonly object _syncObj = new object();
 
-        private Queue<string> messageQueue = new Queue<string>();
+        private BlockingCollection<string> messageQueue = new BlockingCollection<string>();
 
         private Task backgroundTask = null;
-        private ManualResetEvent resetEvent;
+        //  private ManualResetEvent resetEvent;
 
         public event ConsoleCancelEventHandler CancelKeyPress;
 
@@ -38,8 +39,8 @@ namespace hyper.Inputs
                             continue;
                         }
                         lock (_syncObj)
-                            messageQueue.Enqueue(message);
-                        resetEvent.Set();
+                            messageQueue.Add(message);
+                        //       resetEvent.Set();
                     }
                     //if (CanRead)
                     //{
@@ -57,17 +58,17 @@ namespace hyper.Inputs
             backgroundTask.Start();
         }
 
-        public bool Available()
-        {
-            lock (_syncObj)
-                return messageQueue.Count > 0;
-        }
+        //public bool Available()
+        //{
+        //    lock (_syncObj)
+        //        return messageQueue.Count > 0;
+        //}
 
-        public string Read()
-        {
-            lock (_syncObj)
-                return messageQueue.Dequeue();
-        }
+        //public string Read()
+        //{
+        //    lock (_syncObj)
+        //        return messageQueue.Dequeue();
+        //}
 
         //public void Flush()
         //{
@@ -81,15 +82,20 @@ namespace hyper.Inputs
             Console.WriteLine(logMessage);
         }
 
-        public void SetResetEvent(ManualResetEvent resetEvent)
-        {
-            this.resetEvent = resetEvent;
-        }
+        //public void SetResetEvent(ManualResetEvent resetEvent)
+        //{
+        //    this.resetEvent = resetEvent;
+        //}
 
         public void Interrupt()
         {
             //TODO
             //stop console read
+        }
+
+        public void SetQueue(BlockingCollection<string> ownQueue)
+        {
+            this.messageQueue = ownQueue;
         }
     }
 }

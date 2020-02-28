@@ -20,7 +20,7 @@ namespace hyper
         public static Controller controller;
         public static List<ConfigItem> configList;
 
-        private static void SetupInputs()
+        private static void SetupInputs(InputManager inputManager)
         {
             var configuration = new LoggingConfiguration();
 
@@ -60,10 +60,10 @@ namespace hyper
 
             LogManager.Configuration = configuration;
 
-            InputManager.AddInput(consoleTarget);
-            InputManager.AddInput(tcpTarget);
+            inputManager.AddInput(consoleTarget);
+            inputManager.AddInput(tcpTarget);
             var udpInput = new UDPInput(54322);
-            InputManager.AddInput(udpInput);
+            inputManager.AddInput(udpInput);
         }
 
         private static void SetupOutputs()
@@ -81,8 +81,8 @@ namespace hyper
             //typeof(Program).Assembly.GetName().Version);
 
             //return;
-
-            SetupInputs();
+            InputManager inputManager = new InputManager();
+            SetupInputs(inputManager);
             SetupOutputs();
 
             //  Target.Register("MyFirst", typeof(MyNamespace.MyFirstTarget)); //OR, dynamic
@@ -130,7 +130,7 @@ namespace hyper
             Common.logger.Info("Included nodes: {0}", controller.IncludedNodes.Length);
             Common.logger.Info("-----------------------------------");
 
-            currentCommand = new InteractiveCommand(string.Join(" ", args.Skip(1)));
+            currentCommand = new InteractiveCommand(string.Join(" ", args.Skip(1)), inputManager);
             currentCommand.Start();
 
             /*if (args[1] == "r" || args[1] == "replace" || args[1] == "c" || args[1] == "config")

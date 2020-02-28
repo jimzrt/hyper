@@ -1,37 +1,41 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
 namespace hyper.Inputs
 {
-    internal class InputManager
+    public class InputManager
     {
-        private static ManualResetEvent resetEvent = new ManualResetEvent(false);
-        private static List<IInput> Inputs = new List<IInput>();
+        // private static ManualResetEvent resetEvent = new ManualResetEvent(false);
+        private List<IInput> inputs = new List<IInput>();
 
-        public static event ConsoleCancelEventHandler CancelKeyPress;
+        public event ConsoleCancelEventHandler CancelKeyPress;
 
-        private static Queue<string> ownQueue = new Queue<string>();
-        private static readonly object _syncObj = new object();
+        private BlockingCollection<string> ownQueue = new BlockingCollection<string>();
 
-        public static void Interrupt()
+        //private static Queue<string> ownQueue = new Queue<string>();
+        private readonly object _syncObj = new object();
+
+        public void Interrupt()
         {
-            Inputs.ForEach(Input => Input.Interrupt());
+            inputs.ForEach(Input => Input.Interrupt());
         }
 
-        public static void AddInput(IInput Input)
+        public void AddInput(IInput input)
         {
-            Input.SetResetEvent(resetEvent);
-            Inputs.Add(Input);
+            // Input.SetResetEvent(resetEvent);
+            input.SetQueue(ownQueue);
+            inputs.Add(input);
 
             // Input.RegisterEventHandler(CancelKeyPress);
-            Input.CancelKeyPress += (sender, args) => CancelKeyPress?.Invoke(sender, args);
+            input.CancelKeyPress += (sender, args) => CancelKeyPress?.Invoke(sender, args);
         }
 
-        public static string ReadAny()
+        public string ReadAny()
         {
-            var message = "";
+            //var message = "";
 
             //foreach (var Input in Inputs)
             //{
@@ -41,39 +45,39 @@ namespace hyper.Inputs
             //        return message;
             //    }
             //}
+            var message = ownQueue.Take();
+            //while (ownQueue.Count == 0)
+            //    resetEvent.WaitOne();
 
-            while (!Inputs.Any(i => i.Available()) && ownQueue.Count == 0)
-                resetEvent.WaitOne();
+            //if (ownQueue.Count > 0)
+            //{
+            //    lock (_syncObj)
+            //    {
+            //        message = ownQueue.Dequeue();
+            //    }
+            //    resetEvent.Reset();
+            //    return message;
+            //}
 
-            if (ownQueue.Count > 0)
-            {
-                lock (_syncObj)
-                {
-                    message = ownQueue.Dequeue();
-                }
-                resetEvent.Reset();
-                return message;
-            }
+            ////foreach (var Input in Inputs)
+            ////{
+            ////    if (Input.Available())
+            ////    {
+            ////        message = Input.Read();
+            ////        break;
+            ////    }
+            ////}
 
-            foreach (var Input in Inputs)
-            {
-                if (Input.Available())
-                {
-                    message = Input.Read();
-                    break;
-                }
-            }
-
-            //   Inputs.ForEach(Input => Input.CanRead = false);
-            resetEvent.Reset();
+            ////   Inputs.ForEach(Input => Input.CanRead = false);
+            //resetEvent.Reset();
             return message;
         }
 
-        internal static void InjectCommand(string command)
+        internal void InjectCommand(string command)
         {
             lock (_syncObj)
-                ownQueue.Enqueue(command);
-            resetEvent.Set();
+                ownQueue.Add(command);
+            //  resetEvent.Set();
         }
     }
 }

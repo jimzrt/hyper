@@ -2,6 +2,7 @@
 using NLog;
 using NLog.Targets;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
@@ -19,9 +20,9 @@ namespace hyper.Inputs
         public event ConsoleCancelEventHandler CancelKeyPress;
 
         private TCPServer server;
-        private ManualResetEvent resetEvent;
+        //    private ManualResetEvent resetEvent;
 
-        private Queue<string> messageQueue = new Queue<string>();
+        private BlockingCollection<string> messageQueue = new BlockingCollection<string>();
 
         public TCPInput(int port)
         {
@@ -47,22 +48,22 @@ namespace hyper.Inputs
                     return;
                 }
                 lock (_syncObj)
-                    messageQueue.Enqueue(message);
-                resetEvent.Set();
+                    messageQueue.Add(message);
+                // resetEvent.Set();
             }
         }
 
-        public bool Available()
-        {
-            lock (_syncObj)
-                return messageQueue.Count > 0;
-        }
+        //public bool Available()
+        //{
+        //    lock (_syncObj)
+        //        return messageQueue.Count > 0;
+        //}
 
-        public string Read()
-        {
-            lock (_syncObj)
-                return messageQueue.Dequeue();
-        }
+        //public string Read()
+        //{
+        //    lock (_syncObj)
+        //        return messageQueue.Dequeue();
+        //}
 
         //public void Flush()
         //{
@@ -85,14 +86,19 @@ namespace hyper.Inputs
             //}
         }
 
-        public void SetResetEvent(ManualResetEvent resetEvent)
-        {
-            this.resetEvent = resetEvent;
-        }
+        //public void SetResetEvent(ManualResetEvent resetEvent)
+        //{
+        //    this.resetEvent = resetEvent;
+        //}
 
         public void Interrupt()
         {
             server.Stop();
+        }
+
+        public void SetQueue(BlockingCollection<string> ownQueue)
+        {
+            messageQueue = ownQueue;
         }
     }
 }

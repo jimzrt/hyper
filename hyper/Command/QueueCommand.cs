@@ -22,14 +22,15 @@ namespace hyper
     {
         private readonly Controller controller;
         private List<ConfigItem> configList;
-
+        private InputManager inputManager;
         private EventDAO eventDao = new EventDAO();
         private readonly object lockObject = new object();
 
-        public QueueCommand(Controller controller, List<ConfigItem> configList)
+        public QueueCommand(Controller controller, List<ConfigItem> configList, InputManager inputManager)
         {
             this.controller = controller;
             this.configList = configList;
+            this.inputManager = inputManager;
         }
 
         public bool Active
@@ -136,7 +137,7 @@ namespace hyper
                                 //var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, x.SrcNodeId);
                                 //if ((DateTime.Now - lastDate).TotalHours >= 1)
                                 {
-                                    InputManager.InjectCommand($"battery {x.SrcNodeId}");
+                                    inputManager.InjectCommand($"battery {x.SrcNodeId}");
                                 }
                                 return;
                             }
@@ -147,7 +148,7 @@ namespace hyper
                                 command = command + " " + x.SrcNodeId + "!";
                             }
                             Common.logger.Warn($"injecting {command}");
-                            InputManager.InjectCommand(command);
+                            inputManager.InjectCommand(command);
                             commands.Remove(commands.First());
                             if (commands.Count == 0)
                             {
@@ -171,7 +172,7 @@ namespace hyper
                     var lastDate = eventDao.GetLastEvent(typeof(COMMAND_CLASS_BATTERY.BATTERY_REPORT).Name, r.NodeId);
                     if ((DateTime.Now - lastDate).TotalHours >= 1)
                     {
-                        InputManager.InjectCommand($"battery {r.NodeId}");
+                        inputManager.InjectCommand($"battery {r.NodeId}");
                     }
                     return;
                 }
@@ -182,7 +183,7 @@ namespace hyper
                     command = command + " " + r.NodeId + "!";
                 }
                 Common.logger.Warn($"injecting {command}");
-                InputManager.InjectCommand(command);
+                inputManager.InjectCommand(command);
                 commands.Remove(commands.First());
                 if (commands.Count == 0)
                 {

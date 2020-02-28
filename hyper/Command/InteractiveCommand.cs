@@ -24,18 +24,21 @@ namespace hyper
 
         private bool blockExit = false;
         private string args;
-
+        private InputManager inputManager;
         private EventDAO eventDao = new EventDAO();
 
-        public InteractiveCommand(string args)
+        public InteractiveCommand(string args, InputManager inputManager)
         {
             this.args = args;
+            this.inputManager = inputManager;
         }
 
         public bool Active { get; private set; } = false;
 
         private void CancelHandler(object evtSender, ConsoleCancelEventArgs evtArgs)
         {
+            Common.logger.Info(Util.ObjToJson(evtSender));
+
             if (evtArgs != null)
             {
                 evtArgs.Cancel = true;
@@ -64,7 +67,7 @@ namespace hyper
         public override bool Start()
         {
             Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
-            InputManager.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
+            inputManager.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
             // InputManager.AddCancelEventHandler(CancelHandler);
 
             var oneTo255Regex = @"\b(?:[1-9]|[1-8][0-9]|9[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\b";
@@ -92,7 +95,7 @@ namespace hyper
             Common.logger.Info("-----------");
 
             ListenCommand listenComand = new ListenCommand(Program.controller, Program.configList);
-            QueueCommand queueCommand = new QueueCommand(Program.controller, Program.configList);
+            QueueCommand queueCommand = new QueueCommand(Program.controller, Program.configList, inputManager);
 
             Thread InstanceCallerListen = new Thread(
                 new ThreadStart(() => listenComand.Start()));
@@ -115,7 +118,7 @@ namespace hyper
                 }
                 else
                 {
-                    input = InputManager.ReadAny();
+                    input = inputManager.ReadAny();
                 }
                 if (input == null)
                 {
@@ -405,7 +408,7 @@ namespace hyper
             {
                 Thread.Sleep(100);
             }
-            InputManager.Interrupt();
+            inputManager.Interrupt();
             listenComand.Stop();
             Common.logger.Info("goodby master...");
             return true;
