@@ -3,6 +3,7 @@ using hyper.commands;
 using hyper.config;
 using hyper.Database.DAO;
 using hyper.Helper;
+using hyper.Helper.Extension;
 using hyper.Output;
 using System;
 using System.Collections.Concurrent;
@@ -143,6 +144,8 @@ namespace hyper
                         return;
                     }
                     var report = implicitCastMethod.Invoke(null, new[] { x.Command });
+                    report.GetKeyValue(out Enums.EventKey eventKey, out float eventValue);
+                    Common.logger.Info($"key: {eventKey} - value: {eventValue}");
 
                     if (!filterActive && Debug)
                         Common.logger.Info(Util.ObjToJson(report));

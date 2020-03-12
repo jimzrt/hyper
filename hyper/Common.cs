@@ -53,7 +53,8 @@ namespace hyper
                 var versionRes = _controller.GetVersion();
                 if (!versionRes)
                 {
-                    for (int i = 2; i < 5; i++)
+                    var i = 2;
+                    while (true)
                     {
                         Common.logger.Info("Controller - get version: try {0}", i);
                         versionRes = _controller.GetVersion();
@@ -61,6 +62,7 @@ namespace hyper
                         {
                             break;
                         }
+                        i++;
                     }
                 }
                 if (versionRes)

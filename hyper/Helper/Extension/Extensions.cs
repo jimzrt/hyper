@@ -20,8 +20,10 @@ namespace hyper.Helper.Extension
                         eventType = type switch
                         {
                             0x01 => Enums.EventKey.TEMPERATURE,
+                            0x03 => Enums.EventKey.ILLUMINANCE,
                             0x04 => Enums.EventKey.POWER,
                             0x05 => Enums.EventKey.HUMIDITY,
+                            0x1B => Enums.EventKey.ULTRAVIOLET,
                             _ => Enums.EventKey.UNKNOWN,
                         };
 

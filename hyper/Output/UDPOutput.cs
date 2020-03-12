@@ -14,7 +14,7 @@ namespace hyper.Output
     {
         private Socket socket;
         private IPEndPoint ep;
-        private Dictionary<byte, (DateTime, byte[])> eventMap = new Dictionary<byte, (DateTime, byte[])>();
+        private Dictionary<byte, (DateTime, (Enums.EventKey, float))> eventMap = new Dictionary<byte, (DateTime, (Enums.EventKey, float))>();
 
         public UDPOutput(string ipAdress, int port)
         {
@@ -117,23 +117,33 @@ namespace hyper.Output
                     return;
             }
             buffer = nodeId.Reverse().Concat(commandClass.Reverse()).Concat(instance).Concat(index).Concat(values.Reverse()).ToArray();
+            var keyValue = command.GetKeyValue(out Enums.EventKey eventKey, out float eventValue);
             if (!eventMap.ContainsKey(srcNodeId))
             {
-                eventMap[srcNodeId] = (DateTime.Now, values);
+                eventMap[srcNodeId] = (DateTime.Now, (eventKey, eventValue));
             }
             else
             {
-                var (tempTime, tempBuffer) = eventMap[srcNodeId];
+                var (tempTime, (tempKey, tempValue)) = eventMap[srcNodeId];
                 var currentTime = DateTime.Now;
                 var diffInTimeSeconds = (currentTime - tempTime).TotalSeconds;
-                if (diffInTimeSeconds < 5 && values.SequenceEqual(tempBuffer))
+                if (diffInTimeSeconds < 5 && tempValue == eventValue)
                 {
                     Common.logger.Debug("same message or too soon! doing nothing");
+                    if (tempKey != eventKey)
+                    {
+                        Common.logger.Debug($"But different key: {tempKey} - {eventKey}");
+                    }
                     return;
                 }
                 else
                 {
-                    eventMap[srcNodeId] = (DateTime.Now, values);
+                    if ((tempKey == Enums.EventKey.STATE_CLOSED && eventKey == Enums.EventKey.BINARY) || (eventKey == Enums.EventKey.STATE_CLOSED && tempKey == Enums.EventKey.BINARY))
+                    {
+                        Common.logger.Debug("after state close should not come binary! check device configuriaton. Ignoring");
+                        return;
+                    }
+                    eventMap[srcNodeId] = (DateTime.Now, (eventKey, eventValue));
                 }
             }
             socket.SendTo(buffer, ep);

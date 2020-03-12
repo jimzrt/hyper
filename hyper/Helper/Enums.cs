@@ -19,7 +19,9 @@
             IMPACT,
             STATE_ON,
             STATE_CLOSED,
-            BASIC
+            BASIC,
+            ILLUMINANCE,
+            ULTRAVIOLET
         }
 
         //public static EventKey GetEventTypeByMultilevelType(byte eventValue)
