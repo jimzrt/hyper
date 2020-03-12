@@ -5,6 +5,7 @@ import sys
 import subprocess
 import signal
 import shutil
+import time
 
 def remove_temp():
     print("remove temp")
@@ -114,6 +115,7 @@ make_executable("/etc/init.d/hyper")
 subprocess.call("update-rc.d hyper defaults".split(" "))
 print("done")
 
+
 print("update udev")
 if os.path.exists("/etc/udev/rules.d/20_ZStickGen5.rules"):
     os.unlink("/etc/udev/rules.d/20_ZStickGen5.rules")
@@ -156,6 +158,7 @@ print("reload udev")
 subprocess.call("udevadm control --reload-rules".split(" "))
 subprocess.call("udevadm trigger".split(" "))
 #subprocess.Popen(['nohup', './hyper', default_com], stdout=open('/dev/null', 'w'), stderr=open('logfile.log', 'a'), preexec_fn=os.setpgrp, cwd="/var/inhaus/hyper")
+time.sleep(5)
 print("done")
 
 print("starting client to verify")

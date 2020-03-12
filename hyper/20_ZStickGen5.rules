@@ -1,2 +1,2 @@
 ﻿SUBSYSTEMS=="platform", ATTRS{guid}=="GUID = 0x2708a000", SYMLINK+="ttyUSB_ZStickGen5"
-SUBSYSTEM=="tty", ATTRS{idVendor}=="0658", ATTRS{idProduct}=="0200", SYMLINK+="ttyUSB_ZStickGen5", GROUP="dialout", MODE="0666", RUN+="/bin/sh -c 'service hyper restart'"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0658", ATTRS{idProduct}=="0200", SYMLINK+="ttyUSB_ZStickGen5", GROUP="dialout", MODE="0666", RUN+="/bin/sh -c 'sleep 5 && service hyper restart'"
