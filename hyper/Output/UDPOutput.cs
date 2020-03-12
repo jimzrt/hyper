@@ -1,6 +1,7 @@
 ﻿using hyper.Helper;
 using hyper.Helper.Extension;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -13,6 +14,7 @@ namespace hyper.Output
     {
         private Socket socket;
         private IPEndPoint ep;
+        private Dictionary<byte, (DateTime, byte[])> eventMap = new Dictionary<byte, (DateTime, byte[])>();
 
         public UDPOutput(string ipAdress, int port)
         {
@@ -115,7 +117,25 @@ namespace hyper.Output
                     return;
             }
             buffer = nodeId.Reverse().Concat(commandClass.Reverse()).Concat(instance).Concat(index).Concat(values.Reverse()).ToArray();
-            // Console.WriteLine(ByteArrayToString(buffer));
+            if (!eventMap.ContainsKey(srcNodeId))
+            {
+                eventMap[srcNodeId] = (DateTime.Now, values);
+            }
+            else
+            {
+                var (tempTime, tempBuffer) = eventMap[srcNodeId];
+                var currentTime = DateTime.Now;
+                var diffInTimeSeconds = (currentTime - tempTime).TotalSeconds;
+                if (diffInTimeSeconds < 5 && values.SequenceEqual(tempBuffer))
+                {
+                    Common.logger.Debug("same message or too soon! doing nothing");
+                    return;
+                }
+                else
+                {
+                    eventMap[srcNodeId] = (DateTime.Now, values);
+                }
+            }
             socket.SendTo(buffer, ep);
         }
 
