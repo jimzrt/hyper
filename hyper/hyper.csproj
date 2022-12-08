@@ -18,7 +18,7 @@
     <PackageReference Include="linq2db.MySql" Version="3.0.0-preview.1" />
     <PackageReference Include="linq2db.SQLite" Version="3.0.0-preview.1" />
     <PackageReference Include="NetCoreServer" Version="3.0.4" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NLog" Version="4.6.8" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
   </ItemGroup>
